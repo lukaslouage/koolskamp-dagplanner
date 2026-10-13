@@ -41,15 +41,22 @@
     return { ...config.defaults, ...(Object.keys(fromLink).length ? fromLink : saved) };
   }
 
+  /**
+   * Only settings that differ from the defaults are saved and shared. That keeps links short and means
+   * a later change to the defaults reaches everyone, except for the values they changed themselves.
+   */
+  function changedSettings() {
+    return Object.entries(state.settings).filter(([key, value]) => String(value) !== String(config.defaults[key]));
+  }
+
   function saveSettings() {
-    try { localStorage.setItem(config.storageKey, JSON.stringify(state.settings)); } catch (e) { /* storage unavailable */ }
+    try { localStorage.setItem(config.storageKey, JSON.stringify(Object.fromEntries(changedSettings()))); } catch (e) { /* storage unavailable */ }
     history.replaceState(null, '', shareUrl());
   }
 
-  /** Link to the current scenario. Only settings that differ from the defaults are included, to keep it short. */
+  /** Link to the current scenario. */
   function shareUrl() {
-    const changed = Object.entries(state.settings).filter(([key, value]) => String(value) !== String(config.defaults[key]));
-    const hash = new URLSearchParams(changed).toString();
+    const hash = new URLSearchParams(changedSettings()).toString();
     return location.pathname + location.search + (hash ? '#' + hash : '');
   }
 

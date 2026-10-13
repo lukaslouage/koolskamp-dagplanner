@@ -6,5 +6,7 @@
 - Keep the site static: plain HTML, CSS and classic scripts on `window.KK`. No build step, no frameworks, no ES modules (the page must also open from `file://`).
 - Calculations live in `js/schedule.js` and must stay free of DOM access.
 - Respect the brand colours (`#FFD201`, `#000000`) and keep light mode, dark mode and print working after every change.
+- When a CSS or JS file changes, raise the `?v=` number on all local `<link>` and `<script>` tags in `index.html` (same number everywhere). GitHub Pages lets browsers cache files for 10 minutes; without a new number visitors can get a mix of old and new files.
+- Saved settings and share links hold only values that differ from `KK.config.defaults`. Changing a default therefore reaches every visitor; do not go back to saving the full settings object.
 - After a change: open `index.html` to check it, then commit and push to `main` so GitHub Pages updates.
 - See `README.md` for calculation rules and file structure.
