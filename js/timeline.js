@@ -8,12 +8,20 @@ KK.Timeline = class {
     this.schedule = null;
     this.layout = { laneTop: { women: 64, men: 178 } };
 
+    // activeBlockId survives re-renders, so a tapped or clicked block keeps its tooltip.
+    this.activeBlockId = null;
     this.el.addEventListener('mouseover', e => {
       const block = e.target.closest('.block');
       if (block) this.showTooltip(block.dataset.blockId);
     });
+    this.el.addEventListener('mouseout', e => {
+      const from = e.target.closest('.block');
+      if (from && !(e.relatedTarget && from.contains(e.relatedTarget))) this.hideTooltip();
+    });
     this.el.addEventListener('mouseleave', () => this.hideTooltip());
     this.el.addEventListener('click', e => {
+      const block = e.target.closest('.block');
+      this.activeBlockId = block ? block.dataset.blockId : null;
       const rect = this.el.getBoundingClientRect();
       const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
       const { start, end } = KK.config.timelineAxis;
@@ -104,11 +112,13 @@ KK.Timeline = class {
     html.push(`<div class="tooltip" hidden></div>`);
     this.el.innerHTML = html.join('');
     this.tooltipEl = this.el.querySelector('.tooltip');
+    if (this.activeBlockId) this.showTooltip(this.activeBlockId);
   }
 
   showTooltip(blockId) {
     const block = this.schedule && this.schedule.blockById[blockId];
-    if (!block || !this.tooltipEl) return;
+    if (!block || !this.tooltipEl) { this.activeBlockId = null; return; }
+    this.activeBlockId = blockId;
     const f = KK.format;
     const lines = [`Van ${f.exact(block.start)} tot ${f.exact(block.end)}`, `Duur ${f.duration(block.end - block.start)}`];
     if (block.kmFrom != null) lines.push(`Km ${f.km(block.kmFrom)} tot ${f.km(block.kmTo)} (${f.km(block.kmTo - block.kmFrom)} km)`);
@@ -118,10 +128,19 @@ KK.Timeline = class {
     this.tooltipEl.style.left = center + '%';
     this.tooltipEl.style.top = block.lane === 'women' ? '168px' : '174px';
     this.tooltipEl.style.transform = block.lane === 'women' ? 'translateX(-50%)' : 'translate(-50%, -100%)';
+    this.tooltipEl.style.marginLeft = '0px';
     this.tooltipEl.hidden = false;
+
+    // Keep the tooltip inside the visible part of the scrollable timeline (phones scroll it sideways).
+    const view = (this.el.closest('.timeline__scroll') || this.el).getBoundingClientRect();
+    const rect = this.tooltipEl.getBoundingClientRect();
+    const shift = rect.left < view.left + 4 ? view.left + 4 - rect.left
+      : rect.right > view.right - 4 ? view.right - 4 - rect.right : 0;
+    this.tooltipEl.style.marginLeft = `${shift}px`;
   }
 
   hideTooltip() {
+    this.activeBlockId = null;
     if (this.tooltipEl) this.tooltipEl.hidden = true;
   }
 };

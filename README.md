@@ -21,8 +21,8 @@ js/config.js          Distances, fixed durations, default settings, limits
 js/format.js          Time and number formatting (10u15, 10:15:24, 117,5)
 js/schedule.js        Pure race calculations: blocks, passages, margin, broadcasts, rider positions
 js/timeline.js        Renders the two-lane timeline, tooltips, click-to-select time
-js/route-map.js       Leaflet map, GPX routes, rider markers
-js/app.js             State, controls, cards, tables, theme, playback, PDF export
+js/route-map.js       MapLibre map (OpenFreeMap base map), GPX routes, rider markers
+js/app.js             State, controls, cards, tables, theme, share link, playback, PDF export
 data/route-data.js    Route coordinates generated from the GPX files
 data/gpx/             Source GPX files (Strava export)
 ```
@@ -58,6 +58,7 @@ Points are `[lat, lon, elevation]`. The map scales each GPX track to the officia
 - Speed sliders (women 36 to 46 km/u, men 42 to 50 km/u, step 0,5).
 - Extra settings: start times, number of laps and loops, Sporza start times, podium duration, margin thresholds.
 - Settings and theme are saved in `localStorage`.
+- "Deel scenario" copies a link with the current settings in the URL hash (only values that differ from the defaults, e.g. `#womenSpeed=38&womenLaps=8`). Settings in the link win over saved settings. Unknown keys and invalid values are ignored.
 - Timeline from 8u30 to 18u30. Hover a block for exact times and kilometres. Click the timeline to select a time.
 - Map with playback; rider cards show lap and kilometre.
 - "Exporteer PDF" prints an A4 landscape document in light mode: timeline, map, passage tables.
@@ -66,4 +67,4 @@ Points are `[lat, lon, elevation]`. The map scales each GPX track to the officia
 
 Hosted with GitHub Pages from the `main` branch, root folder. Every push to `main` updates the live site within a minute or two.
 
-Map tiles come from OpenStreetMap and need an internet connection. Fonts load from Google Fonts, Leaflet from unpkg.
+Base maps come from OpenFreeMap (light: `positron`, dark: `dark`) and need an internet connection. Fonts load from Google Fonts, MapLibre GL JS 4.7.1 from jsDelivr. The page has `noindex` so search engines do not list it.

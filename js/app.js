@@ -14,28 +14,66 @@
   const timeline = new KK.Timeline($('timeline-track'), { onSelectTime: t => { state.selectedTime = t; render(); } });
   const routeMap = new KK.RouteMap($('route-map'), KK.routeData);
 
+  /** Keeps only known settings with a valid value, so a hand-edited link or old saved data cannot break the page. */
+  function cleanSettings(raw) {
+    const clean = {};
+    Object.entries(config.defaults).forEach(([key, fallback]) => {
+      if (!(key in raw)) return;
+      const value = raw[key];
+      if (typeof fallback === 'number') {
+        const n = Number(value);
+        if (value !== '' && Number.isFinite(n)) clean[key] = n;
+      } else if (value === '' || /^\d{1,2}:\d{2}$/.test(String(value))) {
+        clean[key] = String(value);
+      }
+    });
+    return clean;
+  }
+
+  /** Settings in the link (#womenSpeed=38&...) win over saved settings, so a shared scenario opens exactly as sent. */
   function loadSettings() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(config.storageKey) || '{}');
-      return { ...config.defaults, ...saved };
-    } catch (e) {
-      return { ...config.defaults };
-    }
+    const fromLink = cleanSettings(Object.fromEntries(new URLSearchParams(location.hash.slice(1))));
+    let saved = {};
+    try { saved = cleanSettings(JSON.parse(localStorage.getItem(config.storageKey) || '{}')); } catch (e) { /* storage unavailable */ }
+    return { ...config.defaults, ...(Object.keys(fromLink).length ? fromLink : saved) };
   }
 
   function saveSettings() {
     try { localStorage.setItem(config.storageKey, JSON.stringify(state.settings)); } catch (e) { /* storage unavailable */ }
+    history.replaceState(null, '', shareUrl());
+  }
+
+  /** Link to the current scenario. Only settings that differ from the defaults are included, to keep it short. */
+  function shareUrl() {
+    const changed = Object.entries(state.settings).filter(([key, value]) => String(value) !== String(config.defaults[key]));
+    const hash = new URLSearchParams(changed).toString();
+    return location.pathname + location.search + (hash ? '#' + hash : '');
+  }
+
+  async function shareScenario() {
+    const url = new URL(shareUrl(), location.href).href;
+    const button = $('share-button');
+    try {
+      await navigator.clipboard.writeText(url);
+      button.textContent = 'Link gekopieerd';
+    } catch (e) {
+      window.prompt('Kopieer deze link:', url);
+      return;
+    }
+    clearTimeout(shareScenario.timer);
+    shareScenario.timer = setTimeout(() => { button.textContent = 'Deel scenario'; }, 2500);
   }
 
   function loadTheme() {
-    const saved = localStorage.getItem(config.themeStorageKey);
+    let saved = null;
+    try { saved = localStorage.getItem(config.themeStorageKey); } catch (e) { /* storage unavailable */ }
     if (saved === 'light' || saved === 'dark') return saved;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 
   function setTheme(theme, persist = true) {
     state.theme = theme;
-    if (persist) localStorage.setItem(config.themeStorageKey, theme);
+    if (persist) try { localStorage.setItem(config.themeStorageKey, theme); } catch (e) { /* storage unavailable */ }
     render();
   }
 
@@ -158,7 +196,10 @@
   $('time-range').addEventListener('input', e => { state.selectedTime = Number(e.target.value); render(); });
   $('play-button').addEventListener('click', togglePlayback);
   $('export-button').addEventListener('click', exportPdf);
+  $('share-button').addEventListener('click', shareScenario);
+  window.addEventListener('hashchange', () => { state.settings = loadSettings(); saveSettings(); syncInputs(); render(); });
 
   syncInputs();
+  saveSettings();
   render();
 })();
