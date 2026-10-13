@@ -1,4 +1,4 @@
-/* Koolskamp Koers 2028, day timeline */
+/* Koolskamp Koers Dagplanner */
 
 :root {
   --brand-yellow: #FFD201;
@@ -235,6 +235,44 @@ button { font: inherit; }
 .vline-label--men { color: var(--broadcast-men); }
 .vline-label--status { top: 284px; transform: translateX(-50%); color: #FFF; background: var(--status); }
 
+/* Vertical timeline (phones): time runs down, women left, men right */
+.timeline--vertical .timeline__scroll { overflow: visible; padding-bottom: 0; }
+.timeline--vertical .timeline__grid { display: block; min-width: 0; }
+.timeline--vertical .timeline__labels { display: none; }
+.timeline__track--vertical { --axis: 48px; --lane: calc((100% - 56px) / 2); cursor: pointer; }
+.timeline__track--vertical :is(.block, .lane-bg).vlane--women { left: var(--axis); right: auto; width: var(--lane); }
+.timeline__track--vertical :is(.block, .lane-bg).vlane--men { left: calc(var(--axis) + var(--lane) + 8px); right: auto; width: var(--lane); }
+.timeline__track--vertical .lane-bg { border-radius: 10px; }
+.timeline__track--vertical .block { padding: 2px 8px; gap: 1px; border-radius: 6px; }
+.timeline__track--vertical .block__title { font-size: 13px; }
+.timeline__track--vertical .block__time { font-size: 12px; }
+.timeline__track--vertical .broadcast-band { left: calc(var(--axis) - 4px); right: 0; }
+.vhead {
+  position: sticky; top: 0; z-index: 9; height: 52px; padding-left: var(--axis);
+  display: flex; gap: 8px; align-items: center; background: var(--bg); border-bottom: 1px solid var(--line);
+}
+.vhead__lane { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.vhead__lane b { display: block; font-size: 16px; font-weight: 800; color: var(--fg); }
+.vhead .lane-label__bar { width: 8px; height: 26px; }
+.htick { position: absolute; left: calc(var(--axis) - 4px); right: 0; border-top: 1px solid var(--line); z-index: 1; pointer-events: none; }
+.htick-label {
+  position: absolute; left: 0; width: calc(var(--axis) - 8px); text-align: right; transform: translateY(-50%);
+  font-size: 13px; font-weight: 600; color: var(--muted);
+}
+.hline { position: absolute; left: calc(var(--axis) - 4px); right: 0; transform: translateY(-50%); z-index: 5; pointer-events: none; }
+.hline--women-broadcast { border-top: 3px dotted var(--broadcast-women); }
+.hline--men-broadcast { border-top: 3px dotted var(--broadcast-men); }
+.hline--first-passage { border-top: 3px solid var(--status); }
+.hline--selected { border-top: 2px solid var(--fg); }
+.hline-label {
+  position: absolute; right: 0; z-index: 6; pointer-events: none; white-space: nowrap;
+  font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: var(--bg);
+}
+.htick-label--women, .htick-label--men { font-size: 11px; font-weight: 800; padding: 1px 0; border-radius: 5px; text-align: center; left: 2px; width: calc(var(--axis) - 8px); }
+.htick-label--women { color: var(--broadcast-women); background: color-mix(in oklch, var(--broadcast-women) 14%, var(--bg)); }
+.htick-label--men { color: var(--broadcast-men); background: color-mix(in oklch, var(--broadcast-men) 14%, var(--bg)); }
+.hline-label--status { left: var(--axis); right: auto; color: #FFF; background: var(--status); transform: translateY(calc(-100% - 3px)); }
+
 .tooltip {
   position: absolute; z-index: 20; pointer-events: none;
   background: var(--fg); color: var(--bg); border-radius: 10px; padding: 12px 16px; min-width: 240px;
@@ -323,11 +361,6 @@ button { font: inherit; }
   .playback { flex-basis: 100%; }
   .playback__time { font-size: 26px; min-width: 80px; }
   .route__map { min-height: 420px; }
-  .timeline__grid { grid-template-columns: 92px minmax(0, 1fr); }
-  .lane-label { right: 8px; }
-  .lane-label__name { font-size: 16px; gap: 6px; }
-  .lane-label__bar { width: 8px; height: 22px; }
-  .lane-label__detail { padding-left: 14px; font-size: 13px; }
   .passages__table td:first-child { padding-right: 8px; }
   .passages__table th:nth-child(n+2), .passages__table td:nth-child(n+2) { width: 58px; }
 }

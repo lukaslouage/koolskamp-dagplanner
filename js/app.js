@@ -172,11 +172,13 @@
   // Printing: the 'is-printing' class gives the map its print size on screen too, so the snapshot fits the paper.
   function startPrintLayout() {
     document.documentElement.classList.add('is-printing');
+    render(); // the timeline is always horizontal on paper
   }
 
   function endPrintLayout() {
     document.documentElement.classList.remove('is-printing');
     routeMap.refreshSize();
+    render();
   }
 
   async function exportPdf() {
