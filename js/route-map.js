@@ -1,7 +1,12 @@
-// Leaflet map with the three GPX routes and live rider markers.
+// MapLibre map with the three GPX routes and live rider markers. Base map from OpenFreeMap.
 window.KK = window.KK || {};
 
 KK.RouteMap = class {
+  static STYLES = {
+    light: 'https://tiles.openfreemap.org/styles/positron',
+    dark: 'https://tiles.openfreemap.org/styles/dark',
+  };
+
   constructor(el, routeData) {
     this.el = el;
     this.routes = {
@@ -11,7 +16,6 @@ KK.RouteMap = class {
     };
     this.kruiskalsijde = routeData.kruiskalsijde;
     this.theme = null;
-    if (window.L) this.init();
   }
 
   static haversineKm(a, b) {
@@ -19,6 +23,10 @@ KK.RouteMap = class {
     const dLat = (b[0] - a[0]) * t, dLon = (b[1] - a[1]) * t;
     const x = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * t) * Math.cos(b[0] * t) * Math.sin(dLon / 2) ** 2;
     return 2 * 6371 * Math.asin(Math.sqrt(x));
+  }
+
+  static lngLat(latLng) {
+    return [latLng[1], latLng[0]];
   }
 
   buildRoute(points) {
@@ -39,41 +47,92 @@ KK.RouteMap = class {
     return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
   }
 
-  init() {
-    const L = window.L, r = this.routes;
-    const map = L.map(this.el, { scrollWheelZoom: false, zoomSnap: 0.25 });
+  bounds() {
+    const r = this.routes;
+    const all = [...r.ardooieLoop.latLngs, ...r.approach.latLngs, ...r.localLap.latLngs];
+    const lats = all.map(p => p[0]), lons = all.map(p => p[1]);
+    return [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
+  }
+
+  fit() {
+    if (this.map) this.map.fitBounds(this.bounds(), { padding: 40, animate: false });
+  }
+
+  init(theme) {
+    const ml = window.maplibregl, r = this.routes;
+    const map = new ml.Map({
+      container: this.el,
+      style: KK.RouteMap.STYLES[theme],
+      bounds: this.bounds(),
+      fitBoundsOptions: { padding: 40 },
+      scrollZoom: false,
+      dragRotate: false,
+      pitchWithRotate: false,
+      attributionControl: false,
+      preserveDrawingBuffer: true, // keeps the map visible in the PDF export
+    });
     this.map = map;
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+    map.touchZoomRotate.disableRotation();
+    map.addControl(new ml.NavigationControl({ showCompass: false }), 'top-left');
+    map.addControl(new ml.AttributionControl({ compact: false }), 'bottom-right');
+    map.on('style.load', () => this.addRouteLayers());
 
-    const line = (route, style) => L.polyline(route.latLngs, { opacity: 1, lineJoin: 'round', ...style }).addTo(map);
-    line(r.localLap, { color: '#000', weight: 10 });
-    line(r.localLap, { color: '#FFD201', weight: 6 });
-    line(r.approach, { color: '#FFF', weight: 8 });
-    line(r.approach, { color: '#7A7A7A', weight: 5 });
-    line(r.ardooieLoop, { color: '#000', weight: 4, dashArray: '10 8' });
-
-    const pin = (latLng, text) => L.marker(latLng, {
-      icon: L.divIcon({ className: '', iconSize: [14, 14], iconAnchor: [7, 7], html: '<div class="map-pin"></div>' }),
-    }).addTo(map).bindTooltip(text, { permanent: true, direction: 'right', offset: [10, 0] });
+    const marker = (latLng, className, html, options = {}) => {
+      const el = document.createElement('div');
+      el.className = className;
+      el.innerHTML = html;
+      return new ml.Marker({ element: el, ...options }).setLngLat(KK.RouteMap.lngLat(latLng)).addTo(map);
+    };
+    const pin = (latLng, text) => marker(latLng, 'map-pin-wrap',
+      `<span class="map-pin"></span><span class="map-pin__label">${text}</span>`, { anchor: 'left', offset: [-7, 0] });
     pin(r.ardooieLoop.latLngs[0], 'Start Ardooie');
     pin(this.kruiskalsijde, 'Kruiskalsijde');
     pin(r.localLap.latLngs[0], 'Finish');
 
-    const rider = (race, letter) => L.marker(r.ardooieLoop.latLngs[0], {
-      zIndexOffset: 1000,
-      icon: L.divIcon({ className: '', iconSize: [34, 34], iconAnchor: [17, 17], html: `<div class="map-rider map-rider--${race}">${letter}</div>` }),
-    }).addTo(map).bindTooltip('', { direction: 'top', offset: [0, -18] });
-    this.riderMarkers = { women: rider('women', 'V'), men: rider('men', 'M') };
+    const start = r.ardooieLoop.latLngs[0];
+    this.riderMarkers = {
+      women: marker(start, 'map-rider map-rider--women', 'V'),
+      men: marker(start, 'map-rider map-rider--men', 'M'),
+    };
 
-    map.fitBounds(L.latLngBounds([...r.ardooieLoop.latLngs, ...r.approach.latLngs, ...r.localLap.latLngs]), { padding: [24, 24] });
+    // Refit whenever the container changes size (window resize, print layout), so the routes never end up off screen.
+    if (window.ResizeObserver) {
+      let last = '';
+      new ResizeObserver(entries => {
+        const { width, height } = entries[0].contentRect;
+        const key = `${Math.round(width)}x${Math.round(height)}`;
+        if (width > 0 && key !== last) { last = key; map.resize(); this.fit(); }
+      }).observe(this.el);
+    }
+  }
+
+  /** Adds the route lines. Runs after every style load, because a theme switch replaces the whole style. */
+  addRouteLayers() {
+    const map = this.map, r = this.routes, dark = this.theme === 'dark';
+    const add = (id, route, layers) => {
+      map.addSource(id, { type: 'geojson',
+        data: { type: 'Feature', geometry: { type: 'LineString', coordinates: route.latLngs.map(KK.RouteMap.lngLat) } } });
+      layers.forEach((paint, i) => map.addLayer({ id: `${id}-${i}`, type: 'line', source: id,
+        layout: { 'line-join': 'round', 'line-cap': 'round' }, paint }));
+    };
+    add('local-lap', r.localLap, [
+      { 'line-color': '#000000', 'line-width': 10 },
+      { 'line-color': '#FFD201', 'line-width': 6 },
+    ]);
+    add('approach', r.approach, [
+      { 'line-color': dark ? '#0E0E0E' : '#FFFFFF', 'line-width': 8 },
+      { 'line-color': dark ? '#B5B5B2' : '#7A7A7A', 'line-width': 5 },
+    ]);
+    add('ardooie-loop', r.ardooieLoop, [
+      { 'line-color': dark ? '#E6E6E6' : '#000000', 'line-width': 3.5, 'line-dasharray': [2.5, 2] },
+    ]);
   }
 
   setTheme(theme) {
-    if (!this.map || this.theme === theme) return;
+    if (!window.maplibregl || this.theme === theme) return;
     this.theme = theme;
-    this.map.getPane('tilePane').style.filter = theme === 'dark'
-      ? 'grayscale(0.7) invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9)'
-      : 'grayscale(0.7) contrast(0.95)';
+    if (!this.map) this.init(theme);
+    else this.map.setStyle(KK.RouteMap.STYLES[theme], { diff: false });
   }
 
   setRiders(positions) {
@@ -84,13 +143,14 @@ KK.RouteMap = class {
       const latLng = p.state === 'pre' ? this.routes.ardooieLoop.latLngs[0]
         : p.state === 'finished' ? this.routes.localLap.latLngs[0]
         : this.pointAt(this.routes[p.route], p.fraction);
-      marker.setLatLng(latLng);
-      marker.setOpacity(p.state === 'racing' ? 1 : 0.5);
-      marker.setTooltipContent(`${names[race]}: ${p.label}`);
+      marker.setLngLat(KK.RouteMap.lngLat(latLng));
+      const el = marker.getElement();
+      el.classList.toggle('is-idle', p.state !== 'racing');
+      el.title = `${names[race]}: ${p.label}`;
     });
   }
 
   refreshSize() {
-    if (this.map) this.map.invalidateSize();
+    if (this.map) { this.map.resize(); this.fit(); }
   }
 };
