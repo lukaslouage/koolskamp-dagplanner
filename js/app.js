@@ -181,20 +181,28 @@
     render();
   }
 
+  /** Builds the PDF in the browser and downloads it. An overlay hides the print layout while it is being made. */
   async function exportPdf() {
+    if (state.exporting) return;
     const previousTheme = state.theme;
+    const button = $('export-button');
     state.exporting = true;
-    setTheme('light', false);
-    startPrintLayout();
-    await routeMap.snapshotForPrint(true);
-    const restore = () => {
-      window.removeEventListener('afterprint', restore);
-      state.exporting = false;
+    button.disabled = true;
+    $('export-overlay').hidden = false;
+    try {
+      setTheme('light', false);
+      startPrintLayout();
+      await routeMap.snapshotForPrint(true);
+      await KK.pdfExport.save(document.querySelector('.page'), document.querySelector('.detail'), 'koolskamp-dagplanner.pdf');
+    } catch (e) {
+      window.alert('De PDF kon niet gemaakt worden. Controleer je internetverbinding en probeer opnieuw.');
+    } finally {
       endPrintLayout();
       setTheme(previousTheme, false);
-    };
-    window.addEventListener('afterprint', restore);
-    window.print();
+      $('export-overlay').hidden = true;
+      button.disabled = false;
+      state.exporting = false;
+    }
   }
 
   // Cmd+P / Ctrl+P without the export button.

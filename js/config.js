@@ -19,19 +19,19 @@ KK.config = {
   },
 
   defaults: {
-    womenSpeed: 40,
-    menSpeed: 46,
-    womenStart: '10:15',
-    menStart: '13:30',
+    womenSpeed: 42,
+    menSpeed: 48,
+    womenStart: '10:30',
+    menStart: '13:00',
     womenLaps: 7,
-    menLoops: 4,
-    menLaps: 7,
+    menLoops: 3,
+    menLaps: 8,
     podiumDuration: 20,
-    marginOk: 30,
-    marginWarn: 15,
+    marginOk: 45,
+    marginWarn: 30,
     womenBroadcast: true,     // false = the women's race is not broadcast
     womenBroadcastStart: '', // empty = automatic (lead time before women finish)
-    menBroadcastStart: '16:00',
+    menBroadcastStart: '15:30',
   },
 
   limits: {

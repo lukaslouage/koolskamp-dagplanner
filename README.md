@@ -22,7 +22,8 @@ js/format.js          Time and number formatting (10u15, 10:15:24, 117,5)
 js/schedule.js        Pure race calculations: blocks, passages, margin, broadcasts, rider positions
 js/timeline.js        Renders the two-lane timeline (horizontal, or vertical on phones), tooltips, click-to-select time
 js/route-map.js       MapLibre map (OpenFreeMap base map), GPX routes, rider markers, print snapshot
-js/app.js             State, controls, cards, tables, theme, share link, playback, PDF export
+js/app.js             State, controls, cards, tables, theme, share link, playback, PDF export flow
+js/pdf-export.js      Turns the print layout into a downloadable two-page PDF
 data/route-data.js    Route coordinates generated from the GPX files
 data/gpx/             Source GPX files (Strava export)
 ```
@@ -33,7 +34,7 @@ Scripts are loaded as classic scripts on a shared `window.KK` namespace, so the 
 
 - Time at a point = start time + distance / average speed.
 - **Women** (default 117,5 km): approach from Ardooie to the first passage at the finish line, 12,5 km (Kruiskalsijde at km 10,7), then `womenLaps` local laps of 15 km.
-- **Men** (default 181,5 km): `menLoops` Ardooie loops of 16 km, turn-off to the circuit of 12,5 km (Kruiskalsijde at 10,7 km into the turn-off), then `menLaps` local laps of 15 km.
+- **Men** (default 180,5 km): `menLoops` Ardooie loops of 16 km, turn-off to the circuit of 12,5 km (Kruiskalsijde at 10,7 km into the turn-off), then `menLaps` local laps of 15 km.
 - Team presentation: 60 min, ends 5 min before the start. Start preparation: 5 min before the start.
 - Podium starts at the finish and lasts `podiumDuration`.
 - **Margin** = men's first passage at the finish line minus the end of the women's podium. Green at `marginOk` or more, orange from `marginWarn`, red below. A negative margin shows a red "Conflict: omloop niet vrij" block.
@@ -62,10 +63,11 @@ Points are `[lat, lon, elevation]`. The map scales each GPX track to the officia
 - On screens up to 640 px wide the timeline is vertical: time runs down, women left, men right, lane names stick to the top while scrolling, and Sporza start and end times sit in the hour column. Print is always horizontal.
 - Timeline from 8u30 to 18u30. Hover a block for exact times and kilometres. Click the timeline to select a time.
 - Map with playback; rider cards show lap and kilometre.
-- "Exporteer PDF" prints two A4 landscape pages in light mode. Page 1: settings summary, key figures, timeline and the scenario link. Page 2: map with the passage tables next to it. The map is printed as a still image (`RouteMap.snapshotForPrint`), because browsers do not reliably print a WebGL canvas; the `is-printing` class gives the map its print size (600 x 560) before the snapshot. Cmd+P also works, but keeps the current theme.
+- "Exporteer PDF" downloads `koolskamp-dagplanner.pdf` (two A4 landscape pages, light mode) without the print dialog. Page 1: settings summary, key figures, timeline and the scenario link. Page 2: map with the passage tables next to it. The print layout hangs on `html.is-printing` (page 1170 px wide, map 600 x 560); `js/pdf-export.js` renders it with html-to-image, cuts it at `.detail` and puts both parts in a PDF with jsPDF. The map goes in as a still image (`RouteMap.snapshotForPrint`), because a WebGL canvas cannot be copied reliably. Cmd+P uses the same layout via `beforeprint`, but keeps the current theme.
+- Theme buttons are a sun (light) and a moon (dark).
 
 ## Publishing
 
 Hosted with GitHub Pages from the `main` branch, root folder. Every push to `main` updates the live site within a minute or two.
 
-Base maps come from OpenFreeMap (light: `positron`, dark: `dark`) and need an internet connection. Fonts load from Google Fonts, MapLibre GL JS 4.7.1 from jsDelivr. The page has `noindex` so search engines do not list it.
+Base maps come from OpenFreeMap (light: `positron`, dark: `dark`) and need an internet connection. Fonts load from Google Fonts, MapLibre GL JS 4.7.1 from jsDelivr. html-to-image 1.11.11 and jsPDF 2.5.2 (also jsDelivr) load only when someone exports a PDF. The page has `noindex` so search engines do not list it.
