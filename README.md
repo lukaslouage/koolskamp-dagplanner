@@ -1,0 +1,69 @@
+# Koolskamp Koers 2028 · Day timeline
+
+Interactive day planning for Koolskamp Koers 2028 (Friday 15 September 2028), with a women's race and a men's race on the same day. It shows a two-lane timeline, live summary cards, Sporza broadcast windows, a route map with rider positions and passage tables.
+
+Static site: plain HTML, CSS and JavaScript. No build step, no dependencies to install. Open `index.html` in a browser, or serve the folder with GitHub Pages.
+
+## Conventions
+
+- **Code, file names, identifiers and comments: English.**
+- **All user-facing text: Dutch (Belgian).** Time notation `10u15`, decimal comma `117,5`.
+- **Do not use em dashes in user-facing text.**
+- Brand: race yellow `#FFD201` and black `#000000`, corner radius 8 to 12 px, lots of white space. Women in yellow, men in black/anthracite, organisation blocks in light grey. Approach blocks are slightly lighter than the local laps of the same race.
+- Must work in light and dark mode and stay readable on a projector.
+
+## Structure
+
+```
+index.html            Page markup (Dutch copy)
+css/styles.css        All styling, light/dark theme variables, print rules
+js/config.js          Distances, fixed durations, default settings, limits
+js/format.js          Time and number formatting (10u15, 10:15:24, 117,5)
+js/schedule.js        Pure race calculations: blocks, passages, margin, broadcasts, rider positions
+js/timeline.js        Renders the two-lane timeline, tooltips, click-to-select time
+js/route-map.js       Leaflet map, GPX routes, rider markers
+js/app.js             State, controls, cards, tables, theme, playback, PDF export
+data/route-data.js    Route coordinates generated from the GPX files
+data/gpx/             Source GPX files (Strava export)
+```
+
+Scripts are loaded as classic scripts on a shared `window.KK` namespace, so the page also works when opened directly from disk (`file://`).
+
+## Calculation rules
+
+- Time at a point = start time + distance / average speed.
+- **Women** (default 117,5 km): approach from Ardooie to the first passage at the finish line, 12,5 km (Kruiskalsijde at km 10,7), then `womenLaps` local laps of 15 km.
+- **Men** (default 181,5 km): `menLoops` Ardooie loops of 16 km, turn-off to the circuit of 12,5 km (Kruiskalsijde at 10,7 km into the turn-off), then `menLaps` local laps of 15 km.
+- Team presentation: 60 min, ends 5 min before the start. Start preparation: 5 min before the start.
+- Podium starts at the finish and lasts `podiumDuration`.
+- **Margin** = men's first passage at the finish line minus the end of the women's podium. Green at `marginOk` or more, orange from `marginWarn`, red below. A negative margin shows a red "Conflict: omloop niet vrij" block.
+- **Sporza women** (Canvas / sporza.be): from 50 min before the women's finish (or a manual start time) to the end of the women's podium.
+- **Sporza men** (VRT 1): from `menBroadcastStart` to the end of the men's podium.
+
+## Route data
+
+`data/route-data.js` is derived from the three GPX files:
+
+| Key            | GPX file                        | Meaning                                              |
+|----------------|---------------------------------|------------------------------------------------------|
+| `ardooieLoop`  | `data/gpx/ardooie-loop.gpx`     | Loop in Ardooie, ridden by the men                   |
+| `approach`     | `data/gpx/approach-to-finish.gpx` | Ardooie start to the finish line via Kruiskalsijde |
+| `localLap`     | `data/gpx/local-lap.gpx`        | Local circuit, starts and ends at the finish line    |
+| `kruiskalsijde`| (point)                         | Where the approach joins the local circuit           |
+
+Points are `[lat, lon, elevation]`. The map scales each GPX track to the official distance, so rider positions are approximate. When a GPX file changes, regenerate `route-data.js` from it (parse `<trkpt>` lat/lon and `<ele>`, round to 5 decimals).
+
+## Features
+
+- Speed sliders (women 36 to 46 km/u, men 42 to 50 km/u, step 0,5).
+- Extra settings: start times, number of laps and loops, Sporza start times, podium duration, margin thresholds.
+- Settings and theme are saved in `localStorage`.
+- Timeline from 8u30 to 18u30. Hover a block for exact times and kilometres. Click the timeline to select a time.
+- Map with playback; rider cards show lap and kilometre.
+- "Exporteer PDF" prints an A4 landscape document in light mode: timeline, map, passage tables.
+
+## Publishing
+
+Hosted with GitHub Pages from the `main` branch, root folder. Every push to `main` updates the live site within a minute or two.
+
+Map tiles come from OpenStreetMap and need an internet connection. Fonts load from Google Fonts, Leaflet from unpkg.
