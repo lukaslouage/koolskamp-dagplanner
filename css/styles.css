@@ -230,6 +230,7 @@ button { font: inherit; }
 }
 .vline-label--start { top: 0; transform: translateX(calc(-100% - 4px)); }
 .vline-label--end { top: 18px; transform: translateX(4px); }
+.vline-label--flip { transform: translateX(calc(-100% - 4px)); }
 .vline-label--women { color: var(--broadcast-women); }
 .vline-label--men { color: var(--broadcast-men); }
 .vline-label--status { top: 284px; transform: translateX(-50%); color: #FFF; background: var(--status); }
@@ -261,6 +262,8 @@ button { font: inherit; }
 .playback__time { font-size: 34px; font-weight: 800; min-width: 104px; text-align: right; letter-spacing: -0.02em; }
 .route__body { display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch; }
 .route__map { flex: 3 1 min(100%, 620px); min-height: 600px; border-radius: 12px; overflow: hidden; background: var(--panel); z-index: 0; }
+.route__map--unavailable { display: flex; align-items: center; justify-content: center; color: var(--muted); }
+.route__map--unavailable::after { content: 'De kaart kan op dit toestel niet getoond worden.'; }
 .route__side { flex: 1 1 280px; display: flex; flex-direction: column; gap: 16px; }
 .rider { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
 .rider__head { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; }
@@ -329,14 +332,63 @@ button { font: inherit; }
   .passages__table th:nth-child(n+2), .passages__table td:nth-child(n+2) { width: 58px; }
 }
 
-/* Print */
-@page { size: A4 landscape; margin: 8mm; }
-.print-only, .print-only-inline { display: none; }
+/* Print: A4 landscape, page 1 = summary and timeline, page 2 = map and passage tables */
+.detail { display: flex; flex-direction: column; gap: 28px; }
+.map-print-image { display: none; position: absolute; inset: 0; width: 100%; height: 100%; }
+html.is-printing .route__map { flex: none; width: 600px; height: 560px; min-height: 0; }
+
+@page { size: A4 landscape; margin: 9mm; }
+.print-only { display: none; }
 @media print {
-  html { zoom: 0.72; }
+  html { zoom: 0.9; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .no-print { display: none !important; }
   .print-only { display: flex !important; }
-  .print-only-inline { display: inline !important; font-size: 18px; font-weight: 600; }
+  .page { padding: 0; gap: 18px; max-width: none; }
   .page-break { break-before: page; }
+
+  .brand__logo { width: 44px; height: 44px; font-size: 18px; border-radius: 10px; }
+  .brand__title { font-size: 26px; }
+  .brand__subtitle { font-size: 15px; }
+  .print-summary { margin-top: -6px; gap: 6px 24px; font-size: 14px; }
+  .print-summary b { color: var(--fg); }
+
+  .summary { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .card { padding: 12px 16px; gap: 2px; break-inside: avoid; }
+  .card--margin { padding: 11px 15px; }
+  .card__label { font-size: 14px; }
+  .card__value { font-size: 34px; }
+  .card__detail { font-size: 13px; }
+
+  .timeline { break-inside: avoid; gap: 10px; }
+  .timeline__scroll { overflow: visible; }
+  .timeline__grid { min-width: 0; }
+  .vline--selected { display: none; }
+  .legend { font-size: 13px; gap: 8px 22px; }
+  .print-link { font-size: 12px; color: var(--muted); gap: 6px; margin-top: auto; }
+  .print-link span { color: var(--fg); word-break: break-all; }
+
+  .detail { display: grid; grid-template-columns: 600px minmax(0, 1fr); gap: 20px; align-items: start; }
+  .route { gap: 10px; }
+  .section-title { font-size: 20px; }
+  .route__body { display: block; }
+  .route__map { flex: none; width: 600px; height: 560px; min-height: 0; border-radius: 10px; }
+  .route__side { margin-top: 10px; }
+  .route-legend { border: 0; padding: 0; flex-direction: row; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; }
+  .route-legend__item { gap: 8px; }
+  .route-legend__line { width: 24px; }
+  .maplibregl-canvas { visibility: hidden; }
+  .map-print-image { display: block; }
+  .maplibregl-ctrl-top-left, .maplibregl-ctrl-attrib-button, .map-rider { display: none !important; }
+  .map-pin__label { font-size: 12px; box-shadow: none; border: 1px solid var(--line); }
+
+  .passages { grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 40px; }
+  .passages__card { padding: 12px 14px; gap: 6px; break-inside: avoid; }
+  .passages__title { font-size: 16px; gap: 8px; }
+  .passages__title .lane-label__bar { width: 8px; height: 18px; }
+  .passages__table { font-size: 12.5px; }
+  .passages__table th { font-size: 11px; padding: 4px 0; }
+  .passages__table td { padding: 4px 0; }
+  .passages__table td:first-child { padding-right: 6px; }
+  .passages__table th:nth-child(n+2), .passages__table td:nth-child(n+2) { width: 46px; }
 }

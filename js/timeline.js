@@ -100,8 +100,10 @@ KK.Timeline = class {
     schedule.broadcasts.forEach(b => {
       if (inAxis(b.start)) html.push(`<div class="vline vline--${b.race}-broadcast" style="left:${this.pct(b.start)}%"></div>
         <div class="vline-label vline-label--start vline-label--${b.race}" style="left:${this.pct(b.start)}%">${b.channel} ${f.clock(b.start)}</div>`);
+      // Near the right edge the end label goes to the left of its line, so it is never cut off.
+      const endSide = this.pct(b.end) > 92 ? ' vline-label--flip' : '';
       if (inAxis(b.end)) html.push(`<div class="vline vline--${b.race}-broadcast" style="left:${this.pct(b.end)}%"></div>
-        <div class="vline-label vline-label--end vline-label--${b.race}" style="left:${this.pct(b.end)}%">einde ${f.clock(b.end)}</div>`);
+        <div class="vline-label vline-label--end${endSide} vline-label--${b.race}" style="left:${this.pct(b.end)}%">einde ${f.clock(b.end)}</div>`);
     });
 
     const firstPassage = schedule.men.firstPassageTime;

@@ -120,11 +120,15 @@
     $('men-total').textContent = `${f.km(men.totalKm)} km`;
     $('loop-legend').textContent = `Lus Ardooie, mannen ${men.loops} keer (16 km)`;
 
+    const sporza = schedule.broadcasts.map(b => `${b.race === 'women' ? 'vrouwen' : 'mannen'} ${f.clock(b.start)}`);
+    if (!womenBroadcast) sporza.unshift('vrouwen niet');
     $('print-summary').innerHTML = [
-      `Vrouwen: start ${f.clock(women.start)}, ${f.km(women.speed)} km/u, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
-      `Mannen: start ${f.clock(men.start)}, ${f.km(men.speed)} km/u, ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
-      `Podium ${Number(s.podiumDuration) || 0} min`,
+      `<b>Vrouwen</b> start ${f.clock(women.start)}, ${f.km(women.speed)} km/u, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
+      `<b>Mannen</b> start ${f.clock(men.start)}, ${f.km(men.speed)} km/u, ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
+      `<b>Sporza</b> ${sporza.join(', ')}`,
+      `<b>Podium</b> ${Number(s.podiumDuration) || 0} min`,
     ].map(t => `<span>${t}</span>`).join('');
+    $('print-link').textContent = new URL(shareUrl(), location.href).href;
 
     renderPassages($('women-passages'), women.passages);
     renderPassages($('men-passages'), men.passages);
@@ -138,7 +142,6 @@
     $('men-status-detail').textContent = positions.men.detail;
     $('time-range').value = state.selectedTime;
     $('time-value').textContent = f.clock(state.selectedTime);
-    $('print-map-time').textContent = `om ${f.clock(state.selectedTime)}`;
     routeMap.setTheme(state.theme);
     routeMap.setRiders(positions);
   }
@@ -166,13 +169,35 @@
     }, 60);
   }
 
-  function exportPdf() {
-    const previousTheme = state.theme;
-    setTheme('light', false);
-    const restore = () => { window.removeEventListener('afterprint', restore); setTheme(previousTheme, false); };
-    window.addEventListener('afterprint', restore);
-    setTimeout(() => { routeMap.refreshSize(); window.print(); }, 400);
+  // Printing: the 'is-printing' class gives the map its print size on screen too, so the snapshot fits the paper.
+  function startPrintLayout() {
+    document.documentElement.classList.add('is-printing');
   }
+
+  function endPrintLayout() {
+    document.documentElement.classList.remove('is-printing');
+    routeMap.refreshSize();
+  }
+
+  async function exportPdf() {
+    const previousTheme = state.theme;
+    state.exporting = true;
+    setTheme('light', false);
+    startPrintLayout();
+    await routeMap.snapshotForPrint(true);
+    const restore = () => {
+      window.removeEventListener('afterprint', restore);
+      state.exporting = false;
+      endPrintLayout();
+      setTheme(previousTheme, false);
+    };
+    window.addEventListener('afterprint', restore);
+    window.print();
+  }
+
+  // Cmd+P / Ctrl+P without the export button.
+  window.addEventListener('beforeprint', () => { if (!state.exporting) { startPrintLayout(); routeMap.snapshotForPrint(false); } });
+  window.addEventListener('afterprint', () => { if (!state.exporting) endPrintLayout(); });
 
   // Wiring
   /** Reads an input into the settings. Empty or half-typed numbers are ignored until they are valid. */

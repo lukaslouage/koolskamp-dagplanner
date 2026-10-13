@@ -21,7 +21,7 @@ js/config.js          Distances, fixed durations, default settings, limits
 js/format.js          Time and number formatting (10u15, 10:15:24, 117,5)
 js/schedule.js        Pure race calculations: blocks, passages, margin, broadcasts, rider positions
 js/timeline.js        Renders the two-lane timeline, tooltips, click-to-select time
-js/route-map.js       MapLibre map (OpenFreeMap base map), GPX routes, rider markers
+js/route-map.js       MapLibre map (OpenFreeMap base map), GPX routes, rider markers, print snapshot
 js/app.js             State, controls, cards, tables, theme, share link, playback, PDF export
 data/route-data.js    Route coordinates generated from the GPX files
 data/gpx/             Source GPX files (Strava export)
@@ -61,7 +61,7 @@ Points are `[lat, lon, elevation]`. The map scales each GPX track to the officia
 - "Deel scenario" copies a link with the current settings in the URL hash (only values that differ from the defaults, e.g. `#womenSpeed=38&womenLaps=8`). Settings in the link win over saved settings. Unknown keys and invalid values are ignored.
 - Timeline from 8u30 to 18u30. Hover a block for exact times and kilometres. Click the timeline to select a time.
 - Map with playback; rider cards show lap and kilometre.
-- "Exporteer PDF" prints an A4 landscape document in light mode: timeline, map, passage tables.
+- "Exporteer PDF" prints two A4 landscape pages in light mode. Page 1: settings summary, key figures, timeline and the scenario link. Page 2: map with the passage tables next to it. The map is printed as a still image (`RouteMap.snapshotForPrint`), because browsers do not reliably print a WebGL canvas; the `is-printing` class gives the map its print size (600 x 560) before the snapshot. Cmd+P also works, but keeps the current theme.
 
 ## Publishing
 

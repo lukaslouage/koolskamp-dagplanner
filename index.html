@@ -143,55 +143,59 @@
     </div>
   </section>
 
-  <section class="route page-break">
-    <div class="route__head">
-      <h2 class="section-title">Parcours <span class="print-only-inline muted" id="print-map-time"></span></h2>
-      <div class="playback no-print">
-        <button class="btn btn--primary playback__button" id="play-button">Afspelen</button>
-        <input type="range" class="range range--men playback__range" id="time-range" min="510" max="1110" step="1">
-        <div class="playback__time" id="time-value"></div>
-      </div>
-    </div>
-    <div class="route__body">
-      <div class="route__map" id="route-map"></div>
-      <div class="route__side">
-        <div class="panel rider">
-          <div class="rider__head"><span class="rider__dot rider__dot--women"></span>Vrouwen</div>
-          <div class="rider__status" id="women-status"></div>
-          <div class="rider__detail" id="women-status-detail"></div>
-        </div>
-        <div class="panel rider">
-          <div class="rider__head"><span class="rider__dot rider__dot--men"></span>Mannen</div>
-          <div class="rider__status" id="men-status"></div>
-          <div class="rider__detail" id="men-status-detail"></div>
-        </div>
-        <div class="route-legend">
-          <div class="route-legend__item"><span class="route-legend__line route-legend__line--lap"></span>Lokale ronde (15 km)</div>
-          <div class="route-legend__item"><span class="route-legend__line route-legend__line--approach"></span>Aanloop tot finishlijn (12,5 km)</div>
-          <div class="route-legend__item"><span class="route-legend__line route-legend__line--loop"></span><span id="loop-legend"></span></div>
-          <div class="route-legend__item"><span class="route-legend__line route-legend__line--time"></span>Gekozen tijdstip op de tijdlijn</div>
-          <div class="route-legend__note">Klik op de tijdlijn of gebruik de schuifregelaar. Posities volgen uit de gemiddelde snelheden.</div>
-        </div>
-      </div>
-    </div>
-  </section>
+  <div class="print-only print-link">Dit scenario online openen: <span id="print-link"></span></div>
 
-  <section class="passages page-break">
-    <div class="card passages__card">
-      <h2 class="passages__title"><span class="lane-label__bar chip--women"></span>Doorkomsten vrouwen</h2>
-      <table class="passages__table">
-        <thead><tr><th>Punt</th><th>Km</th><th>Uur</th></tr></thead>
-        <tbody id="women-passages"></tbody>
-      </table>
-    </div>
-    <div class="card passages__card">
-      <h2 class="passages__title"><span class="lane-label__bar chip--men"></span>Doorkomsten mannen</h2>
-      <table class="passages__table">
-        <thead><tr><th>Punt</th><th>Km</th><th>Uur</th></tr></thead>
-        <tbody id="men-passages"></tbody>
-      </table>
-    </div>
-  </section>
+  <div class="detail page-break">
+    <section class="route">
+      <div class="route__head">
+        <h2 class="section-title">Parcours</h2>
+        <div class="playback no-print">
+          <button class="btn btn--primary playback__button" id="play-button">Afspelen</button>
+          <input type="range" class="range range--men playback__range" id="time-range" min="510" max="1110" step="1">
+          <div class="playback__time" id="time-value"></div>
+        </div>
+      </div>
+      <div class="route__body">
+        <div class="route__map" id="route-map"></div>
+        <div class="route__side">
+          <div class="panel rider no-print">
+            <div class="rider__head"><span class="rider__dot rider__dot--women"></span>Vrouwen</div>
+            <div class="rider__status" id="women-status"></div>
+            <div class="rider__detail" id="women-status-detail"></div>
+          </div>
+          <div class="panel rider no-print">
+            <div class="rider__head"><span class="rider__dot rider__dot--men"></span>Mannen</div>
+            <div class="rider__status" id="men-status"></div>
+            <div class="rider__detail" id="men-status-detail"></div>
+          </div>
+          <div class="route-legend">
+            <div class="route-legend__item"><span class="route-legend__line route-legend__line--lap"></span>Lokale ronde (15 km)</div>
+            <div class="route-legend__item"><span class="route-legend__line route-legend__line--approach"></span>Aanloop tot finishlijn (12,5 km)</div>
+            <div class="route-legend__item"><span class="route-legend__line route-legend__line--loop"></span><span id="loop-legend"></span></div>
+            <div class="route-legend__item no-print"><span class="route-legend__line route-legend__line--time"></span>Gekozen tijdstip op de tijdlijn</div>
+            <div class="route-legend__note no-print">Klik op de tijdlijn of gebruik de schuifregelaar. Posities volgen uit de gemiddelde snelheden.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="passages">
+      <div class="card passages__card">
+        <h2 class="passages__title"><span class="lane-label__bar chip--women"></span>Doorkomsten vrouwen</h2>
+        <table class="passages__table">
+          <thead><tr><th>Punt</th><th>Km</th><th>Uur</th></tr></thead>
+          <tbody id="women-passages"></tbody>
+        </table>
+      </div>
+      <div class="card passages__card">
+        <h2 class="passages__title"><span class="lane-label__bar chip--men"></span>Doorkomsten mannen</h2>
+        <table class="passages__table">
+          <thead><tr><th>Punt</th><th>Km</th><th>Uur</th></tr></thead>
+          <tbody id="men-passages"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 
 </div>
 

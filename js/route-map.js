@@ -131,8 +131,10 @@ KK.RouteMap = class {
   setTheme(theme) {
     if (!window.maplibregl || this.theme === theme) return;
     this.theme = theme;
-    if (!this.map) this.init(theme);
-    else this.map.setStyle(KK.RouteMap.STYLES[theme], { diff: false });
+    if (!this.map) {
+      // Without WebGL MapLibre throws; the rest of the page must keep working.
+      try { this.init(theme); } catch (e) { this.map = null; this.el.classList.add('route__map--unavailable'); }
+    } else this.map.setStyle(KK.RouteMap.STYLES[theme], { diff: false });
   }
 
   setRiders(positions) {
@@ -152,5 +154,26 @@ KK.RouteMap = class {
 
   refreshSize() {
     if (this.map) { this.map.resize(); this.fit(); }
+  }
+
+  /**
+   * Browsers do not reliably print a WebGL canvas, so the map is printed as a still image.
+   * Call after the print layout class is set: the container then already has its print size.
+   * With wait = true it waits until all tiles are loaded (export button); without, it snapshots at once (Cmd+P).
+   */
+  async snapshotForPrint(wait) {
+    if (!this.map) return;
+    this.refreshSize();
+    if (wait && !this.map.loaded()) {
+      await new Promise(resolve => { this.map.once('idle', resolve); setTimeout(resolve, 4000); });
+    }
+    this.map.redraw();
+    if (!this.printImage) {
+      this.printImage = document.createElement('img');
+      this.printImage.className = 'map-print-image';
+      this.printImage.alt = '';
+      this.map.getCanvas().after(this.printImage);
+    }
+    try { this.printImage.src = this.map.getCanvas().toDataURL('image/png'); } catch (e) { /* canvas unavailable */ }
   }
 };
