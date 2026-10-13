@@ -24,7 +24,7 @@ KK.pdfExport = (function () {
     return loading;
   }
 
-  const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap';
+  const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
   let fontCss = null;
 
   /**

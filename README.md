@@ -10,6 +10,7 @@ Static site: plain HTML, CSS and JavaScript. No build step, no dependencies to i
 - **All user-facing text: Dutch (Belgian).** Time notation `10u15`, decimal comma `117,5`.
 - **Do not use em dashes in user-facing text.**
 - Brand: race yellow `#FFD201` and black `#000000`, corner radius 8 to 12 px, lots of white space. Women in yellow, men in black/anthracite, organisation blocks in light grey. Approach blocks are slightly lighter than the local laps of the same race.
+- Look: modern dashboard style. Inter font, neutral greys, thin borders, cards with a title bar. Top bar with actions, settings in a sticky left sidebar (stacked above the content below 1024 px), results on the right.
 - Must work in light and dark mode and stay readable on a projector.
 
 ## Structure
@@ -63,7 +64,7 @@ Points are `[lat, lon, elevation]`. The map scales each GPX track to the officia
 - On screens up to 640 px wide the timeline is vertical: time runs down, women left, men right, lane names stick to the top while scrolling, and Sporza start and end times sit in the hour column. Print is always horizontal.
 - Timeline from 8u30 to 18u30. Hover a block for exact times and kilometres. Click the timeline to select a time.
 - Map with playback; rider cards show lap and kilometre.
-- "Exporteer PDF" downloads `koolskamp-dagplanner.pdf` (two A4 landscape pages, light mode) without the print dialog. Page 1: settings summary, key figures, timeline and the scenario link. Page 2: map with the passage tables next to it. The print layout hangs on `html.is-printing` (page 1170 px wide, map 600 x 560); `js/pdf-export.js` renders it with html-to-image, cuts it at `.detail` and puts both parts in a PDF with jsPDF. The map goes in as a still image (`RouteMap.snapshotForPrint`), because a WebGL canvas cannot be copied reliably. Cmd+P uses the same layout via `beforeprint`, but keeps the current theme.
+- "Exporteer PDF" downloads `koolskamp-dagplanner.pdf` (two A4 landscape pages, light mode) without the print dialog. Page 1: settings summary, key figures, timeline and the scenario link. Page 2: map with the passage tables next to it. The print layout hangs on `html.is-printing` (page 1170 px wide, map 540 x 540); `js/pdf-export.js` renders it with html-to-image, cuts it at `.detail` and puts both parts in a PDF with jsPDF. The map goes in as a still image (`RouteMap.snapshotForPrint`), because a WebGL canvas cannot be copied reliably. Cmd+P uses the same layout via `beforeprint`, but keeps the current theme.
 - Theme buttons are a sun (light) and a moon (dark).
 
 ## Publishing

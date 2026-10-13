@@ -65,13 +65,13 @@
     const button = $('share-button');
     try {
       await navigator.clipboard.writeText(url);
-      button.textContent = 'Link gekopieerd';
+      button.querySelector('.btn__label').textContent = 'Link gekopieerd';
     } catch (e) {
       window.prompt('Kopieer deze link:', url);
       return;
     }
     clearTimeout(shareScenario.timer);
-    shareScenario.timer = setTimeout(() => { button.textContent = 'Deel scenario'; }, 2500);
+    shareScenario.timer = setTimeout(() => { button.querySelector('.btn__label').textContent = 'Deel scenario'; }, 2500);
   }
 
   function loadTheme() {
@@ -118,10 +118,10 @@
     $('men-first-passage').textContent = f.clock(men.firstPassageTime);
     $('men-first-passage-detail').textContent = `Na ${f.km(men.firstPassageKm)} km. Kruiskalsijde (km ${f.km(men.kruiskalsijdeKm)}) om ${f.clock(men.kruiskalsijdeTime)}`;
 
-    const range = `van ${f.clock(margin.from)} tot ${f.clock(margin.to)}`;
     $('margin-value').textContent = `${margin.minutes} min`;
-    $('margin-detail').textContent = margin.conflict ? 'Conflict: omloop niet vrij'
-      : margin.status === 'ok' ? `Ruim, ${range}` : margin.status === 'warn' ? `Krap, ${range}` : `Te krap, ${range}`;
+    $('margin-badge').textContent = margin.conflict ? 'Conflict' : { ok: 'Ruim', warn: 'Krap', bad: 'Te krap' }[margin.status];
+    $('margin-detail').textContent = margin.conflict ? 'Omloop niet vrij voor de mannen'
+      : `Omloop vrij van ${f.clock(margin.from)} tot ${f.clock(margin.to)}`;
 
     $('women-total').textContent = `${f.km(women.totalKm)} km`;
     $('men-total').textContent = `${f.km(men.totalKm)} km`;

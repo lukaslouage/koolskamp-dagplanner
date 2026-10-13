@@ -120,7 +120,7 @@ KK.RouteMap = class {
       { 'line-color': '#FFD201', 'line-width': 6 },
     ]);
     add('approach', r.approach, [
-      { 'line-color': dark ? '#0E0E0E' : '#FFFFFF', 'line-width': 8 },
+      { 'line-color': dark ? '#111113' : '#FFFFFF', 'line-width': 8 },
       { 'line-color': dark ? '#B5B5B2' : '#7A7A7A', 'line-width': 5 },
     ]);
     add('ardooie-loop', r.ardooieLoop, [
