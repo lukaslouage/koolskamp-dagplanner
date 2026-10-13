@@ -156,9 +156,11 @@ window.KK = window.KK || {};
       ? f.parseTime(settings.womenBroadcastStart)
       : women.finish - DUR.womenBroadcastLeadBeforeFinish;
     const broadcasts = [
-      { race: 'women', channel: 'Canvas', start: womenBroadcastStart, end: women.podiumEnd },
       { race: 'men', channel: 'VRT 1', start: f.parseTime(settings.menBroadcastStart), end: men.podiumEnd },
     ];
+    if (settings.womenBroadcast !== false) {
+      broadcasts.unshift({ race: 'women', channel: 'Canvas', start: womenBroadcastStart, end: women.podiumEnd });
+    }
 
     const blocks = [...women.blocks, ...men.blocks];
     return { women, men, margin, broadcasts, blocks, blockById: Object.fromEntries(blocks.map(b => [b.id, b])) };
@@ -170,7 +172,7 @@ window.KK = window.KK || {};
       if (time < race.start) return { state: 'pre', label: 'Nog niet gestart', detail: `Start om ${f.clock(race.start)}` };
       const d = ((time - race.start) * race.speed) / 60;
       if (d >= race.totalKm) return { state: 'finished', label: 'Aangekomen', detail: `Finish om ${f.clock(race.finish)}` };
-      return { state: 'racing', ...race.locate(d), detail: `Km ${f.km(d)}, nog ${f.km(race.totalKm - d)} km` };
+      return { state: 'racing', ...race.locate(d), detail: `${f.km(d)} km gereden, nog ${f.km(race.totalKm - d)} km` };
     };
     return { women: position(schedule.women), men: position(schedule.men) };
   };

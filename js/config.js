@@ -29,6 +29,7 @@ KK.config = {
     podiumDuration: 20,
     marginOk: 30,
     marginWarn: 15,
+    womenBroadcast: true,     // false = the women's race is not broadcast
     womenBroadcastStart: '', // empty = automatic (lead time before women finish)
     menBroadcastStart: '16:00',
   },
@@ -40,6 +41,6 @@ KK.config = {
   },
 
   defaultSelectedTime: 13 * 60,
-  storageKey: 'kk2028-settings',
-  themeStorageKey: 'kk2028-theme',
+  storageKey: 'kk-dagplanner-settings',
+  themeStorageKey: 'kk-dagplanner-theme',
 };

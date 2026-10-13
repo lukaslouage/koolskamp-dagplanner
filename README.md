@@ -1,6 +1,6 @@
-# Koolskamp Koers 2028 · Day timeline
+# Koolskamp Koers Dagplanner
 
-Interactive day planning for Koolskamp Koers 2028 (Friday 15 September 2028), with a women's race and a men's race on the same day. It shows a two-lane timeline, live summary cards, Sporza broadcast windows, a route map with rider positions and passage tables.
+Interactive day planning for Koolskamp Koers, to check with the organisation whether a women's race fits on the same day as the men's race. It shows a two-lane timeline, live summary cards, Sporza broadcast windows, a route map with rider positions and passage tables.
 
 Static site: plain HTML, CSS and JavaScript. No build step, no dependencies to install. Open `index.html` in a browser, or serve the folder with GitHub Pages.
 
@@ -37,7 +37,7 @@ Scripts are loaded as classic scripts on a shared `window.KK` namespace, so the 
 - Team presentation: 60 min, ends 5 min before the start. Start preparation: 5 min before the start.
 - Podium starts at the finish and lasts `podiumDuration`.
 - **Margin** = men's first passage at the finish line minus the end of the women's podium. Green at `marginOk` or more, orange from `marginWarn`, red below. A negative margin shows a red "Conflict: omloop niet vrij" block.
-- **Sporza women** (Canvas / sporza.be): from 50 min before the women's finish (or a manual start time) to the end of the women's podium.
+- **Sporza women** (Canvas / sporza.be), unless switched off: from 50 min before the women's finish (or a manual start time) to the end of the women's podium.
 - **Sporza men** (VRT 1): from `menBroadcastStart` to the end of the men's podium.
 
 ## Route data
@@ -55,8 +55,8 @@ Points are `[lat, lon, elevation]`. The map scales each GPX track to the officia
 
 ## Features
 
-- Speed sliders (women 36 to 46 km/u, men 42 to 50 km/u, step 0,5).
-- Extra settings: start times, number of laps and loops, Sporza start times, podium duration, margin thresholds.
+- All settings are visible at the top: speeds (women 36 to 46 km/u, men 42 to 50 km/u, step 0,5) and laps/loops with − and + buttons, start times, Sporza, podium duration and margin thresholds. Typed numbers are clamped to min, max and step.
+- Sporza women can be switched off (`womenBroadcast: false`); the broadcast band and legend item then disappear.
 - Settings and theme are saved in `localStorage`.
 - "Deel scenario" copies a link with the current settings in the URL hash (only values that differ from the defaults, e.g. `#womenSpeed=38&womenLaps=8`). Settings in the link win over saved settings. Unknown keys and invalid values are ignored.
 - Timeline from 8u30 to 18u30. Hover a block for exact times and kilometres. Click the timeline to select a time.

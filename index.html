@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Interactieve dagtijdlijn om te controleren of een vrouwenkoers past op de dag van Koolskamp Koers 2028.">
+<meta name="description" content="Interactieve dagtijdlijn om te controleren of een vrouwenkoers past op de dag van Koolskamp Koers.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23FFD201'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='900' font-size='15' text-anchor='middle'%3EKK%3C/text%3E%3C/svg%3E">
-<title>Koolskamp Koers 2028, dagtijdlijn</title>
+<title>Koolskamp Koers Dagplanner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
@@ -19,8 +19,8 @@
     <div class="brand">
       <div class="brand__logo">KK</div>
       <div>
-        <h1 class="brand__title">Koolskamp Koers 2028</h1>
-        <div class="brand__subtitle">Dagtijdlijn, vrijdag 15 september 2028</div>
+        <h1 class="brand__title">Koolskamp Koers Dagplanner</h1>
+        <div class="brand__subtitle">Past een vrouwenkoers op de dag van de mannenkoers?</div>
       </div>
     </div>
     <div class="header__actions no-print">
@@ -35,58 +35,62 @@
   </header>
   <div class="print-summary print-only" id="print-summary"></div>
 
-  <section class="speed-controls no-print">
-    <div class="panel speed">
-      <div class="speed__head">
-        <div class="speed__label"><span class="chip chip--women"></span>Gemiddelde snelheid vrouwen</div>
-        <div class="speed__value"><span id="women-speed-value"></span> <span class="speed__unit">km/u</span></div>
-      </div>
-      <input type="range" class="range range--women" data-setting="womenSpeed" min="36" max="46" step="0.5">
-      <div class="speed__scale"><span>36 km/u</span><span>46 km/u</span></div>
+  <section class="settings no-print" aria-label="Instellingen">
+    <div class="panel settings__group">
+      <div class="settings__heading"><span class="chip chip--small chip--women"></span>Vrouwen</div>
+      <div class="field"><span>Gem. snelheid <span class="muted">km/u</span></span>
+          <div class="stepper">
+            <button type="button" class="stepper__button" data-step-for="womenSpeed" data-step="-0.5" aria-label="Trager">−</button>
+            <input type="number" inputmode="decimal" min="36" max="46" step="0.5" data-setting="womenSpeed" aria-label="Gemiddelde snelheid vrouwen">
+            <button type="button" class="stepper__button" data-step-for="womenSpeed" data-step="0.5" aria-label="Sneller">+</button>
+          </div></div>
+      <label class="field"><span>Starttijd</span><input type="time" data-setting="womenStart"></label>
+      <div class="field"><span>Rondes <span class="muted">x 15 km</span></span>
+          <div class="stepper">
+            <button type="button" class="stepper__button" data-step-for="womenLaps" data-step="-1" aria-label="Een ronde minder">−</button>
+            <input type="number" inputmode="decimal" min="1" max="15" step="1" data-setting="womenLaps" aria-label="Rondes vrouwen">
+            <button type="button" class="stepper__button" data-step-for="womenLaps" data-step="1" aria-label="Een ronde meer">+</button>
+          </div></div>
     </div>
-    <div class="panel speed">
-      <div class="speed__head">
-        <div class="speed__label"><span class="chip chip--men"></span>Gemiddelde snelheid mannen</div>
-        <div class="speed__value"><span id="men-speed-value"></span> <span class="speed__unit">km/u</span></div>
-      </div>
-      <input type="range" class="range range--men" data-setting="menSpeed" min="42" max="50" step="0.5">
-      <div class="speed__scale"><span>42 km/u</span><span>50 km/u</span></div>
+    <div class="panel settings__group">
+      <div class="settings__heading"><span class="chip chip--small chip--fg"></span>Mannen</div>
+      <div class="field"><span>Gem. snelheid <span class="muted">km/u</span></span>
+          <div class="stepper">
+            <button type="button" class="stepper__button" data-step-for="menSpeed" data-step="-0.5" aria-label="Trager">−</button>
+            <input type="number" inputmode="decimal" min="42" max="50" step="0.5" data-setting="menSpeed" aria-label="Gemiddelde snelheid mannen">
+            <button type="button" class="stepper__button" data-step-for="menSpeed" data-step="0.5" aria-label="Sneller">+</button>
+          </div></div>
+      <label class="field"><span>Starttijd</span><input type="time" data-setting="menStart"></label>
+      <div class="field"><span>Lussen Ardooie <span class="muted">x 16 km</span></span>
+          <div class="stepper">
+            <button type="button" class="stepper__button" data-step-for="menLoops" data-step="-1" aria-label="Een lus minder">−</button>
+            <input type="number" inputmode="decimal" min="0" max="10" step="1" data-setting="menLoops" aria-label="Lussen Ardooie">
+            <button type="button" class="stepper__button" data-step-for="menLoops" data-step="1" aria-label="Een lus meer">+</button>
+          </div></div>
+      <div class="field"><span>Rondes <span class="muted">x 15 km</span></span>
+          <div class="stepper">
+            <button type="button" class="stepper__button" data-step-for="menLaps" data-step="-1" aria-label="Een ronde minder">−</button>
+            <input type="number" inputmode="decimal" min="1" max="15" step="1" data-setting="menLaps" aria-label="Rondes mannen">
+            <button type="button" class="stepper__button" data-step-for="menLaps" data-step="1" aria-label="Een ronde meer">+</button>
+          </div></div>
     </div>
-  </section>
-
-  <section class="settings no-print">
-    <button class="settings__toggle" id="settings-toggle" aria-expanded="false">
-      <span class="settings__icon" id="settings-icon">+</span>Extra instellingen
-    </button>
-    <div class="panel settings__panel" id="settings-panel" hidden>
-      <div class="settings__group">
-        <div class="settings__heading"><span class="chip chip--small chip--women"></span>Vrouwen</div>
-        <label class="field"><span>Starttijd</span><input type="time" data-setting="womenStart"></label>
-        <label class="field"><span>Rondes <span class="muted">x 15 km</span></span><input type="number" min="1" max="15" step="1" data-setting="womenLaps"></label>
-      </div>
-      <div class="settings__group">
-        <div class="settings__heading"><span class="chip chip--small chip--fg"></span>Mannen</div>
-        <label class="field"><span>Starttijd</span><input type="time" data-setting="menStart"></label>
-        <label class="field"><span>Lussen Ardooie <span class="muted">x 16 km</span></span><input type="number" min="0" max="10" step="1" data-setting="menLoops"></label>
-        <label class="field"><span>Rondes <span class="muted">x 15 km</span></span><input type="number" min="1" max="15" step="1" data-setting="menLaps"></label>
-      </div>
-      <div class="settings__group">
-        <div class="settings__heading"><span class="chip chip--small chip--broadcast"></span>Sporza</div>
-        <label class="field">
-          <span class="field__stack">Start vrouwen
-            <span class="field__hint" id="women-broadcast-auto">Auto: 50 min voor finish</span>
-            <button type="button" class="link-button" id="women-broadcast-reset" hidden>Terug naar automatisch</button>
-          </span>
-          <input type="time" data-setting="womenBroadcastStart">
-        </label>
-        <label class="field"><span>Start mannen</span><input type="time" data-setting="menBroadcastStart"></label>
-      </div>
-      <div class="settings__group">
-        <div class="settings__heading"><span class="chip chip--small chip--org"></span>Organisatie</div>
-        <label class="field"><span>Podiumduur <span class="muted">min</span></span><input type="number" min="0" max="90" step="1" data-setting="podiumDuration"></label>
-        <label class="field"><span>Marge groen vanaf <span class="muted">min</span></span><input type="number" min="0" max="180" step="1" data-setting="marginOk"></label>
-        <label class="field"><span>Marge oranje vanaf <span class="muted">min</span></span><input type="number" min="0" max="180" step="1" data-setting="marginWarn"></label>
-      </div>
+    <div class="panel settings__group">
+      <div class="settings__heading"><span class="chip chip--small chip--broadcast"></span>Sporza</div>
+      <label class="field"><span>Vrouwenkoers uitzenden</span><input type="checkbox" class="switch" data-setting="womenBroadcast"></label>
+      <label class="field" id="women-broadcast-field">
+        <span class="field__stack">Start vrouwen
+          <span class="field__hint" id="women-broadcast-auto">Auto: 50 min voor finish</span>
+          <button type="button" class="link-button" id="women-broadcast-reset" hidden>Terug naar automatisch</button>
+        </span>
+        <input type="time" data-setting="womenBroadcastStart">
+      </label>
+      <label class="field"><span>Start mannen</span><input type="time" data-setting="menBroadcastStart"></label>
+    </div>
+    <div class="panel settings__group">
+      <div class="settings__heading"><span class="chip chip--small chip--org"></span>Organisatie</div>
+      <label class="field"><span>Podiumduur <span class="muted">min</span></span><input type="number" min="0" max="90" step="1" data-setting="podiumDuration"></label>
+      <label class="field"><span>Marge groen vanaf <span class="muted">min</span></span><input type="number" min="0" max="180" step="1" data-setting="marginOk"></label>
+      <label class="field"><span>Marge oranje vanaf <span class="muted">min</span></span><input type="number" min="0" max="180" step="1" data-setting="marginWarn"></label>
     </div>
   </section>
 
@@ -130,7 +134,7 @@
       </div>
     </div>
     <div class="legend">
-      <div class="legend__item"><span class="legend__line legend__line--women-broadcast"></span>Sporza vrouwen (Canvas of sporza.be)</div>
+      <div class="legend__item" id="women-broadcast-legend"><span class="legend__line legend__line--women-broadcast"></span>Sporza vrouwen (Canvas of sporza.be)</div>
       <div class="legend__item"><span class="legend__line legend__line--men-broadcast"></span>Sporza mannen (VRT 1)</div>
       <div class="legend__item"><span class="legend__line legend__line--status"></span>Mannen eerste keer aan de meet</div>
       <div class="legend__item muted"><span class="legend__swatch block--women-approach"></span><span class="legend__swatch block--women-lap"></span>Vrouwen aanloop, ronden</div>

@@ -20,7 +20,10 @@
     Object.entries(config.defaults).forEach(([key, fallback]) => {
       if (!(key in raw)) return;
       const value = raw[key];
-      if (typeof fallback === 'number') {
+      if (typeof fallback === 'boolean') {
+        if (value === true || value === 'true') clean[key] = true;
+        else if (value === false || value === 'false') clean[key] = false;
+      } else if (typeof fallback === 'number') {
         const n = Number(value);
         if (value !== '' && Number.isFinite(n)) clean[key] = n;
       } else if (value === '' || /^\d{1,2}:\d{2}$/.test(String(value))) {
@@ -80,7 +83,8 @@
   function syncInputs() {
     document.querySelectorAll('[data-setting]').forEach(input => {
       const value = state.settings[input.dataset.setting];
-      if (document.activeElement !== input) input.value = value ?? '';
+      if (input.type === 'checkbox') input.checked = value !== false;
+      else if (document.activeElement !== input) input.value = value ?? '';
     });
   }
 
@@ -93,8 +97,10 @@
     document.documentElement.dataset.status = margin.status;
     document.querySelectorAll('[data-theme-choice]').forEach(b => b.classList.toggle('is-active', b.dataset.themeChoice === state.theme));
 
-    $('women-speed-value').textContent = f.km(Number(s.womenSpeed));
-    $('men-speed-value').textContent = f.km(Number(s.menSpeed));
+    const womenBroadcast = s.womenBroadcast !== false;
+    $('women-broadcast-field').classList.toggle('is-disabled', !womenBroadcast);
+    $('women-broadcast-field').querySelector('input').disabled = !womenBroadcast;
+    $('women-broadcast-legend').hidden = !womenBroadcast;
     $('women-broadcast-auto').hidden = !!s.womenBroadcastStart;
     $('women-broadcast-reset').hidden = !s.womenBroadcastStart;
 
@@ -103,7 +109,7 @@
     $('men-finish').textContent = f.clock(men.finish);
     $('men-finish-detail').textContent = `${f.km(men.totalKm)} km aan ${f.km(men.speed)} km/u, podium tot ${f.clock(men.podiumEnd)}`;
     $('men-first-passage').textContent = f.clock(men.firstPassageTime);
-    $('men-first-passage-detail').textContent = `Km ${f.km(men.firstPassageKm)}, Kruiskalsijde (km ${f.km(men.kruiskalsijdeKm)}) om ${f.clock(men.kruiskalsijdeTime)}`;
+    $('men-first-passage-detail').textContent = `Na ${f.km(men.firstPassageKm)} km. Kruiskalsijde (km ${f.km(men.kruiskalsijdeKm)}) om ${f.clock(men.kruiskalsijdeTime)}`;
 
     const range = `van ${f.clock(margin.from)} tot ${f.clock(margin.to)}`;
     $('margin-value').textContent = `${margin.minutes} min`;
@@ -169,24 +175,43 @@
   }
 
   // Wiring
+  /** Reads an input into the settings. Empty or half-typed numbers are ignored until they are valid. */
+  function readInput(input) {
+    const key = input.dataset.setting;
+    if (input.type === 'checkbox') state.settings[key] = input.checked;
+    else if (input.type === 'number') {
+      const n = Number(input.value);
+      if (input.value === '' || !Number.isFinite(n)) return;
+      state.settings[key] = n;
+    } else state.settings[key] = input.value;
+    saveSettings();
+    render();
+  }
+
+  /** Keeps a number within its min and max and on its step, e.g. a speed of 40,3 becomes 40,5. */
+  function clampToInput(input, value) {
+    const min = Number(input.min), max = Number(input.max), step = Number(input.step) || 1;
+    const rounded = Math.round((value - min) / step) * step + min;
+    return Math.max(min, Math.min(max, Number(rounded.toFixed(2))));
+  }
+
   document.querySelectorAll('[data-setting]').forEach(input => {
-    input.addEventListener('input', () => {
-      const key = input.dataset.setting;
-      state.settings[key] = input.type === 'range' ? Number(input.value) : input.value;
-      saveSettings();
-      render();
+    input.addEventListener(input.type === 'checkbox' ? 'change' : 'input', () => readInput(input));
+    if (input.type === 'number') input.addEventListener('change', () => {
+      const n = Number(input.value);
+      input.value = clampToInput(input, Number.isFinite(n) && input.value !== '' ? n : state.settings[input.dataset.setting]);
+      readInput(input);
     });
   });
+  document.querySelectorAll('[data-step-for]').forEach(button => button.addEventListener('click', () => {
+    const input = document.querySelector(`[data-setting="${button.dataset.stepFor}"]`);
+    input.value = clampToInput(input, Number(state.settings[input.dataset.setting]) + Number(button.dataset.step));
+    readInput(input);
+  }));
   $('women-broadcast-reset').addEventListener('click', e => {
     e.preventDefault();
     state.settings.womenBroadcastStart = '';
     saveSettings(); syncInputs(); render();
-  });
-  $('settings-toggle').addEventListener('click', () => {
-    const panel = $('settings-panel');
-    panel.hidden = !panel.hidden;
-    $('settings-icon').textContent = panel.hidden ? '+' : '−';
-    $('settings-toggle').setAttribute('aria-expanded', String(!panel.hidden));
   });
   $('reset-button').addEventListener('click', () => {
     state.settings = { ...config.defaults };
