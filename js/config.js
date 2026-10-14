@@ -16,21 +16,21 @@ KK.config = {
   },
 
   defaults: {
-    womenSpeed: 42,
-    menSpeed: 48,
-    womenStart: '10:30',
+    womenSpeed: 41,
+    menSpeed: 47,
+    womenStart: '10:00',
     menStart: '13:00',
-    womenIntroDuration: 60,   // team presentation, minutes (ends at the start)
+    womenIntroDuration: 45,   // team presentation, minutes (ends at the start)
     menIntroDuration: 60,
     womenLaps: 7,
-    menLoops: 3,
-    menLaps: 8,
+    menLoops: 2,
+    menLaps: 9,
     podiumDuration: 25,
     marginOk: 45,
     marginWarn: 30,
-    vipArrival: '11:00',      // guests arrive, aperitif starts
-    vipMenuStart: '12:00',    // three-course menu starts (roughly, tables do not start together)
-    vipMenuEnd: '14:00',      // three-course menu is over (roughly)
+    vipArrival: '11:30',      // guests arrive, aperitif starts
+    vipMenuStart: '12:30',    // three-course menu starts (roughly, tables do not start together)
+    vipMenuEnd: '14:30',      // three-course menu is over (roughly)
     womenBroadcast: true,     // false = the women's race is not broadcast
     womenBroadcastStart: '', // empty = automatic (lead time before women finish)
     menBroadcastStart: '15:30',
