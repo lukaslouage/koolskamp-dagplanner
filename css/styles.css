@@ -283,12 +283,12 @@ h1, h2, h3 { margin: 0; }
 .block--women-intro { background: var(--women-intro); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--brand-yellow); }
 .block--women-approach { background: var(--brand-yellow-light); color: #000; }
 .block--women-lap { background: var(--brand-yellow); color: #000; }
-.block--women-podium { background: var(--brand-yellow); color: #000; box-shadow: inset 0 0 0 2px #000; }
+.block--women-podium { background: var(--women-intro); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--brand-yellow); }
 .block--men-intro { background: var(--bg); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--men-outline); }
 .block--men-loop { background: var(--men-loop); color: #FFF; }
 .block--men-turnoff { background: var(--men-turnoff); color: #FFF; }
 .block--men-lap { background: var(--men-lap); color: #FFF; box-shadow: inset 0 0 0 1px var(--men-border); }
-.block--men-podium { background: #000; color: var(--brand-yellow); box-shadow: inset 0 0 0 2px var(--brand-yellow); }
+.block--men-podium { background: var(--bg); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--men-outline); }
 .block--org { background: var(--org); color: var(--org-fg); box-shadow: inset 0 0 0 1px var(--org-border); }
 .block--conflict { background: var(--bad); color: #FFF; z-index: 4; }
 
