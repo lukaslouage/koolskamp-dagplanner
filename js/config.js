@@ -29,6 +29,9 @@ KK.config = {
     podiumDuration: 25,
     marginOk: 45,
     marginWarn: 30,
+    vipArrival: '11:00',      // guests arrive, aperitif starts
+    vipMenuStart: '12:00',    // three-course menu starts (roughly, tables do not start together)
+    vipMenuEnd: '14:00',      // three-course menu is over (roughly)
     womenBroadcast: true,     // false = the women's race is not broadcast
     womenBroadcastStart: '', // empty = automatic (lead time before women finish)
     menBroadcastStart: '15:30',

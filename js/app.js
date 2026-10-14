@@ -131,10 +131,12 @@
 
     const sporza = schedule.broadcasts.map(b => `${b.race === 'women' ? 'vrouwen' : 'mannen'} ${f.clock(b.start)}`);
     if (!womenBroadcast) sporza.unshift('vrouwen niet');
+    const vip = schedule.vip;
     $('print-summary').innerHTML = [
       `<b>Vrouwen</b> start ${f.clock(women.start)}, ${f.km(women.speed)} km/u, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
       `<b>Mannen</b> start ${f.clock(men.start)}, ${f.km(men.speed)} km/u, ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
-      `<b>Sporza</b> ${sporza.join(', ')}`,
+      `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
+      `<b>Uitzending</b> ${sporza.join(', ')}`,
       `<b>Podium</b> ${Number(s.podiumDuration) || 0} min`,
     ].map(t => `<span>${t}</span>`).join('');
     $('print-link').textContent = new URL(shareUrl(), location.href).href;
@@ -220,6 +222,20 @@
 
   // Wiring
   /** Reads an input into the settings. Empty or half-typed numbers are ignored until they are valid. */
+  const VIP_TIMES = ['vipArrival', 'vipMenuStart', 'vipMenuEnd'];
+  const hhmm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+
+  /** Arrival, menu start and menu end stay in that order: the field that was just changed pushes the others along. */
+  function keepVipTimesInOrder(changed) {
+    const s = state.settings;
+    let [arrival, start, end] = VIP_TIMES.map(k => f.parseTime(s[k]));
+    if (changed === 'vipArrival') { start = Math.max(start, arrival); end = Math.max(end, start); }
+    else if (changed === 'vipMenuStart') { arrival = Math.min(arrival, start); end = Math.max(end, start); }
+    else { start = Math.min(start, end); arrival = Math.min(arrival, start); }
+    [s.vipArrival, s.vipMenuStart, s.vipMenuEnd] = [hhmm(arrival), hhmm(start), hhmm(end)];
+    syncInputs();
+  }
+
   function readInput(input, final = false) {
     const key = input.dataset.setting;
     if (input.type === 'checkbox') state.settings[key] = input.checked;
@@ -230,6 +246,7 @@
     } else state.settings[key] = input.value;
     // The target margin never drops below the minimum margin. Only checked once the value is final
     // (field left, Enter or a stepper click), so typing "45" does not first push the other field to 4.
+    if (final && VIP_TIMES.includes(key)) keepVipTimesInOrder(key);
     if (final && state.settings.marginWarn > state.settings.marginOk) {
       if (key === 'marginOk') state.settings.marginWarn = state.settings.marginOk;
       else if (key === 'marginWarn') state.settings.marginOk = state.settings.marginWarn;
@@ -248,6 +265,7 @@
 
   document.querySelectorAll('[data-setting]').forEach(input => {
     input.addEventListener(input.type === 'checkbox' ? 'change' : 'input', () => readInput(input));
+    if (input.type === 'time') input.addEventListener('change', () => readInput(input, true));
     if (input.type === 'number') input.addEventListener('change', () => {
       const n = Number(input.value);
       input.value = clampToInput(input, Number.isFinite(n) && input.value !== '' ? n : state.settings[input.dataset.setting]);

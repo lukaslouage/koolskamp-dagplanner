@@ -131,6 +131,29 @@ window.KK = window.KK || {};
    * Builds the full day schedule from user settings.
    * Margin = men's first passage at the finish line minus end of the women's podium.
    */
+  /**
+   * VIP tent: aperitif, three-course menu, then free. The menu times are approximate (not all tables
+   * eat at the same time), so the times are kept in order instead of being refused. 'Free' runs to the
+   * end of the men's podium, the end of the race.
+   */
+  function buildVip(s, women, men) {
+    const arrival = f.parseTime(s.vipArrival);
+    const menuStart = Math.max(arrival, f.parseTime(s.vipMenuStart));
+    const menuEnd = Math.max(menuStart, f.parseTime(s.vipMenuEnd));
+    const raceEnd = Math.max(menuEnd, men.podiumEnd);
+    return {
+      arrival, menuStart, menuEnd, raceEnd,
+      blocks: [
+        { id: 'vip-aperitif', lane: 'vip', type: 'vip-aperitif', name: 'Aperitief', shortName: 'Aperitief',
+          start: arrival, end: menuStart, details: [`Gasten komen toe om ${f.exact(arrival)}`] },
+        { id: 'vip-menu', lane: 'vip', type: 'vip-menu', name: '3-gangenmenu', shortName: '3 gangen',
+          start: menuStart, end: menuEnd, details: ['Tijden bij benadering: niet alle tafels eten tegelijk'] },
+        { id: 'vip-free', lane: 'vip', type: 'vip-free', name: 'Vrij', shortName: 'Vrij',
+          start: menuEnd, end: raceEnd, details: ['Drank à volonte tot het einde van de koers'] },
+      ],
+    };
+  }
+
   KK.computeSchedule = function (settings) {
     const women = buildWomen(settings);
     const men = buildMen(settings);
@@ -162,8 +185,9 @@ window.KK = window.KK || {};
       broadcasts.unshift({ race: 'women', channel: 'Canvas', start: womenBroadcastStart, end: women.podiumEnd });
     }
 
-    const blocks = [...women.blocks, ...men.blocks];
-    return { women, men, margin, broadcasts, blocks, blockById: Object.fromEntries(blocks.map(b => [b.id, b])) };
+    const vip = buildVip(settings, women, men);
+    const blocks = [...women.blocks, ...men.blocks, ...vip.blocks];
+    return { women, men, vip, margin, broadcasts, blocks, blockById: Object.fromEntries(blocks.map(b => [b.id, b])) };
   };
 
   /** Position of each race at a given time, used by the map and the rider cards. */
