@@ -90,9 +90,10 @@ KK.Profile = class {
     const key = [width, ...['women', 'men'].map(r => segments[r].map(s => `${s.type}:${s.from}:${s.to}`).join(','))].join('|');
     if (key !== this.key) {
       this.key = key;
-      // Both charts share one elevation scale, so they can be compared.
-      const all = [...segments.women, ...segments.men].flatMap(s => s.points.map(p => p[1]));
-      const yMin = Math.floor((Math.min(...all) - 2) / 5) * 5, yMax = Math.ceil((Math.max(...all) + 2) / 5) * 5;
+      // Both charts share one scale, from 0 m to at least 100 m. The course is flat, and a tight scale would make
+      // it look like a hilly stage.
+      const highest = Math.max(...[...segments.women, ...segments.men].flatMap(s => s.points.map(p => p[1])));
+      const yMin = 0, yMax = Math.max(100, Math.ceil((highest + 5) / 50) * 50);
       ['women', 'men'].forEach(race => this.build(race, races[race], segments[race], width, yMin, yMax));
     }
     if (this.positions) this.setRiders(this.positions);
@@ -107,8 +108,8 @@ KK.Profile = class {
     const climb = Math.round(segments.reduce((sum, s) => sum + s.climb, 0) / 10) * 10;
 
     const parts = [];
-    // Horizontal guides at round elevations (every 10 m). The text stays clear of the dot at km 0.
-    for (let m = Math.ceil(yMin / 10) * 10; m <= yMax; m += 10) parts.push(
+    // Horizontal guides every 50 m. The text stays clear of the dot at km 0.
+    for (let m = yMin; m <= yMax; m += 50) parts.push(
       `<line class="profile__grid" x1="${L.padLeft}" x2="${width - L.padRight}" y1="${y(m)}" y2="${y(m)}"/>
        <text x="${L.padLeft - 16}" y="${y(m) + 3.5}" text-anchor="end">${m} m</text>`);
     // Kilometre axis.
