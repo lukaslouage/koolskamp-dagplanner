@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=7">
+<link rel="stylesheet" href="css/styles.css?v=8">
 </head>
 <body>
 
@@ -102,10 +102,10 @@
       </section>
 
       <section class="settings__group">
-        <h3 class="settings__heading"><span class="chip chip--org"></span>Organisatie</h3>
+        <h3 class="settings__heading"><span class="chip chip--org"></span>Planning</h3>
         <label class="field"><span class="field__label">Podiumduur <span class="muted">min</span></span><input type="number" min="0" max="90" step="1" data-setting="podiumDuration"></label>
-        <label class="field"><span class="field__label">Marge groen vanaf <span class="muted">min</span></span><input type="number" min="0" max="180" step="1" data-setting="marginOk"></label>
-        <label class="field"><span class="field__label">Marge oranje vanaf <span class="muted">min</span></span><input type="number" min="0" max="180" step="1" data-setting="marginWarn"></label>
+        <label class="field"><span class="field__stack"><span class="field__label">Streefmarge <span class="muted">min</span></span><span class="field__hint">Comfortabel vanaf</span></span><input type="number" min="0" max="180" step="1" data-setting="marginOk"></label>
+        <label class="field"><span class="field__stack"><span class="field__label">Minimummarge <span class="muted">min</span></span><span class="field__hint">Onvoldoende eronder</span></span><input type="number" min="0" max="180" step="1" data-setting="marginWarn"></label>
       </section>
     </div>
   </aside>
@@ -232,13 +232,13 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=7"></script>
-<script src="js/config.js?v=7"></script>
-<script src="js/format.js?v=7"></script>
-<script src="js/schedule.js?v=7"></script>
-<script src="js/timeline.js?v=7"></script>
-<script src="js/route-map.js?v=7"></script>
-<script src="js/pdf-export.js?v=7"></script>
-<script src="js/app.js?v=7"></script>
+<script src="data/route-data.js?v=8"></script>
+<script src="js/config.js?v=8"></script>
+<script src="js/format.js?v=8"></script>
+<script src="js/schedule.js?v=8"></script>
+<script src="js/timeline.js?v=8"></script>
+<script src="js/route-map.js?v=8"></script>
+<script src="js/pdf-export.js?v=8"></script>
+<script src="js/app.js?v=8"></script>
 </body>
 </html>

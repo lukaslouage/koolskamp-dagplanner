@@ -119,7 +119,7 @@
     $('men-first-passage-detail').textContent = `Na ${f.km(men.firstPassageKm)} km. Kruiskalsijde (km ${f.km(men.kruiskalsijdeKm)}) om ${f.clock(men.kruiskalsijdeTime)}`;
 
     $('margin-value').textContent = `${margin.minutes} min`;
-    $('margin-badge').textContent = margin.conflict ? 'Conflict' : { ok: 'Ruim', warn: 'Krap', bad: 'Te krap' }[margin.status];
+    $('margin-badge').textContent = margin.conflict ? 'Conflict' : { ok: 'Comfortabel', warn: 'Beperkt', bad: 'Onvoldoende' }[margin.status];
     $('margin-detail').textContent = margin.conflict ? 'Omloop niet vrij voor de mannen'
       : `Omloop vrij van ${f.clock(margin.from)} tot ${f.clock(margin.to)}`;
 

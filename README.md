@@ -38,7 +38,7 @@ Scripts are loaded as classic scripts on a shared `window.KK` namespace, so the 
 - **Men** (default 180,5 km): `menLoops` Ardooie loops of 16 km, turn-off to the circuit of 12,5 km (Kruiskalsijde at 10,7 km into the turn-off), then `menLaps` local laps of 15 km.
 - Team presentation: 60 min, ends 5 min before the start. Start preparation: 5 min before the start.
 - Podium starts at the finish and lasts `podiumDuration`.
-- **Margin** = men's first passage at the finish line minus the end of the women's podium. Green at `marginOk` or more, orange from `marginWarn`, red below. A negative margin shows a red "Conflict: omloop niet vrij" block.
+- **Margin** = men's first passage at the finish line minus the end of the women's podium. Shown as "Comfortabel" (green) from `marginOk` (setting "Streefmarge"), "Beperkt" (orange) from `marginWarn` (setting "Minimummarge"), "Onvoldoende" (red) below that. A negative margin shows a red "Conflict: omloop niet vrij" block.
 - **Sporza women** (Canvas / sporza.be), unless switched off: from 50 min before the women's finish (or a manual start time) to the end of the women's podium.
 - **Sporza men** (VRT 1): from `menBroadcastStart` to the end of the men's podium.
 
