@@ -14,6 +14,7 @@
 
   const timeline = new KK.Timeline($('timeline-track'), { onSelectTime: t => { state.selectedTime = t; render(); } });
   const routeMap = new KK.RouteMap($('route-map'), KK.routeData);
+  const profile = new KK.Profile({ women: $('profile-women'), men: $('profile-men') }, KK.routeData);
 
   /** Keeps only known settings with a valid value, so a hand-edited link or old saved data cannot break the page. */
   function cleanSettings(raw) {
@@ -160,6 +161,8 @@
     $('time-value').textContent = f.clock(state.shownTime);
     routeMap.setTheme(state.theme);
     routeMap.setRiders(positions);
+    profile.render(schedule);
+    profile.setRiders(positions);
   }
 
   function renderPassages(tbody, passages) {

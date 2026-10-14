@@ -192,10 +192,10 @@ window.KK = window.KK || {};
   /** Position of each race at a given time, used by the map and the rider cards. */
   KK.riderPositions = function (schedule, time) {
     const position = race => {
-      if (time < race.start) return { state: 'pre', label: 'Nog niet gestart', detail: `Start om ${f.clock(race.start)}` };
+      if (time < race.start) return { state: 'pre', km: 0, label: 'Nog niet gestart', detail: `Start om ${f.clock(race.start)}` };
       const d = ((time - race.start) * race.speed) / 60;
-      if (d >= race.totalKm) return { state: 'finished', label: 'Aangekomen', detail: `Finish om ${f.clock(race.finish)}` };
-      return { state: 'racing', ...race.locate(d), detail: `${f.km(d)} km gereden, nog ${f.km(race.totalKm - d)} km` };
+      if (d >= race.totalKm) return { state: 'finished', km: race.totalKm, label: 'Aangekomen', detail: `Finish om ${f.clock(race.finish)}` };
+      return { state: 'racing', km: d, ...race.locate(d), detail: `${f.km(d)} km gereden, nog ${f.km(race.totalKm - d)} km` };
     };
     return { women: position(schedule.women), men: position(schedule.men) };
   };
