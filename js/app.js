@@ -41,6 +41,9 @@
     try { saved = cleanSettings(JSON.parse(localStorage.getItem(config.storageKey) || '{}')); } catch (e) { /* storage unavailable */ }
     const settings = { ...config.defaults, ...(Object.keys(fromLink).length ? fromLink : saved) };
     if (settings.marginWarn > settings.marginOk) settings.marginWarn = settings.marginOk; // hand-edited link
+    const [arrival, start, end] = ['vipArrival', 'vipMenuStart', 'vipMenuEnd'].map(k => f.parseTime(settings[k]));
+    if (start < arrival) settings.vipMenuStart = settings.vipArrival;
+    if (end < Math.max(start, arrival)) settings.vipMenuEnd = settings.vipMenuStart;
     return settings;
   }
 
@@ -274,9 +277,15 @@
       const n = Number(input.value);
       if (input.value === '' || !Number.isFinite(n)) return;
       state.settings[key] = n;
-    } else state.settings[key] = input.value;
-    // The target margin never drops below the minimum margin. Only checked once the value is final
-    // (field left, Enter or a stepper click), so typing "45" does not first push the other field to 4.
+    } else {
+      // A time field that is being edited reports in-between values (typing "1" as the hour gives 01:00, an
+      // emptied field gives ''). An empty time is ignored; only the automatic broadcast start may be empty.
+      if (input.value === '' && key !== 'womenBroadcastStart') { if (final) input.value = state.settings[key]; return; }
+      state.settings[key] = input.value;
+    }
+    // The target margin never drops below the minimum margin, and the VIP times stay in order. Only checked
+    // once the value is final (field left or a stepper click), so typing "45" does not first push the other
+    // field to 4, and typing the hour of 14:00 does not first push the other times to 01:00.
     if (final && VIP_TIMES.includes(key)) keepVipTimesInOrder(key);
     if (final && state.settings.marginWarn > state.settings.marginOk) {
       if (key === 'marginOk') state.settings.marginWarn = state.settings.marginOk;
@@ -296,7 +305,7 @@
 
   document.querySelectorAll('[data-setting]').forEach(input => {
     input.addEventListener(input.type === 'checkbox' ? 'change' : 'input', () => readInput(input));
-    if (input.type === 'time') input.addEventListener('change', () => readInput(input, true));
+    if (input.type === 'time') input.addEventListener('blur', () => readInput(input, true)); // not 'change': that fires on every typed digit
     if (input.type === 'number') input.addEventListener('change', () => {
       const n = Number(input.value);
       input.value = clampToInput(input, Number.isFinite(n) && input.value !== '' ? n : state.settings[input.dataset.setting]);
