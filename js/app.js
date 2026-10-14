@@ -38,7 +38,9 @@
     const fromLink = cleanSettings(Object.fromEntries(new URLSearchParams(location.hash.slice(1))));
     let saved = {};
     try { saved = cleanSettings(JSON.parse(localStorage.getItem(config.storageKey) || '{}')); } catch (e) { /* storage unavailable */ }
-    return { ...config.defaults, ...(Object.keys(fromLink).length ? fromLink : saved) };
+    const settings = { ...config.defaults, ...(Object.keys(fromLink).length ? fromLink : saved) };
+    if (settings.marginWarn > settings.marginOk) settings.marginWarn = settings.marginOk; // hand-edited link
+    return settings;
   }
 
   /**
@@ -218,7 +220,7 @@
 
   // Wiring
   /** Reads an input into the settings. Empty or half-typed numbers are ignored until they are valid. */
-  function readInput(input) {
+  function readInput(input, final = false) {
     const key = input.dataset.setting;
     if (input.type === 'checkbox') state.settings[key] = input.checked;
     else if (input.type === 'number') {
@@ -226,6 +228,13 @@
       if (input.value === '' || !Number.isFinite(n)) return;
       state.settings[key] = n;
     } else state.settings[key] = input.value;
+    // The target margin never drops below the minimum margin. Only checked once the value is final
+    // (field left, Enter or a stepper click), so typing "45" does not first push the other field to 4.
+    if (final && state.settings.marginWarn > state.settings.marginOk) {
+      if (key === 'marginOk') state.settings.marginWarn = state.settings.marginOk;
+      else if (key === 'marginWarn') state.settings.marginOk = state.settings.marginWarn;
+      syncInputs();
+    }
     saveSettings();
     render();
   }
@@ -242,13 +251,13 @@
     if (input.type === 'number') input.addEventListener('change', () => {
       const n = Number(input.value);
       input.value = clampToInput(input, Number.isFinite(n) && input.value !== '' ? n : state.settings[input.dataset.setting]);
-      readInput(input);
+      readInput(input, true);
     });
   });
   document.querySelectorAll('[data-step-for]').forEach(button => button.addEventListener('click', () => {
     const input = document.querySelector(`[data-setting="${button.dataset.stepFor}"]`);
     input.value = clampToInput(input, Number(state.settings[input.dataset.setting]) + Number(button.dataset.step));
-    readInput(input);
+    readInput(input, true);
   }));
   $('women-broadcast-reset').addEventListener('click', e => {
     e.preventDefault();

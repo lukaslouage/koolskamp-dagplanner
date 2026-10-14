@@ -59,6 +59,7 @@ Points are `[lat, lon, elevation]`. The map scales each GPX track to the officia
 
 - All settings are visible at the top: speeds (women 36 to 46 km/u, men 42 to 50 km/u, step 0,5) and laps/loops with − and + buttons, start times, Sporza, podium duration and margin thresholds. Typed numbers are clamped to min, max and step.
 - The broadcast switch sits in the same row as the women's broadcast start time (section "Uitzending"). Switched off (`womenBroadcast: false`), the broadcast band and legend item disappear and the time field is greyed out.
+- The target margin (`marginOk`) can never be lower than the minimum margin (`marginWarn`): changing one pushes the other along. Checked when the field is left, not while typing.
 - Settings (only the values that differ from the defaults) and theme are saved in `localStorage`. Own CSS and JS files carry a `?v=` number in `index.html` that goes up with every change, so browsers never mix old and new files.
 - "Deel scenario" copies a link with the current settings in the URL hash (only values that differ from the defaults, e.g. `#womenSpeed=38&womenLaps=8`). Settings in the link win over saved settings. Unknown keys and invalid values are ignored.
 - On screens up to 640 px wide the timeline is vertical: time runs down, women left, men right, lane names stick to the top while scrolling, and Sporza start and end times sit in the hour column. Print is always horizontal.
