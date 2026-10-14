@@ -43,7 +43,6 @@ KK.config = {
     menLaps: { min: 1, max: 15 },
   },
 
-  defaultSelectedTime: 13 * 60,
   storageKey: 'kk-dagplanner-settings-v2', // v2 stores only changed values; v1 held all old defaults
   themeStorageKey: 'kk-dagplanner-theme',
 };

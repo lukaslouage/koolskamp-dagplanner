@@ -5,7 +5,8 @@
 
   const state = {
     settings: loadSettings(),
-    selectedTime: config.defaultSelectedTime,
+    selectedTime: null, // null = follow the start of the women's race until someone picks a time
+    shownTime: null,
     theme: loadTheme(),
     showQuarterGrid: false,
     playTimer: null,
@@ -144,15 +145,16 @@
     renderPassages($('women-passages'), women.passages);
     renderPassages($('men-passages'), men.passages);
 
-    timeline.render(schedule, { selectedTime: state.selectedTime, showQuarterGrid: state.showQuarterGrid });
+    state.shownTime = state.selectedTime ?? women.start;
+    timeline.render(schedule, { selectedTime: state.shownTime, showQuarterGrid: state.showQuarterGrid });
 
-    const positions = KK.riderPositions(schedule, state.selectedTime);
+    const positions = KK.riderPositions(schedule, state.shownTime);
     $('women-status').textContent = positions.women.label;
     $('women-status-detail').textContent = positions.women.detail;
     $('men-status').textContent = positions.men.label;
     $('men-status-detail').textContent = positions.men.detail;
-    $('time-range').value = state.selectedTime;
-    $('time-value').textContent = f.clock(state.selectedTime);
+    $('time-range').value = state.shownTime;
+    $('time-value').textContent = f.clock(state.shownTime);
     routeMap.setTheme(state.theme);
     routeMap.setRiders(positions);
   }
@@ -171,7 +173,7 @@
       button.textContent = 'Afspelen';
       return;
     }
-    if (state.selectedTime >= end) state.selectedTime = start;
+    state.selectedTime = state.shownTime >= end ? start : state.shownTime;
     button.textContent = 'Pauze';
     state.playTimer = setInterval(() => {
       if (state.selectedTime >= end) return togglePlayback();
@@ -284,6 +286,7 @@
   });
   $('reset-button').addEventListener('click', () => {
     state.settings = { ...config.defaults };
+    state.selectedTime = null;
     saveSettings(); syncInputs(); render();
   });
   document.querySelectorAll('[data-theme-choice]').forEach(b => b.addEventListener('click', () => setTheme(b.dataset.themeChoice)));
