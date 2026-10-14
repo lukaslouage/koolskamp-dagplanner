@@ -73,6 +73,11 @@ KK.Timeline = class {
     return head + pad + (this.clamp(t) - KK.config.timelineAxis.start) * pxPerMinute;
   }
 
+  /** Every block is inset 1 px on both sides, so there is the same 2 px between all neighbours. The VIP blocks fade into each other instead. */
+  blockGap(block) {
+    return block.lane === 'vip' ? 0 : 1;
+  }
+
   /**
    * The three-course menu has soft edges (not all tables eat at the same time). To keep the soft edge from
    * showing the empty lane, the aperitif runs a little under the start of the menu and the 'free' block
@@ -167,7 +172,7 @@ KK.Timeline = class {
     schedule.blocks.forEach(block => {
       const a = this.clamp(block.start), z = this.clamp(block.end);
       if (z - a <= 0.01) return;
-      const gap = block.segment ? 1 : 0;
+      const gap = this.blockGap(block);
       const label = this.blockLabel(block, (z - a) * pxPerMinute - gap * 2);
       const top = this.layout.laneTop[block.lane] + 8;
       const [shift, grow] = this.fadeOverlap(block);
@@ -259,7 +264,7 @@ KK.Timeline = class {
     schedule.blocks.forEach(block => {
       const a = this.clamp(block.start), z = this.clamp(block.end);
       if (z - a <= 0.01) return;
-      const gap = block.segment ? 1 : 0;
+      const gap = this.blockGap(block);
       const [shift, grow] = this.fadeOverlap(block);
       const height = y(z) - y(a) - gap * 2;
       const label = this.verticalBlockLabel(block, height, laneWidth);
