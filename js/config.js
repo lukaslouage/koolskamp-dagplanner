@@ -26,7 +26,7 @@ KK.config = {
     womenLaps: 7,
     menLoops: 3,
     menLaps: 8,
-    podiumDuration: 20,
+    podiumDuration: 25,
     marginOk: 45,
     marginWarn: 30,
     womenBroadcast: true,     // false = the women's race is not broadcast
