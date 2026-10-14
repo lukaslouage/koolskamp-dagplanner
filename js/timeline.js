@@ -13,7 +13,7 @@ KK.Timeline = class {
     this.onSelectTime = onSelectTime;
     this.schedule = null;
     this.vertical = false;
-    this.layout = { laneTop: { women: 64, men: 178, vip: 292 }, vipBlockHeight: 52, labelTop: 368, fadePx: 14 };
+    this.layout = { laneTop: { women: 64, men: 178, vip: 292 }, vipBlockHeight: 52, labelTop: 368, fadePx: 14, rightGutter: 24 };  // rightGutter: room for a flag past the last hour (see .timeline__grid)
 
     // activeBlockId survives re-renders, so a tapped or clicked block keeps its tooltip.
     this.activeBlockId = null;
@@ -43,6 +43,8 @@ KK.Timeline = class {
         if (Math.abs(w - lastWidth) > 2 && this.schedule) { lastWidth = w; this.render(this.schedule, this.options); }
       }).observe(this.el);
     }
+    // The flag widths are measured with the web font, so measure again once it has loaded.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (this.schedule) this.render(this.schedule, this.options); });
     if (window.matchMedia) {
       window.matchMedia(KK.Timeline.VERTICAL_QUERY).addEventListener('change', () => {
         if (this.schedule) this.render(this.schedule, this.options);
@@ -81,6 +83,13 @@ KK.Timeline = class {
     if (block.type === 'vip-aperitif') return [0, fade];
     if (block.type === 'vip-free') return [fade, 0];
     return [0, 0];
+  }
+
+  /** Width of a flag label: the measured text, 2 x 10 px padding and the 18 px bend of the flag. */
+  flagWidth(text) {
+    this.measure = this.measure || document.createElement('canvas').getContext('2d');
+    this.measure.font = '600 11.5px Inter, system-ui, sans-serif';
+    return this.measure.measureText(text).width + 20 + 18 + 2;
   }
 
   /** Decides how much text fits in a horizontal block of the given pixel width. */
@@ -185,7 +194,7 @@ KK.Timeline = class {
     const firstPassage = schedule.men.firstPassageTime;
     const womenOnLeft = schedule.women.finish <= firstPassage;
     const px = t => (t - axisStart) * pxPerMinute;
-    const labelWidth = text => text.length * 6.7 + 40;  // text, padding and the bend of the flag
+    const labelWidth = text => this.flagWidth(text);
     const items = [
       { kind: 'status', t: firstPassage, text: `Eerste passage mannen ${f.clock(firstPassage)}`, side: womenOnLeft ? 'right' : 'left' },
       { kind: 'women', t: schedule.women.finish, text: `Aankomst vrouwen ${f.clock(schedule.women.finish)}`, side: womenOnLeft ? 'left' : 'right' },
@@ -193,7 +202,7 @@ KK.Timeline = class {
     ].filter(item => inAxis(item.t));
     const rows = [[], []];
     items.forEach(item => {
-      const width = labelWidth(item.text), roomRight = (axisEnd - item.t) * pxPerMinute, roomLeft = px(item.t);
+      const width = labelWidth(item.text), roomRight = (axisEnd - item.t) * pxPerMinute + this.layout.rightGutter, roomLeft = px(item.t);
       if (item.side === 'right' && roomRight < width + 4 && roomLeft >= width + 4) item.side = 'left';
       else if (item.side === 'left' && roomLeft < width + 4 && roomRight >= width + 4) item.side = 'right';
       const [from, to] = item.side === 'right' ? [px(item.t), px(item.t) + width] : [px(item.t) - width, px(item.t)];

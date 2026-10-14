@@ -113,7 +113,9 @@ KK.pdfExport = (function () {
     parts.forEach((part, i) => {
       if (i > 0) pdf.addPage();
       const fit = Math.min(maxWidth / part.width, maxHeight / part.height);
-      pdf.addImage(part.url, 'JPEG', PAGE.margin, PAGE.margin, part.width * fit, part.height * fit);
+      // Centred sideways, so the white space left and right of the content is always equal.
+      const x = PAGE.margin + (maxWidth - part.width * fit) / 2;
+      pdf.addImage(part.url, 'JPEG', x, PAGE.margin, part.width * fit, part.height * fit);
     });
     pdf.setProperties({ title: 'Koolskamp Koers Dagplanner' });
     return pdf.output('blob');

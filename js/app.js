@@ -185,11 +185,33 @@
   // Printing: the 'is-printing' class gives the map its print size on screen too, so the snapshot fits the paper.
   function startPrintLayout() {
     document.documentElement.classList.add('is-printing');
-    render(); // the timeline is always horizontal on paper
+    fitPrintWidth();
+  }
+
+  /**
+   * Page 1 (everything above the map) should fill an A4 landscape page in both directions. Its height follows
+   * from its width, so the width is adjusted a few times until the page has the A4 shape (279 x 192 mm).
+   * The timeline is always horizontal on paper, so render() runs after every change of width.
+   */
+  function fitPrintWidth() {
+    const root = document.documentElement, page = document.querySelector('.page'), detail = document.querySelector('.detail');
+    const A4 = 279 / 192;
+    let width = 1230;
+    for (let i = 0; i < 4; i++) {
+      root.style.setProperty('--print-w', width);
+      render();
+      const height = detail.getBoundingClientRect().top - page.getBoundingClientRect().top;
+      const wanted = Math.max(1100, Math.min(1400, Math.round(height * A4)));
+      if (Math.abs(wanted - width) < 8) break;
+      width = wanted;
+    }
+    root.style.setProperty('--print-w', width);
+    render();
   }
 
   function endPrintLayout() {
     document.documentElement.classList.remove('is-printing');
+    document.documentElement.style.removeProperty('--print-w');
     routeMap.refreshSize();
     render();
   }

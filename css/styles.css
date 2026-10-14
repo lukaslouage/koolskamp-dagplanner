@@ -259,7 +259,7 @@ h1, h2, h3 { margin: 0; }
 /* ---------- Timeline ---------- */
 .timeline .card__body { display: flex; flex-direction: column; gap: 12px; }
 .timeline__scroll { overflow-x: auto; padding-bottom: 4px; }
-.timeline__grid { min-width: 860px; display: grid; grid-template-columns: 112px minmax(0, 1fr); }
+.timeline__grid { min-width: 860px; display: grid; grid-template-columns: 112px minmax(0, 1fr) 24px; } /* last column: room for a flag past the last hour */
 .timeline__labels { position: sticky; left: 0; z-index: 8; height: 400px; background: var(--bg); }
 .lane-label { position: absolute; height: 100px; left: 0; right: 12px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
 .lane-label--women { top: 64px; }
@@ -519,7 +519,7 @@ html.is-printing body { background: var(--bg); }
 html.is-printing .no-print { display: none !important; }
 html.is-printing .print-only { display: flex !important; }
 html.is-printing .shell { display: block; }
-html.is-printing .page { width: 1230px; margin: 0; padding: 6px; gap: 14px; }
+html.is-printing .page { width: calc(var(--print-w, 1230) * 1px); margin: 0; padding: 6px; gap: 14px; } /* --print-w is set by fitPrintWidth() in app.js */
 
 html.is-printing .print-head { align-items: center; gap: 12px; }
 html.is-printing .print-head .brand__logo { width: 36px; height: 36px; font-size: 14px; }
@@ -560,7 +560,7 @@ html.is-printing .passages__table th:nth-child(2), html.is-printing .passages__t
 
 @page { size: A4 landscape; margin: 9mm; }
 @media print {
-  html { zoom: 0.85; } /* 1230 px * 0.85 = the 279 mm printable width of A4 landscape */
+  html { zoom: 0.85; zoom: calc(1054 / var(--print-w, 1230)); } /* page width * zoom = the 1054 px (279 mm) printable width of A4 landscape */
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .page-break { break-before: page; }
 }
