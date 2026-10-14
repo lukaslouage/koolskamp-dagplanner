@@ -32,7 +32,7 @@ window.KK = window.KK || {};
 
     const blocks = [
       { id: 'women-intro', lane: 'women', type: 'women-intro', name: 'Ploegvoorstelling', shortName: 'Ploegv.',
-        start: start - DUR.teamPresentationGapBeforeStart - introMinutes(s.womenIntroDuration), end: start - DUR.teamPresentationGapBeforeStart },
+        start: start - introMinutes(s.womenIntroDuration), end: start },
       { id: 'women-approach', lane: 'women', type: 'women-approach', name: 'Aanloop', shortName: 'Aanloop',
         start: timeAt(0), end: timeAt(firstPassageKm), kmFrom: 0, kmTo: firstPassageKm,
         details: [`Kruiskalsijde km ${f.km(kruiskalsijdeKm)} om ${f.exact(timeAt(kruiskalsijdeKm))}`,
@@ -79,7 +79,7 @@ window.KK = window.KK || {};
 
     const blocks = [
       { id: 'men-intro', lane: 'men', type: 'men-intro', name: 'Ploegvoorstelling', shortName: 'Ploegv.',
-        start: start - DUR.teamPresentationGapBeforeStart - introMinutes(s.menIntroDuration), end: start - DUR.teamPresentationGapBeforeStart },
+        start: start - introMinutes(s.menIntroDuration), end: start },
     ];
     for (let i = 0; i < loops; i++) {
       const from = i * D.ardooieLoop, to = from + D.ardooieLoop;

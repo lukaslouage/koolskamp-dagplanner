@@ -36,7 +36,7 @@ Scripts are loaded as classic scripts on a shared `window.KK` namespace, so the 
 - Time at a point = start time + distance / average speed.
 - **Women** (default 117,5 km): approach from Ardooie to the first passage at the finish line, 12,5 km (Kruiskalsijde at km 10,7), then `womenLaps` local laps of 15 km.
 - **Men** (default 180,5 km): `menLoops` Ardooie loops of 16 km, turn-off to the circuit of 12,5 km (Kruiskalsijde at 10,7 km into the turn-off), then `menLaps` local laps of 15 km.
-- Team presentation: its length is a setting per race (`womenIntroDuration`, `menIntroDuration`, default 60 min, 0 hides it); it ends 5 min before the start.
+- Team presentation: its length is a setting per race (`womenIntroDuration`, `menIntroDuration`, default 60 min, 0 hides it); it ends at the start of the race.
 - Podium starts at the finish and lasts `podiumDuration`.
 - **Margin** = men's first passage at the finish line minus the end of the women's podium. Shown as "Comfortabel" (green) from `marginOk` (setting "Streefmarge"), "Beperkt" (orange) from `marginWarn` (setting "Minimummarge"), "Onvoldoende" (red) below that. A negative margin shows a red "Conflict: omloop niet vrij" block.
 - **Sporza women** (Canvas / sporza.be), unless switched off: from 50 min before the women's finish (or a manual start time) to the end of the women's podium.
