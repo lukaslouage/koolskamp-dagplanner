@@ -167,12 +167,12 @@ window.KK = window.KK || {};
     if (margin.conflict) {
       women.blocks.push({ id: 'women-conflict', lane: 'women', type: 'conflict', name: 'Conflict: omloop niet vrij', shortName: 'Conflict',
         start: men.firstPassageTime, end: women.podiumEnd,
-        details: [`Mannen eerste keer aan de meet om ${f.exact(men.firstPassageTime)}`,
+        details: [`Eerste passage mannen om ${f.exact(men.firstPassageTime)}`,
                   `Einde podium vrouwen om ${f.exact(women.podiumEnd)}`, `Tekort: ${f.duration(-marginRaw)}`] });
     } else {
       women.blocks.push({ id: 'women-margin', lane: 'women', type: 'org', name: `Marge ${marginMinutes} min`, shortName: `${marginMinutes} min`,
         start: women.podiumEnd, end: men.firstPassageTime,
-        details: [`Mannen eerste keer aan de meet om ${f.exact(men.firstPassageTime)}`] });
+        details: [`Eerste passage mannen om ${f.exact(men.firstPassageTime)}`] });
     }
 
     const womenBroadcastStart = settings.womenBroadcastStart

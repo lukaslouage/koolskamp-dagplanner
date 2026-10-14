@@ -123,7 +123,7 @@ KK.Timeline = class {
 
     const html = this.vertical ? this.verticalHtml(schedule, options) : this.horizontalHtml(schedule, options);
     html.push(`<div class="tooltip" hidden></div>`);
-    this.el.style.height = this.vertical ? `${this.vTop(KK.config.timelineAxis.end) + 28}px` : '';
+    this.el.style.height = this.vertical ? `${this.vTop(KK.config.timelineAxis.end) + 28}px` : this.horizontalRows > 1 ? '426px' : '';
     this.el.innerHTML = html.join('');
     this.tooltipEl = this.el.querySelector('.tooltip');
     if (this.activeBlockId) this.showTooltip(this.activeBlockId);
@@ -181,9 +181,16 @@ KK.Timeline = class {
     const womenFinish = schedule.women.finish;
     const womenOnLeft = womenFinish <= firstPassage;
     if (inAxis(firstPassage)) html.push(`<div class="vline vline--first-passage" style="left:${this.pct(firstPassage)}%"></div>
-      <div class="vline-label vline-label--status${womenOnLeft ? '' : ' vline-label--flip'}" style="left:${this.pct(firstPassage)}%">Mannen aan de meet ${f.clock(firstPassage)}</div>`);
+      <div class="vline-label vline-label--status${womenOnLeft ? '' : ' vline-label--flip'}" style="left:${this.pct(firstPassage)}%">Eerste passage mannen ${f.clock(firstPassage)}</div>`);
     if (inAxis(womenFinish)) html.push(`<div class="vline vline--women-finish" style="left:${this.pct(womenFinish)}%"></div>
-      <div class="vline-label vline-label--women-finish${womenOnLeft ? '' : ' vline-label--right'}" style="left:${this.pct(womenFinish)}%">Vrouwen aankomst ${f.clock(womenFinish)}</div>`);
+      <div class="vline-label vline-label--women-finish${womenOnLeft ? '' : ' vline-label--right'}" style="left:${this.pct(womenFinish)}%">Aankomst vrouwen ${f.clock(womenFinish)}</div>`);
+    // The men's finish label points right (left near the right edge). If it would run into the label of the
+    // first passage, it goes on a second row under it.
+    const menFinish = schedule.men.finish;
+    const secondRow = inAxis(firstPassage) && (menFinish - firstPassage) * pxPerMinute < 200;
+    this.horizontalRows = secondRow ? 2 : 1;
+    if (inAxis(menFinish)) html.push(`<div class="vline vline--men-finish" style="left:${this.pct(menFinish)}%"></div>
+      <div class="vline-label vline-label--men-finish${this.pct(menFinish) > 90 ? ' vline-label--flip' : ''}${secondRow ? ' vline-label--row2' : ''}" style="left:${this.pct(menFinish)}%">Aankomst mannen ${f.clock(menFinish)}</div>`);
     if (inAxis(options.selectedTime)) html.push(`<div class="vline vline--selected" style="left:${this.pct(options.selectedTime)}%"></div>`);
     return html;
   }
@@ -210,7 +217,7 @@ KK.Timeline = class {
     // An hour label that would collide with one of them is left out.
     const marks = [];
     schedule.broadcasts.forEach(b => [b.start, b.end].forEach(t => { if (inAxis(t)) marks.push({ t, race: b.race }); }));
-    const keyTimes = [...marks.map(m => m.t), schedule.men.firstPassageTime, schedule.women.finish];
+    const keyTimes = [...marks.map(m => m.t), schedule.men.firstPassageTime, schedule.women.finish, schedule.men.finish];
     for (let h = Math.ceil(axisStart / 60); h * 60 <= axisEnd; h++) {
       html.push(`<div class="htick" style="top:${y(h * 60)}px"></div>`);
       if (!keyTimes.some(t => Math.abs(t - h * 60) < 12)) html.push(`<div class="htick-label" style="top:${y(h * 60)}px">${h}u</div>`);
@@ -220,6 +227,8 @@ KK.Timeline = class {
     const firstPassageMark = schedule.men.firstPassageTime, womenFinishMark = schedule.women.finish;
     if (inAxis(firstPassageMark)) html.push(`<div class="htick-label htick-label--status" style="top:${y(firstPassageMark)}px">${f.clock(firstPassageMark)}</div>`);
     if (inAxis(womenFinishMark)) html.push(`<div class="htick-label htick-label--women-finish" style="top:${y(womenFinishMark)}px">${f.clock(womenFinishMark)}</div>`);
+    const menFinishMark = schedule.men.finish;
+    if (inAxis(menFinishMark)) html.push(`<div class="htick-label htick-label--men-finish" style="top:${y(menFinishMark)}px">${f.clock(menFinishMark)}</div>`);
 
     schedule.broadcasts.forEach(b => {
       const a = this.clamp(b.start), z = this.clamp(b.end);
@@ -244,6 +253,8 @@ KK.Timeline = class {
     if (inAxis(firstPassage)) html.push(`<div class="hline hline--first-passage" style="top:${y(firstPassage)}px"></div>`);
     const womenFinish = schedule.women.finish;
     if (inAxis(womenFinish)) html.push(`<div class="hline hline--women-finish" style="top:${y(womenFinish)}px"></div>`);
+    const menFinish = schedule.men.finish;
+    if (inAxis(menFinish)) html.push(`<div class="hline hline--men-finish" style="top:${y(menFinish)}px"></div>`);
     if (inAxis(options.selectedTime)) html.push(`<div class="hline hline--selected" style="top:${y(options.selectedTime)}px"></div>`);
     return html;
   }

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=12">
+<link rel="stylesheet" href="css/styles.css?v=13">
 </head>
 <body>
 
@@ -129,17 +129,17 @@
 
     <section class="stats" aria-label="Kerncijfers">
       <div class="stat">
-        <div class="stat__label"><span class="chip chip--women"></span>Finish vrouwen</div>
+        <div class="stat__label"><span class="chip chip--women"></span>Aankomst vrouwen</div>
         <div class="stat__value" id="women-finish"></div>
         <div class="stat__detail" id="women-finish-detail"></div>
       </div>
       <div class="stat">
-        <div class="stat__label"><span class="chip chip--men"></span>Finish mannen</div>
+        <div class="stat__label"><span class="chip chip--men"></span>Aankomst mannen</div>
         <div class="stat__value" id="men-finish"></div>
         <div class="stat__detail" id="men-finish-detail"></div>
       </div>
       <div class="stat">
-        <div class="stat__label"><span class="chip chip--men"></span>Mannen eerste keer aan de meet</div>
+        <div class="stat__label"><span class="chip chip--men"></span>Eerste passage mannen</div>
         <div class="stat__value" id="men-first-passage"></div>
         <div class="stat__detail" id="men-first-passage-detail"></div>
       </div>
@@ -175,10 +175,10 @@
           </div>
         </div>
         <div class="legend">
-          <div class="legend__item" id="women-broadcast-legend"><span class="legend__line legend__line--women-broadcast"></span>Sporza vrouwen (Canvas of sporza.be)</div>
-          <div class="legend__item"><span class="legend__line legend__line--men-broadcast"></span>Sporza mannen (VRT 1)</div>
+          <div class="legend__item"><span class="legend__lines"><span class="legend__line legend__line--women-broadcast" id="women-broadcast-legend"></span><span class="legend__line legend__line--men-broadcast"></span></span>Uitzending</div>
           <div class="legend__item"><span class="legend__line legend__line--women-finish"></span>Aankomst vrouwen</div>
-          <div class="legend__item"><span class="legend__line legend__line--status"></span>Mannen eerste passage</div>
+          <div class="legend__item"><span class="legend__line legend__line--status"></span>Eerste passage mannen</div>
+          <div class="legend__item"><span class="legend__line legend__line--men-finish"></span>Aankomst mannen</div>
           <div class="legend__item"><span class="legend__swatch block--women-approach"></span><span class="legend__swatch block--women-lap"></span>Vrouwen aanloop, ronden</div>
           <div class="legend__item"><span class="legend__swatch block--men-loop"></span><span class="legend__swatch block--men-lap"></span>Mannen aanloop, ronden</div>
         </div>
@@ -243,13 +243,13 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=12"></script>
-<script src="js/config.js?v=12"></script>
-<script src="js/format.js?v=12"></script>
-<script src="js/schedule.js?v=12"></script>
-<script src="js/timeline.js?v=12"></script>
-<script src="js/route-map.js?v=12"></script>
-<script src="js/pdf-export.js?v=12"></script>
-<script src="js/app.js?v=12"></script>
+<script src="data/route-data.js?v=13"></script>
+<script src="js/config.js?v=13"></script>
+<script src="js/format.js?v=13"></script>
+<script src="js/schedule.js?v=13"></script>
+<script src="js/timeline.js?v=13"></script>
+<script src="js/route-map.js?v=13"></script>
+<script src="js/pdf-export.js?v=13"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>
