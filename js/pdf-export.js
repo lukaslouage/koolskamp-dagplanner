@@ -1,4 +1,4 @@
-// Builds the two-page A4 PDF in the browser and downloads it, without the print dialog.
+// Builds the two-page A4 PDF in the browser and shows it in a new tab (or downloads it), without the print dialog.
 // The page must already be in print layout (html.is-printing). Libraries load on first use only.
 window.KK = window.KK || {};
 
@@ -68,10 +68,34 @@ KK.pdfExport = (function () {
   }
 
   /**
-   * Renders `pageEl` to an image, cuts it in two at `splitEl` (the start of page 2)
-   * and saves both parts as one PDF named `filename`.
+   * Opens an empty tab. This has to happen straight in the click handler: a tab opened after the (slow)
+   * PDF has been made would be blocked as a pop-up. Returns null when the browser refuses.
    */
-  async function save(pageEl, splitEl, filename) {
+  function openWaitingTab() {
+    const tab = window.open('', '_blank');
+    if (!tab) return null;
+    try {
+      tab.document.title = 'PDF wordt gemaakt';
+      tab.document.body.style.cssText = 'margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font:500 16px system-ui,sans-serif;color:#52525B;background:#F6F6F7';
+      tab.document.body.textContent = 'PDF wordt gemaakt';
+    } catch (e) { /* the tab stays blank, which is fine */ }
+    return tab;
+  }
+
+  /** Shows the PDF in the tab from openWaitingTab(); without a usable tab it is downloaded instead. */
+  function show(blob, tab, filename) {
+    const url = URL.createObjectURL(blob); // not revoked: the tab (and a later 'save as') still needs it
+    if (tab && !tab.closed) { tab.location.replace(url); return; }
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  /** Renders `pageEl` to an image, cuts it in two at `splitEl` (the start of page 2) and returns both parts as one PDF blob. */
+  async function build(pageEl, splitEl) {
     const [, fontEmbedCSS] = await Promise.all([loadLibraries(), loadFontCss().catch(() => '')]);
     await document.fonts.ready;
     const options = { pixelRatio: 2, backgroundColor: '#FFFFFF', cacheBust: false, fontEmbedCSS };
@@ -91,8 +115,9 @@ KK.pdfExport = (function () {
       const fit = Math.min(maxWidth / part.width, maxHeight / part.height);
       pdf.addImage(part.url, 'JPEG', PAGE.margin, PAGE.margin, part.width * fit, part.height * fit);
     });
-    pdf.save(filename);
+    pdf.setProperties({ title: 'Koolskamp Koers Dagplanner' });
+    return pdf.output('blob');
   }
 
-  return { save };
+  return { build, show, openWaitingTab };
 })();
