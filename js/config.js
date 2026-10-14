@@ -12,9 +12,7 @@ KK.config = {
   },
 
   durations: {
-    teamPresentation: 60,
     teamPresentationGapBeforeStart: 5,
-    startPreparation: 5,
     womenBroadcastLeadBeforeFinish: 50,
   },
 
@@ -23,6 +21,8 @@ KK.config = {
     menSpeed: 48,
     womenStart: '10:30',
     menStart: '13:00',
+    womenIntroDuration: 60,   // team presentation, minutes (ends teamPresentationGapBeforeStart before the start)
+    menIntroDuration: 60,
     womenLaps: 7,
     menLoops: 3,
     menLaps: 8,

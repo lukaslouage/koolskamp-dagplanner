@@ -11,6 +11,9 @@ window.KK = window.KK || {};
     return Number.isNaN(n) ? fallback : Math.max(min, Math.min(max, n));
   };
 
+  /** Length of a team presentation in minutes; an empty or negative value counts as no presentation. */
+  const introMinutes = value => Math.max(0, Number(value) || 0);
+
   function timeAtFactory(start, speed) {
     return km => start + (km * 60) / speed;
   }
@@ -29,9 +32,7 @@ window.KK = window.KK || {};
 
     const blocks = [
       { id: 'women-intro', lane: 'women', type: 'women-intro', name: 'Ploegvoorstelling', shortName: 'Ploegv.',
-        start: start - DUR.teamPresentationGapBeforeStart - DUR.teamPresentation, end: start - DUR.teamPresentationGapBeforeStart },
-      { id: 'women-prep', lane: 'women', type: 'org', name: 'Klaarmaken voor start', shortName: 'Klaar',
-        start: start - DUR.startPreparation, end: start },
+        start: start - DUR.teamPresentationGapBeforeStart - introMinutes(s.womenIntroDuration), end: start - DUR.teamPresentationGapBeforeStart },
       { id: 'women-approach', lane: 'women', type: 'women-approach', name: 'Aanloop', shortName: 'Aanloop',
         start: timeAt(0), end: timeAt(firstPassageKm), kmFrom: 0, kmTo: firstPassageKm,
         details: [`Kruiskalsijde km ${f.km(kruiskalsijdeKm)} om ${f.exact(timeAt(kruiskalsijdeKm))}`,
@@ -78,9 +79,7 @@ window.KK = window.KK || {};
 
     const blocks = [
       { id: 'men-intro', lane: 'men', type: 'men-intro', name: 'Ploegvoorstelling', shortName: 'Ploegv.',
-        start: start - DUR.teamPresentationGapBeforeStart - DUR.teamPresentation, end: start - DUR.teamPresentationGapBeforeStart },
-      { id: 'men-prep', lane: 'men', type: 'org', name: 'Klaarmaken voor start', shortName: 'Klaar',
-        start: start - DUR.startPreparation, end: start },
+        start: start - DUR.teamPresentationGapBeforeStart - introMinutes(s.menIntroDuration), end: start - DUR.teamPresentationGapBeforeStart },
     ];
     for (let i = 0; i < loops; i++) {
       const from = i * D.ardooieLoop, to = from + D.ardooieLoop;

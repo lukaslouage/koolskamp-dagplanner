@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=22">
+<link rel="stylesheet" href="css/styles.css?v=23">
 </head>
 <body>
 
@@ -51,6 +51,13 @@
           </div>
         </div>
         <label class="field"><span class="field__label">Starttijd</span><input type="time" data-setting="womenStart"></label>
+        <div class="field"><span class="field__label">Ploegvoorstelling <span class="muted">min</span></span>
+          <div class="stepper">
+            <button type="button" class="stepper__button" data-step-for="womenIntroDuration" data-step="-5" aria-label="5 minuten korter">−</button>
+            <input type="number" inputmode="decimal" min="0" max="180" step="1" data-setting="womenIntroDuration" aria-label="Duur ploegvoorstelling vrouwen">
+            <button type="button" class="stepper__button" data-step-for="womenIntroDuration" data-step="5" aria-label="5 minuten langer">+</button>
+          </div>
+        </div>
         <div class="field"><span class="field__label">Rondes <span class="muted">x 15 km</span></span>
           <div class="stepper">
             <button type="button" class="stepper__button" data-step-for="womenLaps" data-step="-1" aria-label="Een ronde minder">−</button>
@@ -70,6 +77,13 @@
           </div>
         </div>
         <label class="field"><span class="field__label">Starttijd</span><input type="time" data-setting="menStart"></label>
+        <div class="field"><span class="field__label">Ploegvoorstelling <span class="muted">min</span></span>
+          <div class="stepper">
+            <button type="button" class="stepper__button" data-step-for="menIntroDuration" data-step="-5" aria-label="5 minuten korter">−</button>
+            <input type="number" inputmode="decimal" min="0" max="180" step="1" data-setting="menIntroDuration" aria-label="Duur ploegvoorstelling mannen">
+            <button type="button" class="stepper__button" data-step-for="menIntroDuration" data-step="5" aria-label="5 minuten langer">+</button>
+          </div>
+        </div>
         <div class="field"><span class="field__label">Lussen Ardooie <span class="muted">x 16 km</span></span>
           <div class="stepper">
             <button type="button" class="stepper__button" data-step-for="menLoops" data-step="-1" aria-label="Een lus minder">−</button>
@@ -243,13 +257,13 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=22"></script>
-<script src="js/config.js?v=22"></script>
-<script src="js/format.js?v=22"></script>
-<script src="js/schedule.js?v=22"></script>
-<script src="js/timeline.js?v=22"></script>
-<script src="js/route-map.js?v=22"></script>
-<script src="js/pdf-export.js?v=22"></script>
-<script src="js/app.js?v=22"></script>
+<script src="data/route-data.js?v=23"></script>
+<script src="js/config.js?v=23"></script>
+<script src="js/format.js?v=23"></script>
+<script src="js/schedule.js?v=23"></script>
+<script src="js/timeline.js?v=23"></script>
+<script src="js/route-map.js?v=23"></script>
+<script src="js/pdf-export.js?v=23"></script>
+<script src="js/app.js?v=23"></script>
 </body>
 </html>
