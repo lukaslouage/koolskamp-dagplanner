@@ -176,21 +176,31 @@ KK.Timeline = class {
         <div class="vline-label vline-label--end${endSide} vline-label--${b.race}" style="left:${this.pct(b.end)}%">einde ${f.clock(b.end)}</div>`);
     });
 
-    // The two labels under the lanes point away from each other, so they never overlap.
+    // Key moments: a line from the top of the lanes that bends into a label under the lanes, like a flag.
+    // Each label prefers a side (the women's and the first-passage label point away from each other, the men's
+    // finish points right), switches side when there is no room, and moves to a second row when it would touch
+    // a label that is already on the first row.
     const firstPassage = schedule.men.firstPassageTime;
-    const womenFinish = schedule.women.finish;
-    const womenOnLeft = womenFinish <= firstPassage;
-    if (inAxis(firstPassage)) html.push(`<div class="vline vline--first-passage" style="left:${this.pct(firstPassage)}%"></div>
-      <div class="vline-label vline-label--status${womenOnLeft ? '' : ' vline-label--flip'}" style="left:${this.pct(firstPassage)}%">Eerste passage mannen ${f.clock(firstPassage)}</div>`);
-    if (inAxis(womenFinish)) html.push(`<div class="vline vline--women-finish" style="left:${this.pct(womenFinish)}%"></div>
-      <div class="vline-label vline-label--women-finish${womenOnLeft ? '' : ' vline-label--right'}" style="left:${this.pct(womenFinish)}%">Aankomst vrouwen ${f.clock(womenFinish)}</div>`);
-    // The men's finish label points right (left near the right edge). If it would run into the label of the
-    // first passage, it goes on a second row under it.
-    const menFinish = schedule.men.finish;
-    const secondRow = inAxis(firstPassage) && (menFinish - firstPassage) * pxPerMinute < 200;
-    this.horizontalRows = secondRow ? 2 : 1;
-    if (inAxis(menFinish)) html.push(`<div class="vline vline--men-finish" style="left:${this.pct(menFinish)}%"></div>
-      <div class="vline-label vline-label--men-finish${this.pct(menFinish) > 90 ? ' vline-label--flip' : ''}${secondRow ? ' vline-label--row2' : ''}" style="left:${this.pct(menFinish)}%">Aankomst mannen ${f.clock(menFinish)}</div>`);
+    const womenOnLeft = schedule.women.finish <= firstPassage;
+    const px = t => (t - axisStart) * pxPerMinute;
+    const labelWidth = text => text.length * 6.7 + 40;  // text, padding and the bend of the flag
+    const items = [
+      { kind: 'status', t: firstPassage, text: `Eerste passage mannen ${f.clock(firstPassage)}`, side: womenOnLeft ? 'right' : 'left' },
+      { kind: 'women', t: schedule.women.finish, text: `Aankomst vrouwen ${f.clock(schedule.women.finish)}`, side: womenOnLeft ? 'left' : 'right' },
+      { kind: 'men', t: schedule.men.finish, text: `Aankomst mannen ${f.clock(schedule.men.finish)}`, side: 'right' },
+    ].filter(item => inAxis(item.t));
+    const rows = [[], []];
+    items.forEach(item => {
+      const width = labelWidth(item.text), roomRight = (axisEnd - item.t) * pxPerMinute, roomLeft = px(item.t);
+      if (item.side === 'right' && roomRight < width + 4 && roomLeft >= width + 4) item.side = 'left';
+      else if (item.side === 'left' && roomLeft < width + 4 && roomRight >= width + 4) item.side = 'right';
+      const [from, to] = item.side === 'right' ? [px(item.t), px(item.t) + width] : [px(item.t) - width, px(item.t)];
+      item.row = rows[0].some(([a, b]) => from < b + 6 && a < to + 6) ? 2 : 1;
+      rows[item.row - 1].push([from, to]);
+    });
+    this.horizontalRows = Math.max(1, ...items.map(item => item.row));
+    items.forEach(item => html.push(`<div class="marker marker--${item.kind} marker--${item.side}"
+      style="left:${this.pct(item.t)}%;height:${item.row === 2 ? 346 : 320}px"><span class="marker__label">${item.text}</span></div>`));
     if (inAxis(options.selectedTime)) html.push(`<div class="vline vline--selected" style="left:${this.pct(options.selectedTime)}%"></div>`);
     return html;
   }

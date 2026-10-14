@@ -317,9 +317,6 @@ h1, h2, h3 { margin: 0; }
 .vline { position: absolute; transform: translateX(-50%); z-index: 5; pointer-events: none; }
 .vline--women-broadcast { top: 0; height: 360px; border-left: 2px dotted var(--broadcast-women); }
 .vline--men-broadcast { top: 0; height: 360px; border-left: 2px dotted var(--broadcast-men); }
-.vline--first-passage { top: 58px; height: 308px; border-left: 2px solid var(--status); }
-.vline--women-finish { top: 58px; height: 308px; border-left: 2px solid var(--women-line); }
-.vline--men-finish { top: 58px; height: 308px; border-left: 2px solid var(--men-chip); }
 .vline--selected { top: 58px; height: 308px; border-left: 1.5px solid var(--fg); }
 .vline-label {
   position: absolute; font-size: 11.5px; font-weight: 600; white-space: nowrap;
@@ -329,12 +326,23 @@ h1, h2, h3 { margin: 0; }
 .vline-label--end { top: 18px; transform: translateX(4px); }
 .vline-label--women { color: var(--broadcast-women); }
 .vline-label--men { color: var(--broadcast-men); }
-.vline-label--status { top: 368px; transform: translateX(4px); color: #FFF; background: var(--status); border-radius: 999px; padding: 1px 8px; }
-.vline-label--women-finish { top: 368px; transform: translateX(calc(-100% - 4px)); color: #000; background: var(--brand-yellow); border-radius: 999px; padding: 1px 8px; }
-.vline-label--men-finish { top: 368px; transform: translateX(4px); color: var(--bg); background: var(--men-chip); border-radius: 999px; padding: 1px 8px; }
-.vline-label--right { transform: translateX(4px); }
+.marker { position: absolute; top: 58px; width: 18px; z-index: 5; pointer-events: none; }
+.marker--right { border-left: 2px solid var(--mk); border-bottom: 2px solid var(--mk); border-bottom-left-radius: 12px; transform: translateX(-1px); }
+.marker--left { border-right: 2px solid var(--mk); border-bottom: 2px solid var(--mk); border-bottom-right-radius: 12px; transform: translateX(calc(-100% + 1px)); }
+.marker::before { content: ''; position: absolute; top: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--mk); }
+.marker--right::before { left: -3px; }
+.marker--left::before { right: -3px; }
+.marker__label {
+  position: absolute; bottom: 0; transform: translateY(50%); white-space: nowrap;
+  padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; line-height: 1.4;
+  color: var(--mk-fg); background: var(--mk-bg); box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+}
+.marker--right .marker__label { left: 100%; }
+.marker--left .marker__label { right: 100%; }
+.marker--women { --mk: var(--women-line); --mk-bg: var(--brand-yellow); --mk-fg: #000; }
+.marker--status { --mk: var(--status); --mk-bg: var(--status); --mk-fg: #FFF; }
+.marker--men { --mk: var(--men-chip); --mk-bg: var(--men-chip); --mk-fg: var(--bg); }
 .vline-label--flip { transform: translateX(calc(-100% - 4px)); }
-.vline-label--row2 { top: 394px; }
 
 /* Vertical timeline (phones): time runs down, women left, men right */
 .timeline--vertical .timeline__scroll { overflow: visible; padding-bottom: 0; }
