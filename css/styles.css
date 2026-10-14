@@ -519,7 +519,7 @@ html.is-printing body { background: var(--bg); }
 html.is-printing .no-print { display: none !important; }
 html.is-printing .print-only { display: flex !important; }
 html.is-printing .shell { display: block; }
-html.is-printing .page { width: 1170px; margin: 0; padding: 6px; gap: 14px; }
+html.is-printing .page { width: 1230px; margin: 0; padding: 6px; gap: 14px; }
 
 html.is-printing .print-head { align-items: center; gap: 12px; }
 html.is-printing .print-head .brand__logo { width: 36px; height: 36px; font-size: 14px; }
@@ -560,7 +560,7 @@ html.is-printing .passages__table th:nth-child(2), html.is-printing .passages__t
 
 @page { size: A4 landscape; margin: 9mm; }
 @media print {
-  html { zoom: 0.9; }
+  html { zoom: 0.85; } /* 1230 px * 0.85 = the 279 mm printable width of A4 landscape */
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .page-break { break-before: page; }
 }

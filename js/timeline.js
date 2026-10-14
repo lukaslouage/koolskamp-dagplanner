@@ -91,11 +91,13 @@ KK.Timeline = class {
       return { mode: 'full', title: nameFits ? block.name : block.shortName,
         lines: [block.segment ? f.clock(block.end) : `${f.clock(block.start)}-${f.clock(block.end)}`], pad: 10 };
     }
+    // A title is only shown when the whole word fits (about 7.8 px per character plus padding).
+    const shortFits = pad => block.shortName.length * 7.8 + pad * 2 <= widthPx;
     if (widthPx >= 52) {
-      return { mode: 'compact', title: block.shortName,
+      return { mode: 'compact', title: shortFits(5) ? block.shortName : '',
         lines: block.segment ? [f.clock(block.end)] : [f.clock(block.start), f.clock(block.end)], pad: 5 };
     }
-    if (widthPx >= 22) return { mode: 'tiny', title: block.segment || widthPx >= 44 ? block.shortName : '', lines: [], pad: 3 };
+    if (widthPx >= 22) return { mode: 'tiny', title: shortFits(3) ? block.shortName : '', lines: [], pad: 3 };
     return { mode: 'none', title: '', lines: [], pad: 0 };
   }
 
