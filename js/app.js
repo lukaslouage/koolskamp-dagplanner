@@ -105,8 +105,8 @@
     document.querySelectorAll('[data-theme-choice]').forEach(b => b.classList.toggle('is-active', b.dataset.themeChoice === state.theme));
 
     const womenBroadcast = s.womenBroadcast !== false;
-    $('women-broadcast-field').classList.toggle('is-disabled', !womenBroadcast);
-    $('women-broadcast-field').querySelector('input').disabled = !womenBroadcast;
+    $('women-broadcast-field').classList.toggle('is-off', !womenBroadcast);
+    $('women-broadcast-field').querySelector('input[type="time"]').disabled = !womenBroadcast;
     $('women-broadcast-legend').hidden = !womenBroadcast;
     $('women-broadcast-auto').hidden = !!s.womenBroadcastStart;
     $('women-broadcast-reset').hidden = !s.womenBroadcastStart;

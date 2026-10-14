@@ -170,7 +170,8 @@ h1, h2, h3 { margin: 0; }
 }
 .field__label { color: var(--fg); }
 .field .muted { white-space: nowrap; }
-.field.is-disabled { opacity: 0.45; }
+.field__controls { display: flex; align-items: center; gap: 10px; flex: none; }
+.field.is-off .field__stack, .field.is-off input[type="time"] { opacity: 0.45; }
 .field input:not([type="checkbox"]) {
   flex: none; width: 64px; height: 32px; padding: 0 10px;
   font-size: 13.5px; font-weight: 500; text-align: right;

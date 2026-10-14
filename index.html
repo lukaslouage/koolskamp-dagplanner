@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=4">
+<link rel="stylesheet" href="css/styles.css?v=6">
 </head>
 <body>
 
@@ -87,15 +87,17 @@
       </section>
 
       <section class="settings__group">
-        <h3 class="settings__heading"><span class="chip chip--broadcast"></span>Sporza</h3>
-        <label class="field"><span class="field__label">Vrouwenkoers uitzenden</span><input type="checkbox" class="switch" data-setting="womenBroadcast"></label>
-        <label class="field" id="women-broadcast-field">
+        <h3 class="settings__heading"><span class="chip chip--broadcast"></span>Uitzending</h3>
+        <div class="field" id="women-broadcast-field">
           <span class="field__stack"><span class="field__label">Start vrouwen</span>
-            <span class="field__hint" id="women-broadcast-auto">Automatisch: 50 min voor finish</span>
+            <span class="field__hint" id="women-broadcast-auto">Auto: 50 min voor finish</span>
             <button type="button" class="link-button" id="women-broadcast-reset" hidden>Terug naar automatisch</button>
           </span>
-          <input type="time" data-setting="womenBroadcastStart">
-        </label>
+          <span class="field__controls">
+            <input type="checkbox" class="switch" data-setting="womenBroadcast" aria-label="Vrouwenkoers uitzenden" title="Vrouwenkoers uitzenden">
+            <input type="time" data-setting="womenBroadcastStart" aria-label="Starttijd uitzending vrouwen">
+          </span>
+        </div>
         <label class="field"><span class="field__label">Start mannen</span><input type="time" data-setting="menBroadcastStart"></label>
       </section>
 
@@ -231,13 +233,13 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=4"></script>
-<script src="js/config.js?v=4"></script>
-<script src="js/format.js?v=4"></script>
-<script src="js/schedule.js?v=4"></script>
-<script src="js/timeline.js?v=4"></script>
-<script src="js/route-map.js?v=4"></script>
-<script src="js/pdf-export.js?v=4"></script>
-<script src="js/app.js?v=4"></script>
+<script src="data/route-data.js?v=6"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/format.js?v=6"></script>
+<script src="js/schedule.js?v=6"></script>
+<script src="js/timeline.js?v=6"></script>
+<script src="js/route-map.js?v=6"></script>
+<script src="js/pdf-export.js?v=6"></script>
+<script src="js/app.js?v=6"></script>
 </body>
 </html>
