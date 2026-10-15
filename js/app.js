@@ -31,8 +31,6 @@
       } else if (typeof fallback === 'number') {
         const n = Number(value);
         if (value !== '' && Number.isFinite(n)) clean[key] = n;
-      } else if (key.endsWith('Course')) {
-        if (Object.prototype.hasOwnProperty.call(KK.routeData.courses, value)) clean[key] = String(value);
       } else if (value === '' || /^\d{1,2}:\d{2}$/.test(String(value))) {
         clean[key] = String(value);
       }
@@ -155,7 +153,7 @@
     $('men-first-passage').textContent = f.clock(men.firstRiderTime);
     $('men-first-passage-detail').textContent = men.breakaway > 0
       ? `Vroege vlucht, ${formatMss(Math.round(men.breakaway * 60))} voor het peloton (peloton om ${f.clock(men.firstPassageTime)})`
-      : `Na ${f.km(men.firstPassageKm)} km. ${men.joinName} (km ${f.km(men.joinKm)}) om ${f.clock(men.joinTime)}`;
+      : `Na ${f.km(men.firstPassageKm)} km. Kruiskalsijde (km ${f.km(men.kruiskalsijdeKm)}) om ${f.clock(men.kruiskalsijdeTime)}`;
 
     $('margin-value').textContent = `${margin.minutes} min`;
     $('margin-badge').textContent = margin.conflict ? 'Conflict' : { ok: 'Comfortabel', warn: 'Beperkt', bad: 'Onvoldoende' }[margin.status];
@@ -164,16 +162,15 @@
 
     $('women-total').textContent = `${f.km(women.totalKm)} km`;
     $('men-total').textContent = `${f.km(men.totalKm)} km`;
-    renderCourseFields(women, men);
-    renderRouteLegend(women, men);
+    $('loop-legend').textContent = `Lus Ardooie, mannen ${men.loops} keer (16 km)`;
 
     const sporza = schedule.broadcasts.map(b => `${b.race === 'women' ? 'vrouwen' : 'mannen'} ${f.clock(b.start)}`);
     if (!womenBroadcast) sporza.unshift('vrouwen niet');
     const vip = schedule.vip;
     $('print-summary').innerHTML = [
       scenarios && scenarios.label() && `<b>Scenario</b> ${escapeHtml(scenarios.label())}`,
-      `<b>Vrouwen</b> start ${f.clock(women.start)} in ${courseText(women)}, ${f.km(women.speed)} km/u, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
-      `<b>Mannen</b> start ${f.clock(men.start)} in ${courseText(men)}, ${f.km(men.speed)} km/u, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
+      `<b>Vrouwen</b> start ${f.clock(women.start)}, ${f.km(women.speed)} km/u, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
+      `<b>Mannen</b> start ${f.clock(men.start)}, ${f.km(men.speed)} km/u, ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
       s.showVip !== false && `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
       s.showBroadcast !== false && `<b>Uitzending</b> ${sporza.join(', ')}`,
       `<b>Podium</b> ${Number(s.podiumDuration) || 0} min`,
@@ -197,50 +194,12 @@
     $('time-range').value = state.shownTime;
     $('time-value').textContent = f.clock(state.shownTime);
     routeMap.setTheme(state.theme);
-    routeMap.setCourses([{ course: women.course.id, loops: women.loops }, { course: men.course.id, loops: men.loops }]);
     routeMap.setRiders(positions);
     const flags = KK.flagPositions(schedule, state.shownTime);
     routeMap.setFlags(flags);
     profile.render(schedule);
     profile.setRiders(positions);
     profile.setFlags(flags);
-  }
-
-  /** "Ardooie (2 lussen van 16 km)" or "Ieper" for the summary. */
-  function courseText(race) {
-    const c = race.course;
-    if (!race.loops) return c.name;
-    return `${c.name} (${race.loops} ${race.loops === 1 ? 'lus' : 'lussen'} van ${f.km(c.loop.km)} km)`;
-  }
-
-  /** The loops field of each race follows its course: the name of the start place, the loop length, or off. */
-  function renderCourseFields(...races) {
-    races.forEach(race => {
-      const field = document.querySelector(`[data-loops-field="${race.key}"]`), loop = race.course.loop;
-      field.classList.toggle('is-off', !loop);
-      field.querySelectorAll('input, button').forEach(el => { el.disabled = !loop; });
-      field.querySelector('[data-loops-label]').textContent = loop ? `Lussen ${race.course.start}` : 'Lussen';
-      field.querySelector('[data-loops-hint]').textContent = loop ? `x ${f.km(loop.km)} km` : 'Geen lus bij dit parcours';
-    });
-  }
-
-  /** Map legend: the local lap, and the approach and loop of each course that is ridden. */
-  function renderRouteLegend(women, men) {
-    const item = (kind, text) => `<div class="route-legend__item"><span class="route-legend__line route-legend__line--${kind}"></span>${escapeHtml(text)}</div>`;
-    const lines = [item('lap', `Lokale ronde (${f.km(config.distances.localLap)} km)`)];
-    const approaches = new Map(), loops = new Map();
-    [['vrouwen', women], ['mannen', men]].forEach(([who, race]) => {
-      const c = race.course;
-      if (!approaches.has(c.approach.route)) approaches.set(c.approach.route, `Aanloop ${c.start} tot finishlijn (${f.km(c.approach.km)} km)`);
-      if (race.loops > 0) {
-        const entry = loops.get(c.loop.route) || { text: `Lus ${c.start} (${f.km(c.loop.km)} km)`, who: [] };
-        entry.who.push(`${who} ${race.loops} keer`);
-        loops.set(c.loop.route, entry);
-      }
-    });
-    approaches.forEach(text => lines.push(item('approach', text)));
-    loops.forEach(({ text, who }) => lines.push(item('loop', `${text}: ${who.join(', ')}`)));
-    $('route-legend-items').innerHTML = lines.join('');
   }
 
   /**
@@ -472,15 +431,6 @@
     state.settings = normalizeSettings(cleanSettings(changes));
     saveSettings(); syncInputs(); render();
   }
-  // Course choices from the route data.
-  document.querySelectorAll('[data-course-select]').forEach(select => {
-    select.replaceChildren(...Object.entries(KK.routeData.courses).map(([id, c]) => {
-      const option = document.createElement('option');
-      option.value = id;
-      option.textContent = c.name;
-      return option;
-    }));
-  });
   scenarios = new KK.Scenarios({
     current: () => Object.fromEntries(changedSettings()),
     changesOf,

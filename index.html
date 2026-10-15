@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=68">
+<link rel="stylesheet" href="css/styles.css?v=69">
 </head>
 <body>
 
@@ -84,14 +84,6 @@
 <button type="button" class="stepper__button" data-step-for="womenSpeed" data-step="0.5" aria-label="Sneller">+</button>
 </div>
 </div>
-<label class="field"><span class="field__label">Parcours</span><select class="field__select" data-setting="womenCourse" data-course-select aria-label="Parcours vrouwen"></select></label>
-<div class="field" data-loops-field="women"><span class="field__stack"><span class="field__label" data-loops-label="women">Lussen</span><span class="field__hint" data-loops-hint="women"></span></span>
-<div class="stepper">
-<button type="button" class="stepper__button" data-step-for="womenLoops" data-step="-1" aria-label="Een lus minder">−</button>
-<input type="number" inputmode="decimal" min="0" max="10" step="1" data-setting="womenLoops" aria-label="Lussen rond de startplaats, vrouwen">
-<button type="button" class="stepper__button" data-step-for="womenLoops" data-step="1" aria-label="Een lus meer">+</button>
-</div>
-</div>
 <div class="field"><span class="field__label">Lokale rondes <span class="muted">x 15 km</span></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="womenLaps" data-step="-1" aria-label="Een ronde minder">−</button>
@@ -117,11 +109,10 @@
 <button type="button" class="stepper__button" data-step-for="menSpeed" data-step="0.5" aria-label="Sneller">+</button>
 </div>
 </div>
-<label class="field"><span class="field__label">Parcours</span><select class="field__select" data-setting="menCourse" data-course-select aria-label="Parcours mannen"></select></label>
-<div class="field" data-loops-field="men"><span class="field__stack"><span class="field__label" data-loops-label="men">Lussen</span><span class="field__hint" data-loops-hint="men"></span></span>
+<div class="field"><span class="field__label">Lussen Ardooie <span class="muted">x 16 km</span></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="menLoops" data-step="-1" aria-label="Een lus minder">−</button>
-<input type="number" inputmode="decimal" min="0" max="10" step="1" data-setting="menLoops" aria-label="Lussen rond de startplaats, mannen">
+<input type="number" inputmode="decimal" min="0" max="10" step="1" data-setting="menLoops" aria-label="Lussen Ardooie">
 <button type="button" class="stepper__button" data-step-for="menLoops" data-step="1" aria-label="Een lus meer">+</button>
 </div>
 </div>
@@ -294,7 +285,9 @@
               <div class="rider__detail" id="men-status-detail"></div>
             </div>
             <div class="route-legend">
-              <div class="route-legend__items" id="route-legend-items"></div>
+              <div class="route-legend__item"><span class="route-legend__line route-legend__line--lap"></span>Lokale ronde (15 km)</div>
+              <div class="route-legend__item"><span class="route-legend__line route-legend__line--approach"></span>Aanloop tot finishlijn (12,5 km)</div>
+              <div class="route-legend__item"><span class="route-legend__line route-legend__line--loop"></span><span id="loop-legend"></span></div>
               <div class="route-legend__note no-print">Klik op de tijdlijn of gebruik de schuifregelaar. Posities volgen uit de gemiddelde snelheden.</div>
             </div>
           </div>
@@ -332,16 +325,16 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=68"></script>
-<script src="js/config.js?v=68"></script>
-<script src="js/format.js?v=68"></script>
-<script src="js/schedule.js?v=68"></script>
-<script src="js/timeline.js?v=68"></script>
-<script src="js/route-map.js?v=68"></script>
-<script src="js/profile.js?v=68"></script>
-<script src="js/pdf-export.js?v=68"></script>
-<script src="js/scenarios.js?v=68"></script>
-<script src="js/compare.js?v=68"></script>
-<script src="js/app.js?v=68"></script>
+<script src="data/route-data.js?v=69"></script>
+<script src="js/config.js?v=69"></script>
+<script src="js/format.js?v=69"></script>
+<script src="js/schedule.js?v=69"></script>
+<script src="js/timeline.js?v=69"></script>
+<script src="js/route-map.js?v=69"></script>
+<script src="js/profile.js?v=69"></script>
+<script src="js/pdf-export.js?v=69"></script>
+<script src="js/scenarios.js?v=69"></script>
+<script src="js/compare.js?v=69"></script>
+<script src="js/app.js?v=69"></script>
 </body>
 </html>
