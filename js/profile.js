@@ -1,5 +1,5 @@
 // Elevation profiles under the map: one for the women's race and one for the men's race, with every part of
-// the race (Ardooie loops, approach, laps) in the colours of the timeline and a dot for the current position.
+// the race (loops around the start place, approach, laps) in the colours of the timeline and a dot for the current position.
 // Elevation comes from the GPX files (KK.routeData, [lat, lon, ele]). Like the map, the length of a GPX route
 // is scaled to the official length of that part of the course.
 window.KK = window.KK || {};
@@ -14,11 +14,8 @@ KK.Profile = class {
 
   constructor(containers, routeData) {
     this.containers = containers; // { women: element, men: element }
-    this.routes = {
-      ardooieLoop: this.prepareRoute(routeData.ardooieLoop),
-      approach: this.prepareRoute(routeData.approach),
-      localLap: this.prepareRoute(routeData.localLap),
-    };
+    this.routeData = routeData.routes;
+    this.routes = {}; // prepared on first use: only the routes of the chosen courses are needed
     this.schedule = null;
     this.positions = null;
     this.key = null;
@@ -77,7 +74,8 @@ KK.Profile = class {
   /** The parts of a race (approach, loops, laps) with their elevation points. */
   segments(race) {
     return race.blocks.filter(block => block.kmFrom != null).map(block => {
-      const routeKey = block.type.endsWith('loop') ? 'ardooieLoop' : block.type.endsWith('lap') ? 'localLap' : 'approach';
+      const routeKey = block.route;
+      if (!this.routes[routeKey]) this.routes[routeKey] = this.prepareRoute(this.routeData[routeKey]);
       const length = block.kmTo - block.kmFrom;
       const steps = Math.max(2, Math.round(length * 10));
       const points = [];

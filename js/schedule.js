@@ -18,112 +18,82 @@ window.KK = window.KK || {};
     return km => start + (km * 60) / speed;
   }
 
-  function buildWomen(s) {
-    const start = f.parseTime(s.womenStart);
-    const speed = Number(s.womenSpeed);
-    const laps = clampInt(s.womenLaps, limits.womenLaps, 7);
-    const timeAt = timeAtFactory(start, speed);
-
-    const firstPassageKm = D.approachToFinish;
-    const kruiskalsijdeKm = D.approachToKruiskalsijde;
-    const totalKm = firstPassageKm + D.localLap * laps;
-    const finish = timeAt(totalKm);
-    const podiumEnd = finish + Number(s.podiumDuration || 0);
-
-    const blocks = [
-      { id: 'women-intro', lane: 'women', type: 'women-intro', name: 'Ploegvoorstelling', shortName: 'Ploegv.',
-        start: start - introMinutes(s.womenIntroDuration), end: start },
-      { id: 'women-approach', lane: 'women', type: 'women-approach', name: 'Aanloop', shortName: 'Aanloop',
-        start: timeAt(0), end: timeAt(firstPassageKm), kmFrom: 0, kmTo: firstPassageKm,
-        details: [`Kruiskalsijde km ${f.km(kruiskalsijdeKm)} om ${f.exact(timeAt(kruiskalsijdeKm))}`,
-                  `Eerste doorkomst meet om ${f.exact(timeAt(firstPassageKm))}`] },
-    ];
-    for (let i = 0; i < laps; i++) {
-      const from = firstPassageKm + i * D.localLap, to = from + D.localLap;
-      blocks.push({ id: `women-lap-${i + 1}`, lane: 'women', type: 'women-lap', segment: true,
-        name: `Ronde ${i + 1}`, shortName: `R${i + 1}`, start: timeAt(from), end: timeAt(to), kmFrom: from, kmTo: to,
-        details: [i === laps - 1 ? `Finish om ${f.exact(timeAt(to))}` : `Doorkomst meet om ${f.exact(timeAt(to))}`] });
-    }
-    blocks.push({ id: 'women-podium', lane: 'women', type: 'women-podium', name: 'Podium', shortName: 'Podium', start: finish, end: podiumEnd });
-
-    const passages = [
-      { label: 'Start Ardooie', km: 0, time: timeAt(0), key: true },
-      { label: 'Kruiskalsijde', km: kruiskalsijdeKm, time: timeAt(kruiskalsijdeKm), key: true },
-    ];
-    for (let i = 0; i < laps; i++) {
-      const km = firstPassageKm + i * D.localLap;
-      passages.push({ label: `Doorkomst meet ${i + 1}`, km, time: timeAt(km) });
-    }
-    passages.push({ label: 'Finish', km: totalKm, time: finish, key: true });
-
-    const locate = d => d < firstPassageKm
-      ? { label: 'Aanloop', route: 'approach', fraction: d / D.approachToFinish }
-      : locateLap(d, firstPassageKm, laps);
-
-    return { start, speed, laps, totalKm, timeAt, finish, podiumEnd, firstPassageTime: timeAt(firstPassageKm), blocks, passages, locate };
+  /** The course of a race (start place, optional loop, approach), or the first course for an unknown id. */
+  function courseOf(id) {
+    const courses = KK.routeData.courses;
+    return courses[id] ? { id, ...courses[id] } : { id: Object.keys(courses)[0], ...Object.values(courses)[0] };
   }
 
-  function buildMen(s) {
-    const start = f.parseTime(s.menStart);
-    const speed = Number(s.menSpeed);
-    const loops = clampInt(s.menLoops, limits.menLoops, 4);
-    const laps = clampInt(s.menLaps, limits.menLaps, 7);
+  /**
+   * One race: team presentation, loops around the start place (if the course has a loop), the approach to the
+   * finish line, the local laps and the podium. key is 'women' or 'men'; the settings are read with that prefix.
+   * Distances are the official ones of each part; the map scales the GPX lines to them.
+   */
+  function buildRace(key, s) {
+    const course = courseOf(s[`${key}Course`]);
+    const start = f.parseTime(s[`${key}Start`]);
+    const speed = Number(s[`${key}Speed`]);
+    const loops = course.loop ? clampInt(s[`${key}Loops`], limits[`${key}Loops`], 0) : 0;
+    const laps = clampInt(s[`${key}Laps`], limits[`${key}Laps`], 7);
     const timeAt = timeAtFactory(start, speed);
+    const loopKm = course.loop ? course.loop.km : 0, approach = course.approach, lapKm = D.localLap;
+    const place = course.start;
 
-    const turnoffKm = D.ardooieLoop * loops;
-    const kruiskalsijdeKm = turnoffKm + D.approachToKruiskalsijde;
-    const firstPassageKm = turnoffKm + D.approachToFinish;
-    const totalKm = firstPassageKm + D.localLap * laps;
+    const turnoffKm = loopKm * loops;
+    const joinKm = turnoffKm + approach.joinKm;
+    const firstPassageKm = turnoffKm + approach.km;
+    const totalKm = firstPassageKm + lapKm * laps;
     const finish = timeAt(totalKm);
     const podiumEnd = finish + Number(s.podiumDuration || 0);
 
     const blocks = [
-      { id: 'men-intro', lane: 'men', type: 'men-intro', name: 'Ploegvoorstelling', shortName: 'Ploegv.',
-        start: start - introMinutes(s.menIntroDuration), end: start },
+      { id: `${key}-intro`, lane: key, type: `${key}-intro`, name: 'Ploegvoorstelling', shortName: 'Ploegv.',
+        start: start - introMinutes(s[`${key}IntroDuration`]), end: start },
     ];
     for (let i = 0; i < loops; i++) {
-      const from = i * D.ardooieLoop, to = from + D.ardooieLoop;
-      blocks.push({ id: `men-loop-${i + 1}`, lane: 'men', type: 'men-loop', segment: true,
-        name: `Lus ${i + 1} Ardooie`, shortName: `L${i + 1}`, start: timeAt(from), end: timeAt(to), kmFrom: from, kmTo: to,
-        details: [`Doorkomst startzone Ardooie om ${f.exact(timeAt(to))}`] });
+      const from = i * loopKm, to = from + loopKm;
+      blocks.push({ id: `${key}-loop-${i + 1}`, lane: key, type: `${key}-loop`, segment: true, route: course.loop.route,
+        name: `Lus ${i + 1} ${place}`, shortName: `L${i + 1}`, start: timeAt(from), end: timeAt(to), kmFrom: from, kmTo: to,
+        details: [`Doorkomst startzone ${place} om ${f.exact(timeAt(to))}`] });
     }
-    blocks.push({ id: 'men-turnoff', lane: 'men', type: 'men-turnoff', name: 'Aanloop', shortName: 'Aanloop',
+    blocks.push({ id: `${key}-approach`, lane: key, type: `${key}-approach`, name: 'Aanloop', shortName: 'Aanloop', route: approach.route,
       start: timeAt(turnoffKm), end: timeAt(firstPassageKm), kmFrom: turnoffKm, kmTo: firstPassageKm,
-      details: [`Kruiskalsijde km ${f.km(kruiskalsijdeKm)} om ${f.exact(timeAt(kruiskalsijdeKm))}`,
+      details: [`${approach.joinName} km ${f.km(joinKm)} om ${f.exact(timeAt(joinKm))}`,
                 `Eerste doorkomst meet om ${f.exact(timeAt(firstPassageKm))}`] });
     for (let i = 0; i < laps; i++) {
-      const from = firstPassageKm + i * D.localLap, to = from + D.localLap;
-      blocks.push({ id: `men-lap-${i + 1}`, lane: 'men', type: 'men-lap', segment: true,
+      const from = firstPassageKm + i * lapKm, to = from + lapKm;
+      blocks.push({ id: `${key}-lap-${i + 1}`, lane: key, type: `${key}-lap`, segment: true, route: 'local-lap',
         name: `Ronde ${i + 1}`, shortName: `R${i + 1}`, start: timeAt(from), end: timeAt(to), kmFrom: from, kmTo: to,
         details: [i === laps - 1 ? `Finish om ${f.exact(timeAt(to))}` : `Doorkomst meet om ${f.exact(timeAt(to))}`] });
     }
-    blocks.push({ id: 'men-podium', lane: 'men', type: 'men-podium', name: 'Podium', shortName: 'Podium', start: finish, end: podiumEnd });
+    blocks.push({ id: `${key}-podium`, lane: key, type: `${key}-podium`, name: 'Podium', shortName: 'Podium', start: finish, end: podiumEnd });
 
-    const passages = [{ label: 'Start Ardooie', km: 0, time: timeAt(0), key: true }];
+    const passages = [{ label: `Start ${place}`, km: 0, time: timeAt(0), key: true }];
     for (let i = 1; i <= loops; i++) {
-      const km = i * D.ardooieLoop;
-      passages.push({ label: i === loops ? `Startzone Ardooie ${i}, aanloop` : `Startzone Ardooie ${i}`, km, time: timeAt(km) });
+      const km = i * loopKm;
+      passages.push({ label: i === loops ? `Startzone ${place} ${i}, aanloop` : `Startzone ${place} ${i}`, km, time: timeAt(km) });
     }
-    passages.push({ label: 'Kruiskalsijde', km: kruiskalsijdeKm, time: timeAt(kruiskalsijdeKm), key: true });
+    passages.push({ label: approach.joinName, km: joinKm, time: timeAt(joinKm), key: true });
     for (let i = 0; i < laps; i++) {
-      const km = firstPassageKm + i * D.localLap;
+      const km = firstPassageKm + i * lapKm;
       passages.push({ label: `Doorkomst meet ${i + 1}`, km, time: timeAt(km) });
     }
     passages.push({ label: 'Finish', km: totalKm, time: finish, key: true });
 
+    /** Where on the course a distance is: a label and a route with the fraction along it (for map and profile). */
     const locate = d => {
-      if (d < turnoffKm) return { label: `Lus ${Math.floor(d / D.ardooieLoop) + 1} Ardooie`, route: 'ardooieLoop', fraction: (d % D.ardooieLoop) / D.ardooieLoop };
-      if (d < firstPassageKm) return { label: 'Aanloop', route: 'approach', fraction: (d - turnoffKm) / D.approachToFinish };
+      if (d < turnoffKm) return { label: `Lus ${Math.floor(d / loopKm) + 1} ${place}`, route: course.loop.route, fraction: (d % loopKm) / loopKm };
+      if (d < firstPassageKm) return { label: 'Aanloop', route: approach.route, fraction: (d - turnoffKm) / approach.km };
       return locateLap(d, firstPassageKm, laps);
     };
 
-    return { start, speed, loops, laps, totalKm, timeAt, finish, podiumEnd, blocks, passages, locate,
-      kruiskalsijdeKm, kruiskalsijdeTime: timeAt(kruiskalsijdeKm), firstPassageKm, firstPassageTime: timeAt(firstPassageKm) };
+    return { key, course, start, speed, loops, laps, totalKm, timeAt, finish, podiumEnd, blocks, passages, locate,
+      joinKm, joinName: approach.joinName, joinTime: timeAt(joinKm), firstPassageKm, firstPassageTime: timeAt(firstPassageKm) };
   }
 
   function locateLap(d, lapStartKm, laps) {
     const n = Math.min(laps, Math.floor((d - lapStartKm) / D.localLap) + 1);
-    return { label: `Ronde ${n} van ${laps}`, route: 'localLap', fraction: (d - lapStartKm - (n - 1) * D.localLap) / D.localLap };
+    return { label: `Ronde ${n} van ${laps}`, route: 'local-lap', fraction: (d - lapStartKm - (n - 1) * D.localLap) / D.localLap };
   }
 
   /**
@@ -154,8 +124,8 @@ window.KK = window.KK || {};
   }
 
   KK.computeSchedule = function (settings) {
-    const women = buildWomen(settings);
-    const men = buildMen(settings);
+    const women = buildRace('women', settings);
+    const men = buildRace('men', settings);
 
     // The circuit must be clear for the men's red flag car, not only for the men: it passes the finish line
     // menRedFlag minutes before the first rider. It is free for the men once the women are done: the end of
@@ -244,9 +214,11 @@ window.KK = window.KK || {};
   /** Position of each race at a given time, used by the map and the rider cards. */
   KK.riderPositions = function (schedule, time) {
     const position = race => {
-      if (time < race.start) return { state: 'pre', km: 0, label: 'Nog niet gestart', detail: `Start om ${f.clock(race.start)}` };
+      // Before the start the riders wait at the start place, after the finish at the finish line.
+      const startRoute = race.loops > 0 ? race.course.loop.route : race.course.approach.route;
+      if (time < race.start) return { state: 'pre', km: 0, route: startRoute, fraction: 0, label: 'Nog niet gestart', detail: `Start om ${f.clock(race.start)}` };
       const d = ((time - race.start) * race.speed) / 60;
-      if (d >= race.totalKm) return { state: 'finished', km: race.totalKm, label: 'Aangekomen', detail: `Finish om ${f.clock(race.finish)}` };
+      if (d >= race.totalKm) return { state: 'finished', km: race.totalKm, route: 'local-lap', fraction: 0, label: 'Aangekomen', detail: `Finish om ${f.clock(race.finish)}` };
       return { state: 'racing', km: d, ...race.locate(d), detail: `${f.km(d)} km gereden, nog ${f.km(race.totalKm - d)} km` };
     };
     return { women: position(schedule.women), men: position(schedule.men) };

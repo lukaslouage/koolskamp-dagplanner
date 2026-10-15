@@ -1,4 +1,5 @@
-// MapLibre map with the three GPX routes and live rider markers. Base map from OpenFreeMap.
+// MapLibre map with the routes of the chosen courses (local laps, approaches, loops) and live rider markers.
+// Base map from OpenFreeMap.
 window.KK = window.KK || {};
 
 KK.RouteMap = class {
@@ -9,12 +10,17 @@ KK.RouteMap = class {
 
   constructor(el, routeData) {
     this.el = el;
-    this.routes = {
-      ardooieLoop: this.buildRoute(routeData.ardooieLoop),
-      approach: this.buildRoute(routeData.approach),
-      localLap: this.buildRoute(routeData.localLap),
-    };
-    this.kruiskalsijde = routeData.kruiskalsijde;
+    this.routes = Object.fromEntries(Object.entries(routeData.routes).map(([id, points]) => [id, this.buildRoute(points)]));
+    this.courses = routeData.courses;
+    // On the map an approach stops where it joins the circuit, so it does not cover the yellow local lap.
+    this.drawnUpTo = {};
+    Object.values(this.courses).forEach(c => {
+      const line = this.routes[c.approach.route].latLngs;
+      let best = 0;
+      line.forEach((p, i) => { if (KK.RouteMap.haversineKm(p, c.approach.join) < KK.RouteMap.haversineKm(line[best], c.approach.join)) best = i; });
+      this.drawnUpTo[c.approach.route] = best;
+    });
+    this.shown = null; // which approaches, loops, starts and joins are on the map (see setCourses)
     this.theme = null;
   }
 
@@ -47,9 +53,23 @@ KK.RouteMap = class {
     return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
   }
 
+  /** What to draw for the courses of both races: [{ course: id, loops: number }, ...]. */
+  static plan(courses, races) {
+    const approaches = new Set(), loops = new Map(), starts = new Map(), joins = new Map();
+    races.forEach(({ course: id, loops: n }) => {
+      const c = courses[id];
+      if (!c) return;
+      approaches.add(c.approach.route);
+      joins.set(c.approach.joinName + c.approach.join.join(), { name: c.approach.joinName, latLng: c.approach.join });
+      if (c.loop && n > 0) loops.set(c.loop.route, true);
+      starts.set(c.start, { name: `Start ${c.start}`, route: c.loop && n > 0 ? c.loop.route : c.approach.route });
+    });
+    return { approaches: [...approaches], loops: [...loops.keys()], starts: [...starts.values()], joins: [...joins.values()] };
+  }
+
   bounds() {
-    const r = this.routes;
-    const all = [...r.ardooieLoop.latLngs, ...r.approach.latLngs, ...r.localLap.latLngs];
+    const r = this.routes, shown = this.shown || { approaches: Object.keys(r), loops: [] };
+    const all = [...r['local-lap'].latLngs, ...shown.approaches.flatMap(id => r[id].latLngs), ...shown.loops.flatMap(id => r[id].latLngs)];
     const lats = all.map(p => p[0]), lons = all.map(p => p[1]);
     return [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
   }
@@ -83,13 +103,11 @@ KK.RouteMap = class {
       el.innerHTML = html;
       return new ml.Marker({ element: el, ...options }).setLngLat(KK.RouteMap.lngLat(latLng)).addTo(map);
     };
-    const pin = (latLng, text) => marker(latLng, 'map-pin-wrap',
-      `<span class="map-pin"></span><span class="map-pin__label">${text}</span>`, { anchor: 'left', offset: [-7, 0] });
-    pin(r.ardooieLoop.latLngs[0], 'Start Ardooie');
-    pin(this.kruiskalsijde, 'Kruiskalsijde');
-    pin(r.localLap.latLngs[0], 'Finish');
+    this.marker = marker;
+    this.pins = [];
+    this.finishPin = this.pin(r['local-lap'].latLngs[0], 'Finish');
 
-    const start = r.ardooieLoop.latLngs[0];
+    const start = r['local-lap'].latLngs[0];
     this.riderMarkers = {
       women: marker(start, 'map-rider map-rider--women', 'V'),
       men: marker(start, 'map-rider map-rider--men', 'M'),
@@ -104,6 +122,7 @@ KK.RouteMap = class {
     };
     this.flagMarkers = { women: { red: flag('red'), green: flag('green') }, men: { red: flag('red'), green: flag('green') } };
     this.closureData = { type: 'FeatureCollection', features: [] };
+    if (this.shown) this.updatePins();
     if (this.flags) this.setFlags(this.flags);
 
     // Refit whenever the container changes size (window resize, print layout), so the routes never end up off screen.
@@ -117,9 +136,53 @@ KK.RouteMap = class {
     }
   }
 
+  pin(latLng, text) {
+    return this.marker(latLng, 'map-pin-wrap',
+      `<span class="map-pin"></span><span class="map-pin__label">${text}</span>`, { anchor: 'left', offset: [-7, 0] });
+  }
+
+  /** Start places and the points where an approach joins the circuit, for the courses on the map. */
+  updatePins() {
+    if (!this.map || !this.marker) return;
+    this.pins.forEach(p => p.remove());
+    const r = this.routes, shown = this.shown;
+    this.pins = [
+      ...shown.starts.map(s => this.pin(r[s.route].latLngs[0], s.name)),
+      ...shown.joins.map(j => this.pin(j.latLng, j.name)),
+    ];
+  }
+
+  /** GeoJSON with the lines of a list of routes. */
+  lines(ids) {
+    const part = id => this.drawnUpTo[id] != null ? this.routes[id].latLngs.slice(0, this.drawnUpTo[id] + 1) : this.routes[id].latLngs;
+    return { type: 'FeatureCollection', features: ids.map(id => ({ type: 'Feature', properties: { id },
+      geometry: { type: 'LineString', coordinates: part(id).map(KK.RouteMap.lngLat) } })) };
+  }
+
+  /**
+   * Shows the courses of both races: races = [{ course, loops }]. Only the parts that are ridden are drawn; the
+   * map refits when that changes.
+   */
+  setCourses(races) {
+    const shown = KK.RouteMap.plan(this.courses, races);
+    const key = JSON.stringify(shown);
+    if (key === this.shownKey) return;
+    this.shownKey = key;
+    this.shown = shown;
+    if (!this.map) return;
+    try {
+      const approaches = this.map.getSource('approaches'), loops = this.map.getSource('loops');
+      if (approaches) approaches.setData(this.lines(shown.approaches));
+      if (loops) loops.setData(this.lines(shown.loops));
+    } catch (e) { /* the style is reloading; the layers are added again with this data */ }
+    this.updatePins();
+    this.fit();
+  }
+
   /** Adds the route lines. Runs after every style load, because a theme switch replaces the whole style. */
   addRouteLayers() {
-    const map = this.map, r = this.routes, dark = this.theme === 'dark';
+    const map = this.map, dark = this.theme === 'dark';
+    const shown = this.shown || { approaches: [], loops: [] };
     // The closed stretch of road (between the green and the red flag car) as a red glow under the route lines.
     map.addSource('closure', { type: 'geojson', data: this.closureData || { type: 'FeatureCollection', features: [] } });
     // Drawn in one solid colour (red at about 38% over the map, mixed in advance): a see-through line gets darker
@@ -127,21 +190,20 @@ KK.RouteMap = class {
     const firstLabel = map.getStyle().layers.find(layer => layer.type === 'symbol');
     map.addLayer({ id: 'closure-halo', type: 'line', source: 'closure', layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': dark ? '#5F2325' : '#EDB4B4', 'line-width': 22 } }, firstLabel && firstLabel.id);
-    const add = (id, route, layers) => {
-      map.addSource(id, { type: 'geojson',
-        data: { type: 'Feature', geometry: { type: 'LineString', coordinates: route.latLngs.map(KK.RouteMap.lngLat) } } });
+    const add = (id, data, layers) => {
+      map.addSource(id, { type: 'geojson', data });
       layers.forEach((paint, i) => map.addLayer({ id: `${id}-${i}`, type: 'line', source: id,
         layout: { 'line-join': 'round', 'line-cap': 'round' }, paint }));
     };
-    add('local-lap', r.localLap, [
+    add('local-lap', this.lines(['local-lap']), [
       { 'line-color': '#000000', 'line-width': 10 },
       { 'line-color': '#FFD201', 'line-width': 6 },
     ]);
-    add('approach', r.approach, [
+    add('approaches', this.lines(shown.approaches), [
       { 'line-color': dark ? '#111113' : '#FFFFFF', 'line-width': 8 },
       { 'line-color': dark ? '#B5B5B2' : '#7A7A7A', 'line-width': 5 },
     ]);
-    add('ardooie-loop', r.ardooieLoop, [
+    add('loops', this.lines(shown.loops), [
       { 'line-color': dark ? '#E6E6E6' : '#000000', 'line-width': 3.5, 'line-dasharray': [2.5, 2] },
     ]);
   }
@@ -160,9 +222,7 @@ KK.RouteMap = class {
     const names = { women: 'Vrouwen', men: 'Mannen' };
     Object.entries(positions).forEach(([race, p]) => {
       const marker = this.riderMarkers[race];
-      const latLng = p.state === 'pre' ? this.routes.ardooieLoop.latLngs[0]
-        : p.state === 'finished' ? this.routes.localLap.latLngs[0]
-        : this.pointAt(this.routes[p.route], p.fraction);
+      const latLng = this.pointAt(this.routes[p.route], p.fraction);
       marker.setLngLat(KK.RouteMap.lngLat(latLng));
       const el = marker.getElement();
       el.classList.toggle('is-idle', p.state !== 'racing');

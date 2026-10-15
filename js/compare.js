@@ -7,9 +7,11 @@ KK.Compare = class {
   // Settings shown in "Instellingen die verschillen", in sidebar order. View-only settings (the eyes) are left out.
   static SETTINGS = [
     ['womenStart', 'Start vrouwen', 'time'], ['womenIntroDuration', 'Ploegvoorstelling vrouwen', 'min'],
-    ['womenSpeed', 'Snelheid vrouwen', 'speed'], ['womenLaps', 'Lokale rondes vrouwen', 'count'],
+    ['womenSpeed', 'Snelheid vrouwen', 'speed'], ['womenCourse', 'Parcours vrouwen', 'course'], ['womenLoops', 'Lussen vrouwen', 'count'],
+    ['womenLaps', 'Lokale rondes vrouwen', 'count'],
     ['menStart', 'Start mannen', 'time'], ['menIntroDuration', 'Ploegvoorstelling mannen', 'min'],
-    ['menSpeed', 'Snelheid mannen', 'speed'], ['menLoops', 'Lussen Ardooie', 'count'], ['menLaps', 'Lokale rondes mannen', 'count'],
+    ['menSpeed', 'Snelheid mannen', 'speed'], ['menCourse', 'Parcours mannen', 'course'], ['menLoops', 'Lussen mannen', 'count'],
+    ['menLaps', 'Lokale rondes mannen', 'count'],
     ['menBreakaway', 'Vroege vlucht', 'mss'],
     ['womenRedFlag', 'Rode vlag vrouwen', 'min'], ['womenGreenFlag', 'Groene vlag vrouwen', 'min'],
     ['menRedFlag', 'Rode vlag mannen', 'min'], ['menGreenFlag', 'Groene vlag mannen', 'min'],
@@ -78,12 +80,17 @@ KK.Compare = class {
     if (kind === 'speed') return `${f.km(Number(value))} km/u`;
     if (kind === 'mss') { const s = Math.round(Number(value) || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
     if (kind === 'onoff') return value === false ? 'uit' : 'aan';
+    if (kind === 'course') return (KK.routeData.courses[value] || {}).name || String(value);
     return String(value);
   }
 
   /** Key figures, top to bottom. Each row: label and a function that returns the text for one schedule. */
   static figures() {
     const f = KK.format;
+    const course = race => s => {
+      const r = s.schedule[race];
+      return r.loops ? `${r.course.name}, ${r.loops} ${r.loops === 1 ? 'lus' : 'lussen'}` : r.course.name;
+    };
     const broadcast = race => s => {
       const b = s.schedule.broadcasts.find(x => x.race === race);
       return b ? `${f.clock(b.start)}-${f.clock(b.end)}` : 'geen';
@@ -97,11 +104,13 @@ KK.Compare = class {
       { label: 'Weg vrij na vrouwen', get: s => f.clock(s.schedule.margin.parts.womenClear) },
       { label: 'Weg dicht voor mannen', get: s => f.clock(s.schedule.margin.parts.menRed) },
       { group: 'Vrouwen' },
+      { label: 'Parcours', get: course('women') },
       { label: 'Start', get: s => f.clock(s.schedule.women.start) },
       { label: 'Aankomst', get: s => f.clock(s.schedule.women.finish) },
       { label: 'Afstand', get: s => `${f.km(s.schedule.women.totalKm)} km` },
       { label: 'Uitzending', get: broadcast('women') },
       { group: 'Mannen' },
+      { label: 'Parcours', get: course('men') },
       { label: 'Start', get: s => f.clock(s.schedule.men.start) },
       { label: 'Eerste passage', get: s => f.clock(s.schedule.men.firstRiderTime) },
       { label: 'Aankomst', get: s => f.clock(s.schedule.men.finish) },

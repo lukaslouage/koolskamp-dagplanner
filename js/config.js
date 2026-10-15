@@ -5,10 +5,7 @@ KK.config = {
   timelineAxis: { start: 8 * 60 + 30, end: 18 * 60 + 30 },
 
   distances: {
-    approachToFinish: 12.5,        // Ardooie start (or loop exit) to first passage at the finish line
-    approachToKruiskalsijde: 10.7, // point where the approach joins the local circuit
-    ardooieLoop: 16,
-    localLap: 15,
+    localLap: 15, // the local circuit in Koolskamp; start places, loops and approaches are in KK.routeData.courses
   },
 
   durations: {
@@ -25,6 +22,9 @@ KK.config = {
     womenLaps: 7,
     menLoops: 2,
     menLaps: 9,
+    womenCourse: 'ardooie',   // id in KK.routeData.courses: start place, loop and approach of each race
+    menCourse: 'ardooie',
+    womenLoops: 0,            // loops around the start place before the approach (only when the course has a loop)
     podiumDuration: 25,
     marginOk: 35,
     marginWarn: 15,
@@ -45,6 +45,7 @@ KK.config = {
 
   limits: {
     womenLaps: { min: 1, max: 15 },
+    womenLoops: { min: 0, max: 10 },
     menLoops: { min: 0, max: 10 },
     menLaps: { min: 1, max: 15 },
   },

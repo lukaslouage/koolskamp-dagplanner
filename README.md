@@ -18,7 +18,7 @@ Static site: plain HTML, CSS and JavaScript. No build step, no dependencies to i
 ```
 index.html            Page markup (Dutch copy)
 css/styles.css        All styling, light/dark theme variables, print rules
-js/config.js          Distances, fixed durations, default settings, limits
+js/config.js          Local lap length, fixed durations, default settings, limits
 js/format.js          Time and number formatting (10u15, 10:15:24, 117,5)
 js/schedule.js        Pure race calculations: blocks, passages, margin, broadcasts, rider positions
 js/timeline.js        Renders the two-lane timeline (horizontal, or vertical on phones), tooltips, click-to-select time
@@ -26,20 +26,34 @@ js/route-map.js       MapLibre map (OpenFreeMap base map), GPX routes, rider mar
 js/profile.js         Elevation profiles (women, men) under the map, with the rider dots
 js/app.js             State, controls, cards, tables, theme, share link, playback, PDF export flow
 js/pdf-export.js      Turns the print layout into a downloadable two-page PDF
-data/route-data.js    Route coordinates generated from the GPX files
-data/gpx/             Source GPX files (Strava export)
+js/scenarios.js       Saved scenarios in this browser, export and import
+js/compare.js         Comparison of up to three scenarios
+data/route-data.js    Routes and courses, generated from the GPX files (do not edit by hand)
+data/gpx/             Source GPX files (Strava export, author and links removed)
+tools/build_route_data.py  Builds data/route-data.js from data/gpx (run after adding or changing a GPX)
 ```
 
 Scripts are loaded as classic scripts on a shared `window.KK` namespace, so the page also works when opened directly from disk (`file://`).
 
+## Courses (start places)
+
+A course is a start place with an optional loop and an approach to the finish line in Koolskamp. The local lap is the same for every course. Courses are listed in `COURSES` in `tools/build_route_data.py`; the site reads them from `KK.routeData.courses` and offers them in the sidebar ("Parcours", per race). Now: Ardooie (loop 16 km), Ardooie with the big loop (20,6 km) and Ieper (one approach of 56,9 km, no loop).
+
+GPX rules for a new course (one track per file):
+- **Approach:** from the start place to the finish line in Koolskamp, in riding direction, ending on the finish line (within about 150 m). It has to ride onto the local circuit somewhere; the script finds that point (the last stretch that stays within 25 m of the circuit) and calls it by the name given in `COURSES`.
+- **Loop (optional):** starts and ends at the start place (within about 150 m), in riding direction. The approach starts there too.
+- Distances: give the official length in `COURSES` (`km`, `joinKm`) when known; otherwise the GPX length is used, rounded to 0,1 km.
+
+To add one: put the GPX files in `data/gpx/` (remove author and links), add the course to `COURSES`, run `python3 tools/build_route_data.py` and raise the `?v=` numbers. On the map an approach is drawn up to the point where it joins the circuit, so the yellow local lap stays visible; the riders still follow the whole approach.
+
 ## Calculation rules
 
 - Time at a point = start time + distance / average speed.
-- **Women** (default 117,5 km): approach from Ardooie to the first passage at the finish line, 12,5 km (Kruiskalsijde at km 10,7), then `womenLaps` local laps of 15 km.
-- **Men** (default 180,5 km): `menLoops` Ardooie loops of 16 km, turn-off to the circuit of 12,5 km (Kruiskalsijde at 10,7 km into the turn-off), then `menLaps` local laps of 15 km.
+- **Each race** (`buildRace` in `schedule.js`) rides a course (`womenCourse`, `menCourse`): `womenLoops`/`menLoops` loops around the start place (only when the course has a loop), the approach to the first passage at the finish line (passing the point where it joins the local circuit, e.g. Kruiskalsijde), then `womenLaps`/`menLaps` local laps of 15 km.
+- Defaults: both races start in Ardooie (loop 16 km, approach 12,5 km, Kruiskalsijde at km 10,7 of the approach). Women 0 loops and 7 laps (117,5 km), men 2 loops and 9 laps (179,5 km).
 - Team presentation: its length is a setting per race (`womenIntroDuration`, `menIntroDuration`, default 60 min, 0 hides it); it ends at the start of the race.
 - Podium starts at the finish and lasts `podiumDuration`.
-- **Margin** = men's first passage at the finish line minus the end of the women's podium. Shown as "Comfortabel" (green) from `marginOk` (setting "Streefmarge"), "Beperkt" (orange) from `marginWarn` (setting "Minimummarge"), "Onvoldoende" (red) below that. A negative margin shows a red "Conflict: omloop niet vrij" block.
+- **Margin** = men's first passage at the finish line minus the end of the women's podium. Shown as "Comfortabel" (green) from `marginOk` (setting "Streefmarge"), "Beperkt" (orange) from `marginWarn` (setting "Minimummarge"), "Onvoldoende" (red) below that. A negative margin shows a red "Conflict: weg niet vrij" block.
 - The margin card shows the whole sum (`margin.parts`, `renderMarginSum` in `app.js`): women clear = the later of the end of the podium and the green flag car of the women; men come = first passage (minus the early break-away if there is one) minus the red flag car; margin = men come minus women clear. Times are rounded to the minute and the margin is the difference of those rounded times, so the sum on the screen always adds up. The card is wide next to the three other cards from 1400 px; on smaller screens it has its own row. It is also in the PDF.
 - **Road closure (rode vlag, groene vlag):** each race has `womenRedFlag`/`menRedFlag` (minutes the red flag car drives ahead of the first rider) and `womenGreenFlag`/`menGreenFlag` (minutes the green flag car follows the winner), default 2 min for red and 3 min for green, in the sidebar block "Wegafsluiting". They are shown where the selected time is (not on the timeline, where they were too small to read): on the map a red flag where the riders will be in `red` minutes, a green flag where they were `green` minutes ago and the stretch of road in between as a red glow (`KK.flagPositions`, `RouteMap.setFlags`). A flag past the start or the finish is left out. The flags and the glow are not in the PDF, which only has the settings in its summary. The margin runs from the moment the women are clear (the end of the podium or the green flag car of the women, whichever is later) to the red flag car of the men, so the red flag car of the men shortens the margin and the green flag car of the women only counts when it is later than the podium. Only the vehicles that mark the front and the rear of the race are modelled, not every car and motorbike. There is no general rule for the number of minutes (the Belgian police guidance only says the road is closed from the red to the green flag), so the values should be confirmed with the police zone or race director.
 - **Early break-away (men):** `menBreakaway` (seconds, shown as m:ss, 0 to 15 min, default 2:00) is the lead of the first riders over the modelled group at the first passage at the finish line. It moves the first passage of the men (`men.firstRiderTime`) and with it the red flag car and the margin earlier; the finish, the average speed and the later laps do not change. The peloton time stays in the passage table (an extra row "vroege vlucht" appears) and on the first-passage card.

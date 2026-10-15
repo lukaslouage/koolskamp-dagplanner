@@ -20,6 +20,7 @@
   --org-fg: #52525B;
   --org-border: #D4D4D8;
   --women-intro: #FFF7CC;
+  --women-loop: #FFF0A6;      /* loops around the start place: lighter than the approach, which is lighter than the laps */
   --men-loop: #52525B;
   --men-turnoff: #3F3F46;
   --men-lap: #18181B;
@@ -56,6 +57,7 @@
   --org-fg: #D4D4D8;
   --org-border: #3F3F46;
   --women-intro: #3A3200;
+  --women-loop: #FFF0A6;
   --men-loop: #5A5A62;
   --men-turnoff: #45454C;
   --men-lap: #2E2E33;
@@ -183,7 +185,7 @@ h1, h2, h3 { margin: 0; }
 .field__label { color: var(--fg); }
 .field .muted { white-space: nowrap; }
 .field__controls { display: flex; align-items: center; gap: 10px; flex: none; }
-.field.is-off .field__stack, .field.is-off input[type="time"] { opacity: 0.45; }
+.field.is-off .field__stack, .field.is-off input[type="time"], .field.is-off .stepper { opacity: 0.45; }
 .field input:not([type="checkbox"]) {
   flex: none; width: 64px; height: 32px; padding: 0 10px;
   font-size: 13.5px; font-weight: 500; text-align: right;
@@ -351,12 +353,13 @@ h1, h2, h3 { margin: 0; }
 .block__times { display: flex; flex-direction: column; gap: 2px; }
 
 .block--women-intro { background: var(--women-intro); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--brand-yellow); }
+.block--women-loop { background: var(--women-loop); color: #000; }
 .block--women-approach { background: var(--brand-yellow-light); color: #000; }
 .block--women-lap { background: var(--brand-yellow); color: #000; }
 .block--women-podium { background: var(--women-intro); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--brand-yellow); }
 .block--men-intro { background: var(--bg); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--men-outline); }
 .block--men-loop { background: var(--men-loop); color: #FFF; }
-.block--men-turnoff { background: var(--men-turnoff); color: #FFF; }
+.block--men-approach { background: var(--men-turnoff); color: #FFF; }
 .block--men-lap { background: var(--men-lap); color: #FFF; box-shadow: inset 0 0 0 1px var(--men-border); }
 .block--men-podium { background: var(--bg); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--men-outline); }
 .block--org { background: color-mix(in oklch, var(--status) 16%, var(--bg)); color: var(--status); box-shadow: inset 0 0 0 1.5px var(--status); } /* the margin block takes the status colour */
@@ -523,10 +526,11 @@ html.is-printing .map-flag { display: none !important; }
 .profile__tick { stroke: var(--line-strong); stroke-width: 1; }
 .profile__separator { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 2 3; }
 .profile__line { fill: none; stroke: var(--fg); stroke-opacity: .6; stroke-width: 1.25; stroke-linejoin: round; }
+.profile__area--women-loop { fill: var(--women-loop); fill-opacity: .9; }
 .profile__area--women-approach { fill: var(--brand-yellow-light); fill-opacity: .85; }
 .profile__area--women-lap { fill: var(--brand-yellow); fill-opacity: .8; }
 .profile__area--men-loop { fill: var(--men-loop); fill-opacity: .55; }
-.profile__area--men-turnoff { fill: var(--men-turnoff); fill-opacity: .6; }
+.profile__area--men-approach { fill: var(--men-turnoff); fill-opacity: .6; }
 .profile__area--men-lap { fill: var(--men-lap); fill-opacity: .6; }
 .profile__guide { stroke: var(--fg); stroke-opacity: .45; stroke-width: 1; stroke-dasharray: 3 3; }
 .profile__rider circle { stroke-width: 2.5; }
@@ -560,16 +564,18 @@ html.is-printing .map-flag { display: none !important; }
 
 /* ---------- Scenarios (sidebar) ---------- */
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.route-legend__items { display: contents; }
 .scenario { display: flex; flex-direction: column; gap: 8px; }
 .scenario .settings__heading { margin-bottom: 0; }
-.scenario__select, .compare__select {
+.scenario__select, .compare__select, .field__select {
   width: 100%; height: 34px; padding: 0 30px 0 10px; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--fg);
   border: 1px solid var(--line-strong); border-radius: 8px; background: var(--bg); box-shadow: var(--shadow);
   appearance: none; -webkit-appearance: none; cursor: pointer;
   background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
   background-position: calc(100% - 15px) 15px, calc(100% - 10px) 15px; background-size: 5px 5px; background-repeat: no-repeat;
 }
-.scenario__select:focus-visible, .compare__select:focus-visible { outline: none; border-color: var(--fg); box-shadow: var(--focus); }
+.scenario__select:focus-visible, .compare__select:focus-visible, .field__select:focus-visible { outline: none; border-color: var(--fg); box-shadow: var(--focus); }
+.field__select { flex: none; width: 150px; }
 .scenario__actions { display: flex; gap: 6px; align-items: center; }
 .scenario__actions > .btn { flex: 1; }
 .scenario__actions .btn:disabled { cursor: default; }
