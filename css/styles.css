@@ -37,6 +37,7 @@
   --broadcast-men: oklch(0.55 0.18 320);
   --approach: #7A7A7A;
   --status: var(--ok);
+  --first-passage: #64748B; /* fixed: the colour of the margin (--status) belongs to the margin block */
   color-scheme: light;
 }
 
@@ -71,6 +72,7 @@
   --broadcast-women: oklch(0.72 0.15 255);
   --broadcast-men: oklch(0.72 0.15 320);
   --approach: #B5B5B2;
+  --first-passage: #94A3B8;
   color-scheme: dark;
 }
 
@@ -342,7 +344,7 @@ h1, h2, h3 { margin: 0; }
 .block--men-turnoff { background: var(--men-turnoff); color: #FFF; }
 .block--men-lap { background: var(--men-lap); color: #FFF; box-shadow: inset 0 0 0 1px var(--men-border); }
 .block--men-podium { background: var(--bg); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--men-outline); }
-.block--org { background: var(--org); color: var(--org-fg); box-shadow: inset 0 0 0 1px var(--org-border); }
+.block--org { background: color-mix(in oklch, var(--status) 16%, var(--bg)); color: var(--status); box-shadow: inset 0 0 0 1.5px var(--status); } /* the margin block takes the status colour */
 .block--conflict { background: var(--bad); color: #FFF; z-index: 4; }
 
 /* VIP tent: neutral blue-grey, clearly different from the race colours */
@@ -382,7 +384,7 @@ h1, h2, h3 { margin: 0; }
 .marker--right .marker__label { left: 100%; }
 .marker--left .marker__label { right: 100%; }
 .marker--women { --mk: var(--women-line); --mk-bg: var(--brand-yellow); --mk-fg: #000; }
-.marker--status { --mk: var(--status); --mk-bg: var(--status); --mk-fg: #FFF; }
+.marker--status { --mk: var(--first-passage); --mk-bg: var(--first-passage); --mk-fg: #FFF; }
 .marker--men { --mk: var(--men-chip); --mk-bg: var(--men-chip); --mk-fg: var(--bg); }
 .vline-label--flip { transform: translateX(calc(-100% - 4px)); }
 
@@ -417,13 +419,13 @@ h1, h2, h3 { margin: 0; }
 .htick-label--women, .htick-label--men, .htick-label--status, .htick-label--women-finish, .htick-label--men-finish { font-size: 11px; font-weight: 600; padding: 1px 0; border-radius: 5px; text-align: center; left: 2px; width: calc(var(--axis) - 8px); }
 .htick-label--women { color: var(--broadcast-women); background: color-mix(in oklch, var(--broadcast-women) 14%, var(--bg)); }
 .htick-label--men { color: var(--broadcast-men); background: color-mix(in oklch, var(--broadcast-men) 14%, var(--bg)); }
-.htick-label--status { color: #FFF; background: var(--status); }
+.htick-label--status { color: #FFF; background: var(--first-passage); }
 .htick-label--women-finish { color: #000; background: var(--brand-yellow); }
 .htick-label--men-finish { color: var(--bg); background: var(--men-chip); }
 .hline { position: absolute; left: calc(var(--axis) - 4px); right: 0; transform: translateY(-50%); z-index: 5; pointer-events: none; }
 .hline--women-broadcast { border-top: 2px dotted var(--broadcast-women); }
 .hline--men-broadcast { border-top: 2px dotted var(--broadcast-men); }
-.hline--first-passage { border-top: 2px solid var(--status); }
+.hline--first-passage { border-top: 2px solid var(--first-passage); }
 .hline--selected { border-top: 1.5px solid var(--fg); }
 .hline--women-finish { border-top: 2px solid var(--women-line); }
 .hline--men-finish { border-top: 2px solid var(--men-chip); }
