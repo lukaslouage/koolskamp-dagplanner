@@ -16,8 +16,15 @@ KK.config = {
   },
 
   defaults: {
-    womenSpeed: 42,
-    menSpeed: 48,
+    // Expected average speeds and the range around them (slow, fast), from ProCyclingStats:
+    // men = Kampioenschap van Vlaanderen 2021 to 2026 (44,6 to 48,0, average 46,5);
+    // women = flat Flemish 1.1/1.2 women's races 2022 to 2026 (mostly 38,5 to 42, average 40,7). See README.
+    womenSpeed: 40.5,
+    womenSpeedSlow: 38.5,
+    womenSpeedFast: 42,
+    menSpeed: 46.5,
+    menSpeedSlow: 44.5,
+    menSpeedFast: 48,
     womenStart: '10:00',
     menStart: '13:00',
     womenIntroDuration: 45,   // team presentation, minutes (ends at the start)
@@ -50,6 +57,8 @@ KK.config = {
   },
 
   storageKey: 'kk-dagplanner-settings-v2', // v2 stores only changed values; v1 held all old defaults
+  variantsStorageKey: 'kk-dagplanner-variants-v1', // the variants (A, B, C) on screen: { active, reference, view, variants }
+  maxVariants: 3,
   scenariosStorageKey: 'kk-dagplanner-scenarios-v1', // saved scenarios: [{ id, name, settings (changes only), savedAt }]
   activeScenarioKey: 'kk-dagplanner-active-scenario',
   sidebarStorageKey: 'kk-dagplanner-sidebar',

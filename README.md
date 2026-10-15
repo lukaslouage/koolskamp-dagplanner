@@ -99,4 +99,26 @@ The button in the heading of the sidebar folds the settings in. On wide screens 
 - Export file: `{ app: 'koolskamp-dagplanner', version: 1, scenarios: [{ name, settings }] }`. Import adds the scenarios it does not have yet (same name and same settings are skipped, a clash in name gets " (2)").
 - The PDF summary starts with the scenario name ("(gewijzigd)" when the screen differs from the saved version).
 
-`js/compare.js` (`KK.Compare`) shows up to three scenarios side by side in a dialog: the screen, the defaults or any saved scenario per column. It lists the key figures (margin with status, road clear and closed, start, arrival, distance and broadcast per race), the settings that differ, and a small day overview per scenario on the timeline axis. A value that differs from the first column is marked. The dialog is not part of the PDF.
+Saved scenarios belong to a variant (see below): each variant can show its own saved scenario. In the share link the name goes per variant (`scenario`, `b.scenario`, ...).
+
+## Speed range (slow and fast)
+
+The average speed is not a choice but an uncertainty, so each race has an expected speed and a range: `womenSpeed` (40,5) with `womenSpeedSlow`/`womenSpeedFast` (38,5 to 42), `menSpeed` (46,5) with `menSpeedSlow`/`menSpeedFast` (44,5 to 48). `normalizeSettings` keeps slow at or below and fast at or above the expected speed.
+
+`KK.speedCases` and `KK.computeRange` (in `schedule.js`) compute two extreme cases for the margin: worst = women slow and men fast (women clear late, men come early), best = the opposite. This is a strict worst case: in bad weather both races usually ride slower, which partly cancels out. The margin card shows the range as a bar over the red, orange and green zones (`KK.Compare.rangeBar`) and warns when the worst case falls below the minimum margin. The status itself stays on the expected margin. In the timeline a hatched band shows where the women can be clear and where the men's red flag can come.
+
+Where the numbers come from (ProCyclingStats, average speed of the winner):
+- Men, Kampioenschap van Vlaanderen (Koolskamp, 1.1): 2021 46,6; 2022 44,6; 2023 46,2; 2024 45,8; 2025 48,0; 2026 47,8 km/u (average 46,5). Earlier editions 2010 to 2019 were slower (40,6 to 46,1).
+- Women, flat Flemish (and one Dutch) 1.1/1.2 races 2022 to 2026, with little climbing: GP Eco-Struct (Schellebelle) 40,4 to 41,7; Omloop der Kempen Ladies 39,2 to 41,4; GP Yvonne Reynders 40,0 to 40,8; Omloop van Borsele 38,3 to 41,6; Dwars door de Westhoek (more climbing) 39,8 to 40,7. Average about 40,7, mostly 38,5 to 42. Hillier races (Omloop van het Hageland, GP Oetingen) ride 36 to 39,7 km/u.
+
+## Variants and comparison
+
+`js/variants.js` (`KK.Variants`) keeps up to three variants (A, B, C) of the settings. Tabs above the page show each variant with its margin; the sidebar and the planning view always show the active one (`state.settings` is a getter on the active variant). "+ Variant" adds a copy of the active variant, the default values or a saved scenario. A variant has an automatic name (what differs from A) unless it is renamed (double-click or the dots menu). One variant is the reference for the comparison (A unless chosen otherwise).
+
+Variants are saved in this browser (`kk-dagplanner-variants-v1`) and all go into the share link: variant A as plain settings (so older links keep working), B and C with the prefix `b.` or `c.`, plus `v` (active variant), `ref` (reference) and `view=vergelijk`. A link replaces the variants in the browser that opens it. The PDF always shows the planning of the active variant; with more than one variant its summary names the variant.
+
+"Vergelijken" (`js/compare.js`, `KK.Compare`) replaces the planning view with:
+- a card per variant: margin and status, difference with the reference, the range when riding slow or fast, and the settings that differ;
+- "Dagverloop": the blocks of each variant on one time axis, with the hatched uncertainty and dashed lines where the road is clear and closed in the reference;
+- "Wat verandert er": key times and margins with the difference against the reference (rows without differences are left out);
+- "Zoek de grens": one setting of the active variant (start, speed, laps, loops, podium, break-away) run over a range. A chart shows the expected margin and the band between the worst and the best case over the zones, and a table answers up to which value the margin stays comfortable or above the minimum, both at the expected speeds and in the worst case. A value picked in the chart can be put in the active variant or in a new variant. When the expected speed is run, the slow and fast speed move along with it.

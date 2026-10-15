@@ -1,5 +1,6 @@
 // Saved scenarios: a name plus the settings that differ from the defaults, kept in this browser (localStorage).
 // Switching, saving, renaming, deleting, and moving scenarios between browsers through a .json file.
+// Which scenario is open belongs to the active variant (KK.Variants): each variant can show its own scenario.
 window.KK = window.KK || {};
 
 KK.Scenarios = class {
@@ -8,13 +9,12 @@ KK.Scenarios = class {
 
   /**
    * hooks: current() = changes of the settings on screen, changesOf(raw) = cleaned changes of any settings object,
-   * apply(changes) = put settings on screen, onChange() = something about the scenarios changed (re-render).
+   * apply(changes) = put settings on screen, onChange() = something about the scenarios changed (re-render),
+   * binding() = the active variant, which holds scenarioId (the open scenario) and sharedName (from a link).
    */
   constructor(hooks) {
     this.hooks = hooks;
     this.list = this.load();
-    this.activeId = null;
-    this.sharedName = '';
     this.nameMode = null; // 'new' or 'rename' while the name field is open
     const $ = id => document.getElementById(id);
     this.el = {
@@ -22,9 +22,13 @@ KK.Scenarios = class {
       menu: $('scenario-menu'), form: $('scenario-name-form'), name: $('scenario-name'), cancel: $('scenario-name-cancel'),
       file: $('scenario-file'),
     };
-    this.restoreActive();
     this.wire();
   }
+
+  get activeId() { return this.hooks.binding().scenarioId || null; }
+  set activeId(id) { this.hooks.binding().scenarioId = id; }
+  get sharedName() { return this.hooks.binding().sharedName || ''; }
+  set sharedName(name) { this.hooks.binding().sharedName = name; }
 
   // ---------- Storage ----------
 
@@ -38,25 +42,7 @@ KK.Scenarios = class {
   persist() {
     try {
       localStorage.setItem(KK.config.scenariosStorageKey, JSON.stringify(this.list));
-      if (this.activeId) localStorage.setItem(KK.config.activeScenarioKey, this.activeId);
-      else localStorage.removeItem(KK.config.activeScenarioKey);
     } catch (e) { this.flash('Opslaan in deze browser lukt niet (privévenster?)'); }
-  }
-
-  /** Which scenario is open: a name in the link wins (a shared link), otherwise the one that was open last time. */
-  restoreActive() {
-    this.activeId = null;
-    this.sharedName = '';
-    const linkName = new URLSearchParams(location.hash.slice(1)).get('scenario');
-    if (linkName) {
-      const match = this.byName(linkName);
-      if (match && this.same(match.settings, this.hooks.current())) { this.activeId = match.id; return; }
-      this.sharedName = linkName.slice(0, 60);
-      return;
-    }
-    let stored = null;
-    try { stored = localStorage.getItem(KK.config.activeScenarioKey); } catch (e) { /* storage unavailable */ }
-    if (this.byId(stored)) this.activeId = stored;
   }
 
   byId(id) { return this.list.find(s => s.id === id) || null; }
@@ -71,6 +57,12 @@ KK.Scenarios = class {
 
   /** Name for the share link and the PDF: only when the screen shows exactly the saved scenario. */
   cleanName() { return this.active && !this.dirty ? this.active.name : ''; }
+
+  /** Same for any variant: the name of its saved scenario when it shows that scenario unchanged. */
+  cleanNameFor(variant) {
+    const scenario = this.byId(variant.scenarioId);
+    return scenario && this.same(scenario.settings, this.hooks.changesOf(variant.settings)) ? scenario.name : '';
+  }
 
   /** Label for the PDF summary. */
   label() {

@@ -241,6 +241,31 @@ window.KK = window.KK || {};
     return result;
   };
 
+  /**
+   * The speed range of a race (womenSpeedSlow/Fast, menSpeedSlow/Fast) turned into two extreme cases for the margin.
+   * Worst: the women ride slow and the men fast (the women are clear late, the men come early). Best: the opposite.
+   * Everything else stays as set. The expected speed always lies inside the range.
+   */
+  KK.speedCases = function (settings) {
+    const value = (key, fallback) => (Number.isFinite(Number(settings[key])) && settings[key] !== '' ? Number(settings[key]) : fallback);
+    const women = Number(settings.womenSpeed), men = Number(settings.menSpeed);
+    const range = (race, expected) => ({
+      slow: Math.min(expected, value(`${race}SpeedSlow`, expected)),
+      fast: Math.max(expected, value(`${race}SpeedFast`, expected)),
+    });
+    const w = range('women', women), m = range('men', men);
+    return {
+      worst: { ...settings, womenSpeed: w.slow, menSpeed: m.fast },
+      best: { ...settings, womenSpeed: w.fast, menSpeed: m.slow },
+    };
+  };
+
+  /** Schedules of the worst and the best case (see KK.speedCases). */
+  KK.computeRange = function (settings) {
+    const cases = KK.speedCases(settings);
+    return { worst: KK.computeSchedule(cases.worst), best: KK.computeSchedule(cases.best) };
+  };
+
   /** Position of each race at a given time, used by the map and the rider cards. */
   KK.riderPositions = function (schedule, time) {
     const position = race => {

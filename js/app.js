@@ -3,8 +3,21 @@
   const { config, format: f } = KK;
   const $ = id => document.getElementById(id);
 
+  let scenarios = null; // KK.Scenarios, created once the variants are loaded
+  let compare = null; // KK.Compare, the comparison view
+
+  // The settings on screen are those of the active variant (A, B or C); see js/variants.js.
+  const variants = new KK.Variants({
+    full: raw => normalizeSettings(cleanSettings(raw || {})),
+    changesOf,
+    cleanNameFor: variant => (scenarios ? scenarios.cleanNameFor(variant) : ''),
+    scenarios: () => (scenarios ? scenarios.all() : []),
+    onChange: () => { saveSettings(); syncInputs(); render(); },
+  });
+
   const state = {
-    settings: loadSettings(),
+    get settings() { return variants.current.settings; },
+    set settings(value) { variants.current.settings = value; },
     selectedTime: null, // null = follow the start of the women's race until someone picks a time
     shownTime: null,
     theme: loadTheme(),
@@ -15,7 +28,6 @@
   const timeline = new KK.Timeline($('timeline-track'), { onSelectTime: t => { state.selectedTime = t; render(); } });
   const routeMap = new KK.RouteMap($('route-map'), KK.routeData);
   const profile = new KK.Profile({ women: $('profile-women'), men: $('profile-men') }, KK.routeData);
-  let scenarios = null; // KK.Scenarios, created once the settings are loaded
 
   const escapeHtml = text => String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -38,14 +50,6 @@
     return clean;
   }
 
-  /** Settings in the link (#womenSpeed=38&...) win over saved settings, so a shared scenario opens exactly as sent. */
-  function loadSettings() {
-    const fromLink = cleanSettings(Object.fromEntries(new URLSearchParams(location.hash.slice(1))));
-    let saved = {};
-    try { saved = cleanSettings(JSON.parse(localStorage.getItem(config.storageKey) || '{}')); } catch (e) { /* storage unavailable */ }
-    return normalizeSettings(Object.keys(fromLink).length ? fromLink : saved);
-  }
-
   /** Full settings from cleaned values: defaults filled in, and rules a hand-edited link or file could break put right. */
   function normalizeSettings(clean) {
     const settings = { ...config.defaults, ...clean };
@@ -53,7 +57,17 @@
     const [arrival, start, end] = ['vipArrival', 'vipMenuStart', 'vipMenuEnd'].map(k => f.parseTime(settings[k]));
     if (start < arrival) settings.vipMenuStart = settings.vipArrival;
     if (end < Math.max(start, arrival)) settings.vipMenuEnd = settings.vipMenuStart;
+    ['women', 'men'].forEach(race => keepSpeedRange(settings, race));
     return settings;
+  }
+
+  /** The slow speed is never above the expected speed and the fast speed never below it. */
+  function keepSpeedRange(settings, race, changed = '') {
+    const key = `${race}Speed`, slow = `${race}SpeedSlow`, fast = `${race}SpeedFast`;
+    if (changed === slow && settings[slow] > settings[key]) settings[key] = settings[slow];
+    if (changed === fast && settings[fast] < settings[key]) settings[key] = settings[fast];
+    if (settings[slow] > settings[key]) settings[slow] = settings[key];
+    if (settings[fast] < settings[key]) settings[fast] = settings[key];
   }
 
   /** Only the values of a settings object that differ from the defaults (after cleaning). */
@@ -70,18 +84,14 @@
     return Object.entries(state.settings).filter(([key, value]) => String(value) !== String(config.defaults[key]));
   }
 
+  /** Saves all variants in this browser and puts them in the address bar, so the link always shares them. */
   function saveSettings() {
-    try { localStorage.setItem(config.storageKey, JSON.stringify(Object.fromEntries(changedSettings()))); } catch (e) { /* storage unavailable */ }
-    history.replaceState(null, '', shareUrl());
+    variants.persist();
   }
 
-  /** Link to the current scenario. */
+  /** Link with all variants (and the name of a saved scenario they show unchanged). */
   function shareUrl() {
-    const params = new URLSearchParams(changedSettings());
-    const name = scenarios && scenarios.cleanName();
-    if (name) params.set('scenario', name); // only a name, so whoever opens the link can save it under that name
-    const hash = params.toString();
-    return location.pathname + location.search + (hash ? '#' + hash : '');
+    return variants.url();
   }
 
   async function shareScenario() {
@@ -129,7 +139,10 @@
   function render() {
     const s = state.settings;
     const schedule = KK.computeSchedule(s);
+    const range = KK.computeRange(s);
     const { women, men, margin } = schedule;
+    const comparing = variants.view === 'compare' && !document.documentElement.classList.contains('is-printing');
+    document.querySelector('.page').classList.toggle('is-comparing', comparing);
 
     document.documentElement.dataset.theme = state.theme;
     document.documentElement.dataset.status = margin.status;
@@ -159,6 +172,12 @@
     $('margin-badge').textContent = margin.conflict ? 'Conflict' : { ok: 'Comfortabel', warn: 'Beperkt', bad: 'Onvoldoende' }[margin.status];
     $('margin-detail').textContent = margin.conflict ? 'Vrouwen nog niet klaar als de weg dicht moet voor de mannen' : `Weg vrij ${f.clock(margin.parts.womenClear)}, weer dicht ${f.clock(margin.parts.menRed)}`;
     renderMarginSum(margin, men.firstRiderTime);
+    renderMarginRange(margin, range, s);
+    variants.renderTabs(variants.list.map((v, i) => (i === variants.active ? margin : KK.computeSchedule(v.settings).margin)));
+    const several = variants.list.length > 1;
+    $('sidebar-variant').hidden = !several;
+    $('sidebar-variant').textContent = several ? variants.letter(variants.active) : '';
+    $('sidebar-variant').title = several ? `Je past variant ${variants.fullLabel(variants.active)} aan` : '';
 
     $('women-total').textContent = `${f.km(women.totalKm)} km`;
     $('men-total').textContent = `${f.km(men.totalKm)} km`;
@@ -168,9 +187,10 @@
     if (!womenBroadcast) sporza.unshift('vrouwen niet');
     const vip = schedule.vip;
     $('print-summary').innerHTML = [
+      variants.list.length > 1 && `<b>Variant</b> ${escapeHtml(variants.fullLabel(variants.active))}`,
       scenarios && scenarios.label() && `<b>Scenario</b> ${escapeHtml(scenarios.label())}`,
-      `<b>Vrouwen</b> start ${f.clock(women.start)}, ${f.km(women.speed)} km/u, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
-      `<b>Mannen</b> start ${f.clock(men.start)}, ${f.km(men.speed)} km/u, ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
+      `<b>Vrouwen</b> start ${f.clock(women.start)}, ${f.km(women.speed)} km/u (${f.km(range.worst.women.speed)} tot ${f.km(range.best.women.speed)}), ${women.laps} rondes, ${f.km(women.totalKm)} km`,
+      `<b>Mannen</b> start ${f.clock(men.start)}, ${f.km(men.speed)} km/u (${f.km(range.best.men.speed)} tot ${f.km(range.worst.men.speed)}), ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
       s.showVip !== false && `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
       s.showBroadcast !== false && `<b>Uitzending</b> ${sporza.join(', ')}`,
       `<b>Podium</b> ${Number(s.podiumDuration) || 0} min`,
@@ -185,7 +205,11 @@
     const positions = KK.riderPositions(schedule, state.shownTime);
     if (scenarios) scenarios.update();
     timeline.render(schedule, { selectedTime: state.shownTime, positions, showQuarterGrid: state.showQuarterGrid,
-      showBroadcast: s.showBroadcast !== false, showVip: s.showVip !== false });
+      showBroadcast: s.showBroadcast !== false, showVip: s.showVip !== false,
+      // Where the women can be clear and the men's red flag can come, between the best and the worst case.
+      range: { womenClear: [range.best.margin.parts.womenClear, range.worst.margin.parts.womenClear],
+        menRed: [range.worst.margin.parts.menRed, range.best.margin.parts.menRed] } });
+    if (comparing && compare) compare.render();
 
     $('women-status').textContent = positions.women.label;
     $('women-status-detail').textContent = positions.women.detail;
@@ -229,6 +253,16 @@
       <div class="sum__group"><div class="sum__title">Vrouwen</div>${women.join('')}</div>
       <div class="sum__group"><div class="sum__title">Mannen</div>${men.join('')}</div>
       <div class="sum__result">${f.clock(p.menRed)} \u2212 ${f.clock(p.womenClear)} = <b>${minus(margin.minutes)} min</b></div>`;
+  }
+
+  /** The margin when the women ride slow and the men fast (worst) or the other way round (best), as a bar. */
+  function renderMarginRange(margin, range, s) {
+    const worst = range.worst.margin.minutes, best = range.best.margin.minutes;
+    const ok = Number(s.marginOk), warn = Number(s.marginWarn), minus = KK.Compare.minus;
+    const worstStatus = KK.Compare.statusOf(worst, ok, warn);
+    const text = `Traag of snel rijden: ${minus(worst)} tot ${minus(best)} min${worstStatus === 'bad' ? '. Let op: in het slechtste geval onder de minimummarge.' : ''}`;
+    $('margin-range').innerHTML = `${KK.Compare.rangeBar({ worst, expected: margin.minutes, best, ok, warn })}
+      <div class="mrange__text${worstStatus === 'bad' ? ' is-bad' : ''}" title="Vrouwen ${f.km(range.worst.women.speed)} km/u en mannen ${f.km(range.worst.men.speed)} km/u geeft ${minus(worst)} min; vrouwen ${f.km(range.best.women.speed)} en mannen ${f.km(range.best.men.speed)} km/u geeft ${minus(best)} min">${text}</div>`;
   }
 
   function renderPassages(tbody, passages) {
@@ -361,6 +395,8 @@
     // once the value is final (field left or a stepper click), so typing "45" does not first push the other
     // field to 4, and typing the hour of 14:00 does not first push the other times to 01:00.
     if (final && VIP_TIMES.includes(key)) keepVipTimesInOrder(key);
+    const speedRace = (key.match(/^(women|men)Speed/) || [])[1];
+    if (final && speedRace) { keepSpeedRange(state.settings, speedRace, key); syncInputs(); }
     if (final && state.settings.marginWarn > state.settings.marginOk) {
       if (key === 'marginOk') state.settings.marginWarn = state.settings.marginOk;
       else if (key === 'marginWarn') state.settings.marginOk = state.settings.marginWarn;
@@ -424,7 +460,12 @@
   $('play-button').addEventListener('click', togglePlayback);
   $('export-button').addEventListener('click', exportPdf);
   $('share-button').addEventListener('click', shareScenario);
-  window.addEventListener('hashchange', () => { state.settings = loadSettings(); scenarios.restoreActive(); saveSettings(); syncInputs(); render(); });
+  window.addEventListener('hashchange', () => {
+    if (location.hash.slice(1) === variants.hash()) return; // our own update of the address bar
+    variants.reloadFromHash();
+    variants.resolveLinkScenarios(scenarios);
+    saveSettings(); syncInputs(); render();
+  });
 
   /** Puts a set of settings (changes only) on screen, as if they were typed in. */
   function applySettings(changes) {
@@ -436,15 +477,38 @@
     changesOf,
     apply: applySettings,
     onChange: () => { saveSettings(); render(); },
+    binding: () => variants.current,
   });
-  const compare = new KK.Compare($('compare-dialog'), {
-    current: () => ({ name: scenarios.label(), settings: Object.fromEntries(changedSettings()) }),
-    scenarios: () => scenarios.all(),
-    full: changes => normalizeSettings(cleanSettings(changes)),
-    activeId: () => scenarios.activeId,
-    open: id => scenarios.open(id),
+  variants.resolveLinkScenarios(scenarios);
+
+  /** Sets one setting of a settings object; an expected speed takes its slow and fast speed along. */
+  function withSetting(settings, key, value) {
+    const next = { ...settings, [key]: value };
+    const race = (key.match(/^(women|men)Speed$/) || [])[1];
+    if (race) {
+      const shift = Number(value) - Number(settings[key]);
+      next[`${race}SpeedSlow`] = Number(settings[`${race}SpeedSlow`]) + shift;
+      next[`${race}SpeedFast`] = Number(settings[`${race}SpeedFast`]) + shift;
+    }
+    return normalizeSettings(cleanSettings(next));
+  }
+  const changed = () => { saveSettings(); syncInputs(); render(); };
+  compare = new KK.Compare($('compare-view'), {
+    data: () => ({
+      variants: variants.list.map((v, index) => {
+        const range = KK.computeRange(v.settings);
+        return { index, letter: variants.letter(index), label: variants.label(index), settings: v.settings,
+          schedule: KK.computeSchedule(v.settings), worst: range.worst, best: range.best };
+      }),
+      active: variants.active, reference: variants.reference, max: variants.max,
+    }),
+    activate: index => { variants.active = index; changed(); },
+    setReference: index => { variants.reference = index; changed(); },
+    apply: (key, value) => { state.settings = withSetting(state.settings, key, value); changed(); },
+    addWith: (key, value) => { if (variants.add(changesOf(withSetting(state.settings, key, value)))) changed(); },
+    addCopy: () => { if (variants.add(changesOf(state.settings))) changed(); },
   });
-  $('compare-button').addEventListener('click', () => compare.show());
+  $('compare-button').addEventListener('click', () => { variants.view = 'compare'; changed(); window.scrollTo({ top: 0 }); });
 
   syncInputs();
   saveSettings();

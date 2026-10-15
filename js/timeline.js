@@ -202,6 +202,17 @@ KK.Timeline = class {
         ${content}</div>`);
     });
 
+    // Hatched: where the women can be clear and where the men's red flag can come, from fast to slow riding.
+    if (options.range) {
+      const band = (lane, [a, z], title) => {
+        const from = this.clamp(Math.min(a, z)), to = this.clamp(Math.max(a, z));
+        if (to - from < 0.5) return;
+        html.push(`<div class="uband uband--${lane}" style="top:${this.layout.laneTop[lane] + 8}px;left:${this.pct(from)}%;width:${this.pct(to) - this.pct(from)}%" title="${title}"></div>`);
+      };
+      band('women', options.range.womenClear, 'Weg vrij na de vrouwen, naargelang de snelheid');
+      band('men', options.range.menRed, 'Rode vlag van de mannen, naargelang de snelheid');
+    }
+
     const inAxis = t => t >= axisStart && t <= axisEnd;
     this.broadcasts.forEach(b => {
       if (inAxis(b.start)) html.push(`<div class="vline vline--${b.race}-broadcast" style="left:${this.pct(b.start)}%"></div>
@@ -296,6 +307,15 @@ KK.Timeline = class {
     });
 
     marks.forEach(m => html.push(`<div class="hline hline--${m.race}-broadcast" style="top:${y(m.t)}px"></div>`));
+
+    if (options.range) {
+      const band = (lane, [a, z]) => {
+        const from = this.clamp(Math.min(a, z)), to = this.clamp(Math.max(a, z));
+        if (to - from >= 0.5) html.push(`<div class="uband uband--${lane} vlane--${lane}" style="top:${y(from)}px;height:${y(to) - y(from)}px"></div>`);
+      };
+      band('women', options.range.womenClear);
+      band('men', options.range.menRed);
+    }
 
     const firstPassage = schedule.men.firstRiderTime;
     if (inAxis(firstPassage)) html.push(`<div class="hline hline--first-passage" style="top:${y(firstPassage)}px"></div>`);

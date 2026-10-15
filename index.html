@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=69">
+<link rel="stylesheet" href="css/styles.css?v=75">
 </head>
 <body>
 
@@ -37,7 +37,7 @@
   <aside class="sidebar no-print" aria-label="Instellingen">
     <div class="sidebar__head">
       <button class="btn btn--ghost btn--small sidebar__toggle" id="sidebar-toggle" aria-expanded="true" aria-controls="settings" title="Instellingen inklappen" aria-label="Instellingen inklappen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path class="sidebar__chevron" d="M16 9l-3 3 3 3"/></svg></button>
-      <h2 class="sidebar__title">Instellingen</h2>
+      <h2 class="sidebar__title">Instellingen <span class="sidebar__variant" id="sidebar-variant" hidden></span></h2>
       <button class="btn btn--ghost btn--small" id="reset-button" title="Alle instellingen terug naar de standaardwaarden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="btn__label">Standaard</span></button>
     </div>
 
@@ -64,7 +64,7 @@
 <button type="button" class="btn btn--ghost btn--small" id="scenario-name-cancel">Annuleer</button>
 </form>
 <p class="scenario__status" id="scenario-status" hidden></p>
-<button type="button" class="btn btn--secondary btn--small scenario__compare" id="compare-button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="16" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>Scenario's vergelijken</button>
+<button type="button" class="btn btn--secondary btn--small scenario__compare" id="compare-button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="16" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>Vergelijken</button>
 <input type="file" id="scenario-file" accept=".json,application/json" hidden>
 </section>
 <section class="settings__group">
@@ -83,6 +83,9 @@
 <input type="number" inputmode="decimal" min="36" max="46" step="0.5" data-setting="womenSpeed" aria-label="Gemiddelde snelheid vrouwen">
 <button type="button" class="stepper__button" data-step-for="womenSpeed" data-step="0.5" aria-label="Sneller">+</button>
 </div>
+</div>
+<div class="field field--range"><span class="field__stack"><span class="field__label">Traag tot snel</span><span class="field__hint">Vlakke 1.1/1.2: 38,5 tot 42</span></span>
+<span class="field__controls range-inputs"><input type="number" inputmode="decimal" min="34" max="48" step="0.5" data-setting="womenSpeedSlow" aria-label="Trage gemiddelde snelheid vrouwen"><span class="muted">tot</span><input type="number" inputmode="decimal" min="34" max="48" step="0.5" data-setting="womenSpeedFast" aria-label="Snelle gemiddelde snelheid vrouwen"></span>
 </div>
 <div class="field"><span class="field__label">Lokale rondes <span class="muted">x 15 km</span></span>
 <div class="stepper">
@@ -108,6 +111,9 @@
 <input type="number" inputmode="decimal" min="42" max="50" step="0.5" data-setting="menSpeed" aria-label="Gemiddelde snelheid mannen">
 <button type="button" class="stepper__button" data-step-for="menSpeed" data-step="0.5" aria-label="Sneller">+</button>
 </div>
+</div>
+<div class="field field--range"><span class="field__stack"><span class="field__label">Traag tot snel</span><span class="field__hint">Koolskamp sinds 2021: 44,6 tot 48</span></span>
+<span class="field__controls range-inputs"><input type="number" inputmode="decimal" min="40" max="52" step="0.5" data-setting="menSpeedSlow" aria-label="Trage gemiddelde snelheid mannen"><span class="muted">tot</span><input type="number" inputmode="decimal" min="40" max="52" step="0.5" data-setting="menSpeedFast" aria-label="Snelle gemiddelde snelheid mannen"></span>
 </div>
 <div class="field"><span class="field__label">Lussen Ardooie <span class="muted">x 16 km</span></span>
 <div class="stepper">
@@ -197,6 +203,18 @@
         <div class="brand__subtitle">Past een vrouwenkoers op de dag van de mannenkoers?</div>
       </div>
     </div>
+    <div class="variants no-print" id="variants">
+      <div class="variants__tabs" id="variant-tabs" role="tablist" aria-label="Varianten"></div>
+      <details class="menu variants__add" id="variant-add">
+        <summary class="btn btn--ghost btn--small" title="Voeg een variant toe om te vergelijken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Variant</summary>
+        <div class="menu__list" role="menu" id="variant-add-list"></div>
+      </details>
+      <div class="segmented variants__view" role="group" aria-label="Weergave">
+        <button type="button" class="segmented__item segmented__item--text" data-view="plan">Plannen</button>
+        <button type="button" class="segmented__item segmented__item--text" data-view="compare">Vergelijken</button>
+      </div>
+    </div>
+    <section class="compare-view no-print" id="compare-view" aria-label="Varianten vergelijken"></section>
     <div class="print-summary print-only" id="print-summary"></div>
 
     <section class="stats" aria-label="Kerncijfers">
@@ -220,6 +238,7 @@
           <div class="stat__label">Marge <span class="badge" id="margin-badge"></span></div>
           <div class="stat__value stat__value--status" id="margin-value"></div>
           <div class="stat__detail" id="margin-detail"></div>
+          <div class="mrange" id="margin-range"></div>
         </div>
         <div class="sum" id="margin-sum" aria-label="Opbouw van de marge"></div>
       </div>
@@ -314,27 +333,20 @@
   </main>
 </div>
 
-<dialog class="compare no-print" id="compare-dialog" aria-labelledby="compare-title">
-  <div class="compare__head">
-    <h2 class="compare__title" id="compare-title">Scenario's vergelijken</h2>
-    <button type="button" class="btn btn--ghost btn--small compare__close" aria-label="Sluiten" title="Sluiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  </div>
-  <div class="compare__body"></div>
-</dialog>
-
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=69"></script>
-<script src="js/config.js?v=69"></script>
-<script src="js/format.js?v=69"></script>
-<script src="js/schedule.js?v=69"></script>
-<script src="js/timeline.js?v=69"></script>
-<script src="js/route-map.js?v=69"></script>
-<script src="js/profile.js?v=69"></script>
-<script src="js/pdf-export.js?v=69"></script>
-<script src="js/scenarios.js?v=69"></script>
-<script src="js/compare.js?v=69"></script>
-<script src="js/app.js?v=69"></script>
+<script src="data/route-data.js?v=75"></script>
+<script src="js/config.js?v=75"></script>
+<script src="js/format.js?v=75"></script>
+<script src="js/schedule.js?v=75"></script>
+<script src="js/timeline.js?v=75"></script>
+<script src="js/route-map.js?v=75"></script>
+<script src="js/profile.js?v=75"></script>
+<script src="js/pdf-export.js?v=75"></script>
+<script src="js/scenarios.js?v=75"></script>
+<script src="js/compare.js?v=75"></script>
+<script src="js/variants.js?v=75"></script>
+<script src="js/app.js?v=75"></script>
 </body>
 </html>
