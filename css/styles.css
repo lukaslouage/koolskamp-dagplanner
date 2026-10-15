@@ -421,7 +421,7 @@ h1, h2, h3 { margin: 0; }
 .legend__lines .legend__line { margin-right: 0; }
 
 /* ---------- Route ---------- */
-.playback { display: flex; align-items: center; gap: 12px; flex: 1 1 360px; max-width: 640px; }
+.playback { display: flex; align-items: center; gap: 12px; }
 .playback__button { min-width: 84px; }
 .range { width: 100%; height: 20px; margin: 0; accent-color: var(--fg); }
 .playback__range { flex: 1; min-width: 0; }
@@ -588,7 +588,6 @@ html.is-printing .flagbar { display: none; }
   .card__head { padding: 10px 14px; }
   .card__body { padding: 12px 14px 14px; }
   .legend { padding-left: 0; gap: 8px 16px; }
-  .playback { flex-basis: 100%; }
   .route__map { height: 420px; }
   .passages__table th, .passages__table td { padding: 7px 12px; }
   .passages__table th:nth-child(n+2), .passages__table td:nth-child(n+2) { width: 60px; }

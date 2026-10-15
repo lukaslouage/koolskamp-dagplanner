@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=50">
+<link rel="stylesheet" href="css/styles.css?v=51">
 </head>
 <body>
 
@@ -243,17 +243,16 @@
       <section class="card route">
         <div class="card__head">
           <h2 class="card__title">Parcours</h2>
-          <div class="playback no-print">
-            <button class="btn btn--secondary btn--small playback__button" id="play-button">Afspelen</button>
-            <input type="range" class="range playback__range" id="time-range" min="510" max="1110" step="1" aria-label="Tijdstip">
-            <div class="playback__time" id="time-value"></div>
-          </div>
         </div>
         <div class="card__body route__body">
           <div class="route__main">
             <div class="route__map" id="route-map"></div>
+            <div class="playback no-print">
+              <button class="btn btn--secondary btn--small playback__button" id="play-button">Afspelen</button>
+              <input type="range" class="range playback__range" id="time-range" min="510" max="1110" step="1" aria-label="Tijdstip">
+              <div class="playback__time" id="time-value"></div>
+            </div>
             <div class="profile route__profile">
-              <div class="profile__title">Hoogteprofiel <span class="profile__hint no-print">De bolletjes en vlaggen volgen het gekozen tijdstip</span></div>
               <div class="profile__chart" id="profile-women"></div>
               <div class="profile__chart" id="profile-men"></div>
               <p class="profile__note">Hoogte volgens de GPX-bestanden, afgevlakt. De klim is een schatting. Het rode stuk is de gesloten weg tussen de groene en de rode vlag.</p>
@@ -303,14 +302,14 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=50"></script>
-<script src="js/config.js?v=50"></script>
-<script src="js/format.js?v=50"></script>
-<script src="js/schedule.js?v=50"></script>
-<script src="js/timeline.js?v=50"></script>
-<script src="js/route-map.js?v=50"></script>
-<script src="js/profile.js?v=50"></script>
-<script src="js/pdf-export.js?v=50"></script>
-<script src="js/app.js?v=50"></script>
+<script src="data/route-data.js?v=51"></script>
+<script src="js/config.js?v=51"></script>
+<script src="js/format.js?v=51"></script>
+<script src="js/schedule.js?v=51"></script>
+<script src="js/timeline.js?v=51"></script>
+<script src="js/route-map.js?v=51"></script>
+<script src="js/profile.js?v=51"></script>
+<script src="js/pdf-export.js?v=51"></script>
+<script src="js/app.js?v=51"></script>
 </body>
 </html>
