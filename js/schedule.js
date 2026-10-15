@@ -87,7 +87,7 @@ window.KK = window.KK || {};
         name: `Lus ${i + 1} Ardooie`, shortName: `L${i + 1}`, start: timeAt(from), end: timeAt(to), kmFrom: from, kmTo: to,
         details: [`Doorkomst startzone Ardooie om ${f.exact(timeAt(to))}`] });
     }
-    blocks.push({ id: 'men-turnoff', lane: 'men', type: 'men-turnoff', name: 'Afdraai naar omloop', shortName: 'Afdraai',
+    blocks.push({ id: 'men-turnoff', lane: 'men', type: 'men-turnoff', name: 'Aanloop', shortName: 'Aanloop',
       start: timeAt(turnoffKm), end: timeAt(firstPassageKm), kmFrom: turnoffKm, kmTo: firstPassageKm,
       details: [`Kruiskalsijde km ${f.km(kruiskalsijdeKm)} om ${f.exact(timeAt(kruiskalsijdeKm))}`,
                 `Eerste doorkomst meet om ${f.exact(timeAt(firstPassageKm))}`] });
@@ -102,7 +102,7 @@ window.KK = window.KK || {};
     const passages = [{ label: 'Start Ardooie', km: 0, time: timeAt(0), key: true }];
     for (let i = 1; i <= loops; i++) {
       const km = i * D.ardooieLoop;
-      passages.push({ label: i === loops ? `Startzone Ardooie ${i}, afdraai` : `Startzone Ardooie ${i}`, km, time: timeAt(km) });
+      passages.push({ label: i === loops ? `Startzone Ardooie ${i}, aanloop` : `Startzone Ardooie ${i}`, km, time: timeAt(km) });
     }
     passages.push({ label: 'Kruiskalsijde', km: kruiskalsijdeKm, time: timeAt(kruiskalsijdeKm), key: true });
     for (let i = 0; i < laps; i++) {
@@ -113,7 +113,7 @@ window.KK = window.KK || {};
 
     const locate = d => {
       if (d < turnoffKm) return { label: `Lus ${Math.floor(d / D.ardooieLoop) + 1} Ardooie`, route: 'ardooieLoop', fraction: (d % D.ardooieLoop) / D.ardooieLoop };
-      if (d < firstPassageKm) return { label: 'Afdraai naar omloop', route: 'approach', fraction: (d - turnoffKm) / D.approachToFinish };
+      if (d < firstPassageKm) return { label: 'Aanloop', route: 'approach', fraction: (d - turnoffKm) / D.approachToFinish };
       return locateLap(d, firstPassageKm, laps);
     };
 
