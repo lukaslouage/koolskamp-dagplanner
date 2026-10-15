@@ -229,6 +229,30 @@ h1, h2, h3 { margin: 0; }
 .switch:checked::after { transform: translateX(16px); }
 .switch:focus-visible, .stepper__button:focus-visible { outline: none; box-shadow: var(--focus); }
 
+/* Eye in a group heading: shows or hides that part of the timeline. A hidden group folds in. */
+.settings__heading .eye {
+  margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; background: transparent; color: var(--muted);
+}
+.eye:hover { background: var(--panel); color: var(--fg); }
+.eye:focus-visible { outline: none; box-shadow: var(--focus); }
+.eye svg { width: 17px; height: 17px; }
+.eye .eye__shut, .eye[aria-pressed="false"] .eye__open { display: none; }
+.eye[aria-pressed="false"] .eye__shut { display: block; }
+.settings__group.is-hidden .settings__body { display: none; }
+.settings__group.is-hidden .settings__heading { margin-bottom: 0; color: var(--muted); }
+.settings__group.is-hidden .chip { opacity: .4; }
+.settings__note { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+
+/* Road closure: one small table, women and men side by side */
+.closure { display: flex; flex-direction: column; gap: 6px; }
+.closure__row { display: grid; grid-template-columns: minmax(0, 1fr) 82px 82px; gap: 8px; align-items: center; font-size: 13.5px; }
+.closure__row--head { font-size: 12px; color: var(--muted); text-align: center; }
+.closure__row--head span:first-child { text-align: left; }
+.stepper--compact { width: 82px; }
+.stepper--compact .stepper__button { width: 22px; }
+.field .stepper--compact input, .closure .stepper--compact input { width: 36px; height: 100%; border: 0; border-radius: 0; box-shadow: none; padding: 0; text-align: center; -moz-appearance: textfield; font-size: 13.5px; background: var(--bg); color: var(--fg); }
+
 /* ---------- Stats ---------- */
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 3.2fr); gap: 12px; }
 .stat {
@@ -272,7 +296,9 @@ h1, h2, h3 { margin: 0; }
 .timeline .card__body { display: flex; flex-direction: column; gap: 12px; }
 .timeline__scroll { overflow-x: auto; padding-bottom: 4px; }
 .timeline__grid { min-width: 860px; display: grid; grid-template-columns: 112px minmax(0, 1fr) 24px; } /* last column: room for a flag past the last hour */
-.timeline__labels { position: sticky; left: 0; z-index: 8; height: 400px; background: var(--bg); }
+.timeline--no-vip { --cut: 80px; } /* a hidden VIP lane makes the lanes area this much shorter */
+.timeline--no-vip .lane-label--vip { display: none; }
+.timeline__labels { position: sticky; left: 0; z-index: 8; height: calc(400px - var(--cut, 0px)); background: var(--bg); }
 .lane-label { position: absolute; height: 100px; left: 0; right: 12px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
 .lane-label--women { top: 64px; }
 .lane-label--men { top: 178px; }
@@ -280,7 +306,7 @@ h1, h2, h3 { margin: 0; }
 .lane-label__name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
 .lane-label__bar { width: 4px; height: 18px; border-radius: 2px; display: inline-block; flex: none; }
 .lane-label__detail { font-size: 12.5px; color: var(--muted); padding-left: 12px; }
-.timeline__track { position: relative; height: 400px; cursor: crosshair; }
+.timeline__track { position: relative; height: calc(400px - var(--cut, 0px)); cursor: crosshair; }
 
 .tick { position: absolute; top: 40px; height: 320px; border-left: 1px solid var(--line); }
 .tick--quarter { top: 64px; height: 214px; border-left-style: dashed; }
@@ -290,7 +316,7 @@ h1, h2, h3 { margin: 0; }
 }
 .lane-bg { position: absolute; left: 0; right: 0; height: 100px; background: var(--panel); border-radius: 10px; }
 .lane-bg--vip { height: 68px; }
-.broadcast-band { position: absolute; top: 0; height: 360px; z-index: 1; pointer-events: none; }
+.broadcast-band { position: absolute; top: 0; height: calc(360px - var(--cut, 0px)); z-index: 1; pointer-events: none; }
 .broadcast-band--women { background: color-mix(in oklch, var(--broadcast-women) 12%, transparent); }
 .broadcast-band--men { background: color-mix(in oklch, var(--broadcast-men) 12%, transparent); }
 
@@ -331,15 +357,15 @@ h1, h2, h3 { margin: 0; }
 .block--vip-aperitif, .block--vip-free { z-index: 2; }
 
 .vline { position: absolute; transform: translateX(-50%); z-index: 5; pointer-events: none; }
-.vline--women-broadcast { top: 0; height: 360px; border-left: 2px dotted var(--broadcast-women); }
-.vline--men-broadcast { top: 0; height: 360px; border-left: 2px dotted var(--broadcast-men); }
-.vline--selected { top: 58px; height: 308px; border-left: 1.5px solid var(--fg); }
+.vline--women-broadcast { top: 0; height: calc(360px - var(--cut, 0px)); border-left: 2px dotted var(--broadcast-women); }
+.vline--men-broadcast { top: 0; height: calc(360px - var(--cut, 0px)); border-left: 2px dotted var(--broadcast-men); }
+.vline--selected { top: 58px; height: calc(308px - var(--cut, 0px)); border-left: 1.5px solid var(--fg); }
 .vline-label {
   position: absolute; font-size: 11.5px; font-weight: 600; white-space: nowrap;
   padding: 1px 6px; border-radius: 6px; z-index: 6; pointer-events: none; background: var(--bg);
 }
 .vline-label--start { top: 0; transform: translateX(calc(-100% - 4px)); }
-.vline-label--end { top: 18px; transform: translateX(4px); }
+.vline-label--end { top: 0; transform: translateX(4px); }
 .vline-label--women { color: var(--broadcast-women); }
 .vline-label--men { color: var(--broadcast-men); }
 .marker { position: absolute; top: 58px; width: 18px; z-index: 5; pointer-events: none; }
@@ -364,7 +390,7 @@ h1, h2, h3 { margin: 0; }
 .timeline--vertical .timeline__scroll { overflow: visible; padding-bottom: 0; }
 .timeline--vertical .timeline__grid { display: block; min-width: 0; }
 .timeline--vertical .timeline__labels { display: none; }
-.timeline__track--vertical { --axis: 48px; --lane: calc((100% - 64px) / 3); cursor: pointer; }
+.timeline__track--vertical { --axis: 48px; --lane: calc((100% - var(--axis) - 8px * (var(--lanes, 3) - 1)) / var(--lanes, 3)); cursor: pointer; }
 .timeline__track--vertical :is(.block, .lane-bg).vlane--women { left: var(--axis); right: auto; width: var(--lane); }
 .timeline__track--vertical :is(.block, .lane-bg).vlane--men { left: calc(var(--axis) + var(--lane) + 8px); right: auto; width: var(--lane); }
 .timeline__track--vertical :is(.block, .lane-bg).vlane--vip { left: calc(var(--axis) + 2 * (var(--lane) + 8px)); right: auto; width: var(--lane); }

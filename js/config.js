@@ -39,6 +39,8 @@ KK.config = {
     womenBroadcast: true,     // false = the women's race is not broadcast
     womenBroadcastStart: '', // empty = automatic (lead time before women finish)
     menBroadcastStart: '15:30',
+    showBroadcast: true,      // the eye in the sidebar: false hides the broadcast in the timeline (view only, no effect on the calculation)
+    showVip: true,            // same for the VIP tent lane
   },
 
   limits: {

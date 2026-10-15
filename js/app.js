@@ -121,7 +121,11 @@
     const womenBroadcast = s.womenBroadcast !== false;
     $('women-broadcast-field').classList.toggle('is-off', !womenBroadcast);
     $('women-broadcast-field').querySelector('input[type="time"]').disabled = !womenBroadcast;
-    $('women-broadcast-legend').hidden = !womenBroadcast;
+    document.querySelectorAll('[data-toggle-view]').forEach(button => {
+      const shown = s[button.dataset.toggleView] !== false;
+      button.setAttribute('aria-pressed', String(shown));
+      button.closest('.settings__group').classList.toggle('is-hidden', !shown);
+    });
     $('women-broadcast-auto').hidden = !!s.womenBroadcastStart;
     $('women-broadcast-reset').hidden = !s.womenBroadcastStart;
 
@@ -149,11 +153,11 @@
     $('print-summary').innerHTML = [
       `<b>Vrouwen</b> start ${f.clock(women.start)}, ${f.km(women.speed)} km/u, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
       `<b>Mannen</b> start ${f.clock(men.start)}, ${f.km(men.speed)} km/u, ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
-      `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
-      `<b>Uitzending</b> ${sporza.join(', ')}`,
+      s.showVip !== false && `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
+      s.showBroadcast !== false && `<b>Uitzending</b> ${sporza.join(', ')}`,
       `<b>Podium</b> ${Number(s.podiumDuration) || 0} min`,
       `<b>Wegafsluiting</b> vrouwen ${schedule.closures.women.red} min voor, ${schedule.closures.women.green} min na; mannen ${schedule.closures.men.red} min voor, ${schedule.closures.men.green} min na${men.breakaway > 0 ? `, vroege vlucht ${formatMss(Math.round(men.breakaway * 60))}` : ''}`,
-    ].map(t => `<span>${t}</span>`).join('');
+    ].filter(Boolean).map(t => `<span>${t}</span>`).join('');
     $('print-link').textContent = new URL(shareUrl(), location.href).href;
 
     renderPassages($('women-passages'), women.passages);
@@ -161,7 +165,8 @@
 
     state.shownTime = state.selectedTime ?? women.start;
     const positions = KK.riderPositions(schedule, state.shownTime);
-    timeline.render(schedule, { selectedTime: state.shownTime, positions, showQuarterGrid: state.showQuarterGrid });
+    timeline.render(schedule, { selectedTime: state.shownTime, positions, showQuarterGrid: state.showQuarterGrid,
+      showBroadcast: s.showBroadcast !== false, showVip: s.showVip !== false });
 
     $('women-status').textContent = positions.women.label;
     $('women-status-detail').textContent = positions.women.detail;
@@ -364,6 +369,11 @@
       input.value = formatMss(Math.max(0, Math.min(900, Number(state.settings[input.dataset.setting] || 0) + Number(button.dataset.step))));
     } else input.value = clampToInput(input, Number(state.settings[input.dataset.setting]) + Number(button.dataset.step));
     readInput(input, true);
+  }));
+  document.querySelectorAll('[data-toggle-view]').forEach(button => button.addEventListener('click', () => {
+    const key = button.dataset.toggleView;
+    state.settings[key] = state.settings[key] === false;
+    saveSettings(); render();
   }));
   $('women-broadcast-reset').addEventListener('click', e => {
     e.preventDefault();

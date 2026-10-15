@@ -150,13 +150,20 @@ KK.Timeline = class {
     this.schedule = schedule;
     this.options = options;
     this.vertical = this.isVertical();
+    this.showVip = options.showVip !== false;
+    this.showBroadcast = options.showBroadcast !== false;
+    this.broadcasts = this.showBroadcast ? schedule.broadcasts : [];
     this.el.classList.toggle('timeline__track--vertical', this.vertical);
     const section = this.el.closest('.timeline');
-    if (section) section.classList.toggle('timeline--vertical', this.vertical);
+    if (section) {
+      section.classList.toggle('timeline--vertical', this.vertical);
+      section.classList.toggle('timeline--no-vip', !this.showVip);
+      section.style.setProperty('--lanes', this.showVip ? 3 : 2);
+    }
 
     const html = this.vertical ? this.verticalHtml(schedule, options) : this.horizontalHtml(schedule, options);
     html.push(`<div class="tooltip" hidden></div>`);
-    this.el.style.height = this.vertical ? `${this.vTop(KK.config.timelineAxis.end) + 28}px` : this.horizontalRows > 1 ? '426px' : '';
+    this.el.style.height = this.vertical ? `${this.vTop(KK.config.timelineAxis.end) + 28}px` : this.horizontalRows > 1 ? 'calc(426px - var(--cut, 0px))' : '';
     this.el.innerHTML = html.join('');
     this.tooltipEl = this.el.querySelector('.tooltip');
     if (this.activeBlockId) this.showTooltip(this.activeBlockId);
@@ -179,14 +186,15 @@ KK.Timeline = class {
       for (let m = axisStart + 15; m < axisEnd; m += 15) if (m % 60) html.push(`<div class="tick tick--quarter" style="left:${this.pct(m)}%"></div>`);
     }
 
-    html.push(`<div class="lane-bg" style="top:64px"></div><div class="lane-bg" style="top:178px"></div><div class="lane-bg lane-bg--vip" style="top:${this.layout.laneTop.vip}px"></div>`);
+    html.push(`<div class="lane-bg" style="top:64px"></div><div class="lane-bg" style="top:178px"></div>${this.showVip ? `<div class="lane-bg lane-bg--vip" style="top:${this.layout.laneTop.vip}px"></div>` : ''}`);
 
-    schedule.broadcasts.forEach(b => {
+    this.broadcasts.forEach(b => {
       const a = this.clamp(b.start), z = this.clamp(b.end);
       if (z > a) html.push(`<div class="broadcast-band broadcast-band--${b.race}" style="left:${this.pct(a)}%;width:${this.pct(z) - this.pct(a)}%"></div>`);
     });
 
     schedule.blocks.forEach(block => {
+      if (block.lane === 'vip' && !this.showVip) return;
       const a = this.clamp(block.start), z = this.clamp(block.end);
       if (z - a <= 0.01) return;
       const gap = this.blockGap(block);
@@ -203,7 +211,7 @@ KK.Timeline = class {
     });
 
     const inAxis = t => t >= axisStart && t <= axisEnd;
-    schedule.broadcasts.forEach(b => {
+    this.broadcasts.forEach(b => {
       if (inAxis(b.start)) html.push(`<div class="vline vline--${b.race}-broadcast" style="left:${this.pct(b.start)}%"></div>
         <div class="vline-label vline-label--start vline-label--${b.race}" style="left:${this.pct(b.start)}%">${b.channel} ${f.clock(b.start)}</div>`);
       // Near the right edge the end label goes to the left of its line, so it is never cut off.
@@ -244,7 +252,7 @@ KK.Timeline = class {
     });
     this.horizontalRows = Math.max(1, ...items.map(item => item.row));
     items.forEach(item => html.push(`<div class="marker marker--${item.kind} marker--${item.side}"
-      style="left:${this.pct(item.t)}%;height:${item.row === 2 ? 346 : 320}px"><span class="marker__label">${item.text}</span></div>`));
+      style="left:${this.pct(item.t)}%;height:calc(${item.row === 2 ? 346 : 320}px - var(--cut, 0px))"><span class="marker__label">${item.text}</span></div>`));
     if (inAxis(options.selectedTime)) html.push(`<div class="vline vline--selected" style="left:${this.pct(options.selectedTime)}%"></div>`);
     return html;
   }
@@ -253,7 +261,8 @@ KK.Timeline = class {
     const f = KK.format;
     const { start: axisStart, end: axisEnd } = KK.config.timelineAxis;
     const { axis, gap: laneGap } = KK.Timeline.V;
-    const laneWidth = Math.max(1, ((this.el.clientWidth || 343) - axis - laneGap * 2) / 3);
+    const lanes = this.showVip ? 3 : 2;
+    const laneWidth = Math.max(1, ((this.el.clientWidth || 343) - axis - laneGap * (lanes - 1)) / lanes);
     const inAxis = t => t >= axisStart && t <= axisEnd;
     const y = t => this.vTop(t);
     const html = [];
@@ -262,15 +271,15 @@ KK.Timeline = class {
     html.push(`<div class="vhead">
       <div class="vhead__lane vlane--women"><span class="lane-label__bar chip--women"></span><span><b>Vrouwen</b>${f.km(schedule.women.totalKm)} km</span></div>
       <div class="vhead__lane vlane--men"><span class="lane-label__bar chip--men"></span><span><b>Mannen</b>${f.km(schedule.men.totalKm)} km</span></div>
-      <div class="vhead__lane vlane--vip"><span class="lane-label__bar chip--vip"></span><span><b>VIP-tent</b>&nbsp;</span></div>
+      ${this.showVip ? '<div class="vhead__lane vlane--vip"><span class="lane-label__bar chip--vip"></span><span><b>VIP-tent</b>&nbsp;</span></div>' : ''}
     </div>`);
     const laneBg = lane => `<div class="lane-bg vlane--${lane}" style="top:${y(axisStart) - 8}px;height:${y(axisEnd) - y(axisStart) + 16}px"></div>`;
-    html.push(laneBg('women') + laneBg('men') + laneBg('vip'));
+    html.push(laneBg('women') + laneBg('men') + (this.showVip ? laneBg('vip') : ''));
 
     // Broadcast start and end times go in the hour column (in their own colour), so they never cover a block.
     // An hour label that would collide with one of them is left out.
     const marks = [];
-    schedule.broadcasts.forEach(b => [b.start, b.end].forEach(t => { if (inAxis(t)) marks.push({ t, race: b.race }); }));
+    this.broadcasts.forEach(b => [b.start, b.end].forEach(t => { if (inAxis(t)) marks.push({ t, race: b.race }); }));
     const keyTimes = [...marks.map(m => m.t), schedule.men.firstRiderTime, schedule.women.finish, schedule.men.finish];
     for (let h = Math.ceil(axisStart / 60); h * 60 <= axisEnd; h++) {
       html.push(`<div class="htick" style="top:${y(h * 60)}px"></div>`);
@@ -284,12 +293,13 @@ KK.Timeline = class {
     const menFinishMark = schedule.men.finish;
     if (inAxis(menFinishMark)) html.push(`<div class="htick-label htick-label--men-finish" style="top:${y(menFinishMark)}px">${f.clock(menFinishMark)}</div>`);
 
-    schedule.broadcasts.forEach(b => {
+    this.broadcasts.forEach(b => {
       const a = this.clamp(b.start), z = this.clamp(b.end);
       if (z > a) html.push(`<div class="broadcast-band broadcast-band--${b.race}" style="top:${y(a)}px;height:${y(z) - y(a)}px"></div>`);
     });
 
     schedule.blocks.forEach(block => {
+      if (block.lane === 'vip' && !this.showVip) return;
       const a = this.clamp(block.start), z = this.clamp(block.end);
       if (z - a <= 0.01) return;
       const gap = this.blockGap(block);

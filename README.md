@@ -81,3 +81,7 @@ Points are `[lat, lon, elevation]`. The map scales each GPX track to the officia
 Hosted with GitHub Pages from the `main` branch, root folder. Every push to `main` updates the live site within a minute or two.
 
 Base maps come from OpenFreeMap (light: `positron`, dark: `dark`) and need an internet connection. Fonts load from Google Fonts, MapLibre GL JS 4.7.1 from jsDelivr. html-to-image 1.11.11 and jsPDF 2.5.2 (also jsDelivr) load only when someone exports a PDF. The page has `noindex` so search engines do not list it.
+
+## Hide parts of the timeline (eye)
+
+`showBroadcast` and `showVip` (in `KK.config.defaults`, both `true`) are set with the eye in the heading of the Uitzending and VIP-tent groups in the sidebar. They only change the view: the timeline drops the broadcast bands and labels or the VIP lane (`.timeline--no-vip` shortens the lanes area through `--cut`; on phones there are two columns instead of three), and the print summary and PDF follow. The calculation and the margin are not affected. Like all settings they are saved and shared only when they differ from the default.
