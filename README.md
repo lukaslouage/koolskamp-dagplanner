@@ -85,3 +85,7 @@ Base maps come from OpenFreeMap (light: `positron`, dark: `dark`) and need an in
 ## Hide parts of the timeline (eye)
 
 `showBroadcast` and `showVip` (in `KK.config.defaults`, both `true`) are set with the eye in the heading of the Uitzending and VIP-tent groups in the sidebar. They only change the view: the timeline drops the broadcast bands and labels or the VIP lane (`.timeline--no-vip` shortens the lanes area through `--cut`; on phones there are two columns instead of three), and the print summary and PDF follow. The calculation and the margin are not affected. Like all settings they are saved and shared only when they differ from the default.
+
+## Collapsing the settings
+
+The button in the heading of the sidebar folds the settings in. On wide screens a narrow strip with only the button stays and the page gets the extra width (timeline, map and profiles follow through their resize observers); on a phone the settings fold away under their heading. The choice is kept per browser in `localStorage` (`kk-dagplanner-sidebar`), not in the settings or the share link.

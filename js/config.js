@@ -50,5 +50,6 @@ KK.config = {
   },
 
   storageKey: 'kk-dagplanner-settings-v2', // v2 stores only changed values; v1 held all old defaults
+  sidebarStorageKey: 'kk-dagplanner-sidebar',
   themeStorageKey: 'kk-dagplanner-theme',
 };

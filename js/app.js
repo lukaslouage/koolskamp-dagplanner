@@ -384,6 +384,17 @@
     state.settings.womenBroadcastStart = '';
     saveSettings(); syncInputs(); render();
   });
+  const shell = document.querySelector('.shell'), sidebarToggle = $('sidebar-toggle');
+  function setSidebarCollapsed(collapsed, save = true) {
+    shell.classList.toggle('is-collapsed', collapsed);
+    sidebarToggle.setAttribute('aria-expanded', String(!collapsed));
+    const label = collapsed ? 'Instellingen uitklappen' : 'Instellingen inklappen';
+    sidebarToggle.title = label;
+    sidebarToggle.setAttribute('aria-label', label);
+    if (save) try { localStorage.setItem(config.sidebarStorageKey, collapsed ? '1' : '0'); } catch (e) { /* storage unavailable */ }
+  }
+  try { setSidebarCollapsed(localStorage.getItem(config.sidebarStorageKey) === '1', false); } catch (e) { /* storage unavailable */ }
+  sidebarToggle.addEventListener('click', () => setSidebarCollapsed(!shell.classList.contains('is-collapsed')));
   $('reset-button').addEventListener('click', () => {
     state.settings = { ...config.defaults };
     state.selectedTime = null;
