@@ -32,6 +32,7 @@ KK.config = {
     womenGreenFlag: 5,        // minutes the green flag car follows the winner (road open again after that)
     menRedFlag: 5,
     menGreenFlag: 5,
+    menBreakaway: 0,          // seconds the early break-away is ahead of the modelled group at the first passage (men only)
     vipArrival: '11:30',      // guests arrive, aperitif starts
     vipMenuStart: '12:45',    // three-course menu starts (roughly, tables do not start together)
     vipMenuEnd: '14:30',      // three-course menu is over (roughly)

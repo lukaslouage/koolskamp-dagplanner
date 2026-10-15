@@ -161,10 +161,18 @@ window.KK = window.KK || {};
     // menRedFlag minutes before the first rider. It is free for the men once the women are done: the end of
     // the podium or, if later, the green flag car of the women's race.
     const minutes = value => Math.max(0, Number(value) || 0);
+    // An early break-away is ahead of the modelled group when the men first reach the circuit. The red flag car
+    // drives ahead of the first rider, so it is the break-away that decides when the road must be clear.
+    men.breakaway = Math.min(15, minutes(Number(settings.menBreakaway) / 60));
+    men.firstRiderTime = men.firstPassageTime - men.breakaway;
+    if (men.breakaway > 0) {
+      const index = men.passages.findIndex(p => p.label === 'Doorkomst meet 1');
+      if (index >= 0) men.passages.splice(index, 0, { label: 'Doorkomst meet 1, vroege vlucht', km: men.firstPassageKm, time: men.firstRiderTime });
+    }
     const closures = {
       women: { lane: 'women', start: women.firstPassageTime - minutes(settings.womenRedFlag), end: women.finish + minutes(settings.womenGreenFlag),
         red: minutes(settings.womenRedFlag), green: minutes(settings.womenGreenFlag) },
-      men: { lane: 'men', start: men.firstPassageTime - minutes(settings.menRedFlag), end: men.finish + minutes(settings.menGreenFlag),
+      men: { lane: 'men', start: men.firstRiderTime - minutes(settings.menRedFlag), end: men.finish + minutes(settings.menGreenFlag),
         red: minutes(settings.menRedFlag), green: minutes(settings.menGreenFlag) },
     };
     const womenClear = Math.max(women.podiumEnd, closures.women.end);
@@ -177,12 +185,12 @@ window.KK = window.KK || {};
     if (margin.conflict) {
       women.blocks.push({ id: 'women-conflict', lane: 'women', type: 'conflict', name: 'Conflict: omloop niet vrij', shortName: 'Conflict',
         start: closures.men.start, end: womenClear,
-        details: [`Rode vlag mannen om ${f.exact(closures.men.start)} (eerste passage om ${f.exact(men.firstPassageTime)})`,
+        details: [`Rode vlag mannen om ${f.exact(closures.men.start)} (eerste passage om ${f.exact(men.firstRiderTime)})`,
                   `Weg vrij na vrouwen om ${f.exact(womenClear)}`, `Tekort: ${f.duration(-marginRaw)}`] });
     } else {
       women.blocks.push({ id: 'women-margin', lane: 'women', type: 'org', name: `Marge ${marginMinutes} min`, shortName: `${marginMinutes} min`,
         start: womenClear, end: closures.men.start,
-        details: [`Weg vrij na vrouwen om ${f.exact(womenClear)}`, `Rode vlag mannen om ${f.exact(closures.men.start)} (eerste passage om ${f.exact(men.firstPassageTime)})`] });
+        details: [`Weg vrij na vrouwen om ${f.exact(womenClear)}`, `Rode vlag mannen om ${f.exact(closures.men.start)} (eerste passage om ${f.exact(men.firstRiderTime)})`] });
     }
 
     const womenBroadcastStart = settings.womenBroadcastStart
@@ -198,6 +206,30 @@ window.KK = window.KK || {};
     const vip = buildVip(settings, women, men);
     const blocks = [...women.blocks, ...men.blocks, ...vip.blocks];
     return { women, men, vip, margin, closures, broadcasts, blocks, blockById: Object.fromEntries(blocks.map(b => [b.id, b])) };
+  };
+
+  /**
+   * Where the red flag car (ahead of the riders) and the green flag car (behind them) are at a given time, and the
+   * stretch of road between them. The red flag car is where the riders will be in `red` minutes, the green flag car
+   * where they were `green` minutes ago. A flag past the start or the finish is left out; the stretch then ends
+   * at the start or the finish. Returns { women, men }, each null while that race is not on the road.
+   */
+  KK.flagPositions = function (schedule, time) {
+    const result = {};
+    ['women', 'men'].forEach(key => {
+      const race = schedule[key], closure = schedule.closures[key];
+      if (time < race.start || time >= race.finish) { result[key] = null; return; }
+      const distanceAt = t => ((t - race.start) * race.speed) / 60;
+      const place = d => ({ km: d, ...race.locate(Math.min(d, race.totalKm - 0.001)) });
+      const dRed = distanceAt(time + closure.red), dGreen = distanceAt(time - closure.green);
+      const from = Math.max(0, dGreen), to = Math.min(race.totalKm, dRed);
+      const stretch = [];
+      const step = 0.15;
+      for (let d = from; d < to; d += step) stretch.push(place(d));
+      stretch.push(place(to));
+      result[key] = { red: dRed < race.totalKm ? place(dRed) : null, green: dGreen > 0 ? place(dGreen) : null, stretch, redMinutes: closure.red, greenMinutes: closure.green };
+    });
+    return result;
   };
 
   /** Position of each race at a given time, used by the map and the rider cards. */

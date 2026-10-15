@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=37">
+<link rel="stylesheet" href="css/styles.css?v=40">
 </head>
 <body>
 
@@ -124,32 +124,39 @@
 
       <section class="settings__group">
         <h3 class="settings__heading"><span class="chip chip--closure"></span>Wegafsluiting</h3>
-        <div class="field"><span class="field__stack"><span class="field__label">Rode vlag vrouwen <span class="muted">min</span></span><span class="field__hint">Voor de eerste renster</span></span>
+        <div class="field"><span class="field__stack"><span class="field__label">Rode vlag vrouwen</span><span class="field__hint">min voor de koers</span></span>
           <div class="stepper">
             <button type="button" class="stepper__button" data-step-for="womenRedFlag" data-step="-1" aria-label="Een minuut minder">−</button>
             <input type="number" inputmode="decimal" min="0" max="60" step="1" data-setting="womenRedFlag" aria-label="Rode vlag vrouwen, minuten voor de koers">
             <button type="button" class="stepper__button" data-step-for="womenRedFlag" data-step="1" aria-label="Een minuut meer">+</button>
           </div>
         </div>
-        <div class="field"><span class="field__stack"><span class="field__label">Groene vlag vrouwen <span class="muted">min</span></span><span class="field__hint">Na de winnares</span></span>
+        <div class="field"><span class="field__stack"><span class="field__label">Groene vlag vrouwen</span><span class="field__hint">min na de winnares</span></span>
           <div class="stepper">
             <button type="button" class="stepper__button" data-step-for="womenGreenFlag" data-step="-1" aria-label="Een minuut minder">−</button>
             <input type="number" inputmode="decimal" min="0" max="60" step="1" data-setting="womenGreenFlag" aria-label="Groene vlag vrouwen, minuten na de winnares">
             <button type="button" class="stepper__button" data-step-for="womenGreenFlag" data-step="1" aria-label="Een minuut meer">+</button>
           </div>
         </div>
-        <div class="field"><span class="field__stack"><span class="field__label">Rode vlag mannen <span class="muted">min</span></span><span class="field__hint">Voor de eerste renner</span></span>
+        <div class="field"><span class="field__stack"><span class="field__label">Rode vlag mannen</span><span class="field__hint">min voor de koers</span></span>
           <div class="stepper">
             <button type="button" class="stepper__button" data-step-for="menRedFlag" data-step="-1" aria-label="Een minuut minder">−</button>
             <input type="number" inputmode="decimal" min="0" max="60" step="1" data-setting="menRedFlag" aria-label="Rode vlag mannen, minuten voor de koers">
             <button type="button" class="stepper__button" data-step-for="menRedFlag" data-step="1" aria-label="Een minuut meer">+</button>
           </div>
         </div>
-        <div class="field"><span class="field__stack"><span class="field__label">Groene vlag mannen <span class="muted">min</span></span><span class="field__hint">Na de winnaar</span></span>
+        <div class="field"><span class="field__stack"><span class="field__label">Groene vlag mannen</span><span class="field__hint">min na de winnaar</span></span>
           <div class="stepper">
             <button type="button" class="stepper__button" data-step-for="menGreenFlag" data-step="-1" aria-label="Een minuut minder">−</button>
             <input type="number" inputmode="decimal" min="0" max="60" step="1" data-setting="menGreenFlag" aria-label="Groene vlag mannen, minuten na de winnaar">
             <button type="button" class="stepper__button" data-step-for="menGreenFlag" data-step="1" aria-label="Een minuut meer">+</button>
+          </div>
+        </div>
+        <div class="field" title="Voorsprong van de vroege vlucht op het peloton bij de eerste passage aan de meet"><span class="field__stack"><span class="field__label">Vroege vlucht mannen</span><span class="field__hint">m:ss voorsprong</span></span>
+          <div class="stepper">
+            <button type="button" class="stepper__button" data-step-for="menBreakaway" data-step="-30" aria-label="30 seconden minder">−</button>
+            <input type="text" inputmode="numeric" autocomplete="off" data-setting="menBreakaway" data-format="mss" aria-label="Voorsprong vroege vlucht mannen, minuten en seconden">
+            <button type="button" class="stepper__button" data-step-for="menBreakaway" data-step="30" aria-label="30 seconden meer">+</button>
           </div>
         </div>
       </section>
@@ -222,7 +229,7 @@
         </div>
         <div class="legend">
           <div class="legend__item"><span class="legend__lines"><span class="legend__line legend__line--women-broadcast" id="women-broadcast-legend"></span><span class="legend__line legend__line--men-broadcast"></span></span>Uitzending</div>
-          <div class="legend__item"><span class="legend__closure"></span>Weg gesloten (rode tot groene vlag)</div>
+          <div class="legend__item"><span class="legend__flags"><svg class="flagbar__flag flagbar__flag--red" viewBox="0 0 12 14" aria-hidden="true"><path class="pole" d="M1 14V1"/><path d="M1.8 1.2h8.2l-2.5 3 2.5 3H1.8z"/></svg><svg class="flagbar__flag flagbar__flag--green" viewBox="0 0 12 14" aria-hidden="true"><path class="pole" d="M1 14V1"/><path d="M1.8 1.2h8.2l-2.5 3 2.5 3H1.8z"/></svg></span>Rode en groene vlag (volgen het gekozen tijdstip)</div>
         </div>
       </div>
     </section>
@@ -297,14 +304,14 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=37"></script>
-<script src="js/config.js?v=37"></script>
-<script src="js/format.js?v=37"></script>
-<script src="js/schedule.js?v=37"></script>
-<script src="js/timeline.js?v=37"></script>
-<script src="js/route-map.js?v=37"></script>
-<script src="js/profile.js?v=37"></script>
-<script src="js/pdf-export.js?v=37"></script>
-<script src="js/app.js?v=37"></script>
+<script src="data/route-data.js?v=40"></script>
+<script src="js/config.js?v=40"></script>
+<script src="js/format.js?v=40"></script>
+<script src="js/schedule.js?v=40"></script>
+<script src="js/timeline.js?v=40"></script>
+<script src="js/route-map.js?v=40"></script>
+<script src="js/profile.js?v=40"></script>
+<script src="js/pdf-export.js?v=40"></script>
+<script src="js/app.js?v=40"></script>
 </body>
 </html>

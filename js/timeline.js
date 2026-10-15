@@ -90,10 +90,12 @@ KK.Timeline = class {
     return [0, 0];
   }
 
-  /** Text for hovering a closure bar. */
-  closureTitle(closure) {
-    const f = KK.format;
-    return `Weg gesloten aan de meet van ${f.clock(closure.start)} tot ${f.clock(closure.end)}: rode vlag ${closure.red} min voor de eerste renner, groene vlag ${closure.green} min na de winnaar`;
+  /** The red and the green flag around the selected time in one lane: a short bar, red before the line and green after it. */
+  flagBar(lane, closure, style) {
+    const who = lane === 'women' ? 'vrouwen' : 'mannen';
+    const flag = color => `<svg class="flagbar__flag flagbar__flag--${color}" viewBox="0 0 12 14" aria-hidden="true"><path class="pole" d="M1 14V1"/><path d="M1.8 1.2h8.2l-2.5 3 2.5 3H1.8z"/></svg>`;
+    return `<div class="flagbar flagbar--${lane}" style="${style}" title="Rode vlag ${closure.red} min voor de eerste renner, groene vlag ${closure.green} min na de winnaar (${who})">
+      <i class="flagbar__red" style="flex:${closure.red}"></i><i class="flagbar__green" style="flex:${closure.green}"></i>${flag('red')}${flag('green')}</div>`;
   }
 
   /** Width of a flag label: the measured text, 2 x 10 px padding and the 18 px bend of the flag. */
@@ -210,19 +212,19 @@ KK.Timeline = class {
         <div class="vline-label vline-label--end${endSide} vline-label--${b.race}" style="left:${this.pct(b.end)}%">einde ${f.clock(b.end)}</div>`);
     });
 
-    // Road closure at the finish line: from the red flag car to the green flag car, as a thin bar under each race lane.
+    // Red and green flag at the selected time, in each lane whose race is on the road.
     ['women', 'men'].forEach(lane => {
-      const c = schedule.closures[lane];
-      const a = this.clamp(c.start), z = this.clamp(c.end);
-      if (z > a) html.push(`<div class="closure closure--${lane}" style="top:${this.layout.laneTop[lane] + 94}px;left:${this.pct(a)}%;width:${this.pct(z) - this.pct(a)}%"
-        title="${this.closureTitle(c)}"></div>`);
+      const c = schedule.closures[lane], p = options.positions && options.positions[lane];
+      if (!p || p.state !== 'racing' || c.red + c.green <= 0) return;
+      const from = this.pct(options.selectedTime - c.red), to = this.pct(options.selectedTime + c.green);
+      html.push(this.flagBar(lane, c, `top:${this.layout.laneTop[lane] + 94}px;left:${from}%;width:${to - from}%`));
     });
 
     // Key moments: a line from the top of the lanes that bends into a label under the lanes, like a flag.
     // Each label prefers a side (the women's and the first-passage label point away from each other, the men's
     // finish points right), switches side when there is no room, and moves to a second row when it would touch
     // a label that is already on the first row.
-    const firstPassage = schedule.men.firstPassageTime;
+    const firstPassage = schedule.men.firstRiderTime;
     const womenOnLeft = schedule.women.finish <= firstPassage;
     const px = t => (t - axisStart) * pxPerMinute;
     const labelWidth = text => this.flagWidth(text);
@@ -269,14 +271,14 @@ KK.Timeline = class {
     // An hour label that would collide with one of them is left out.
     const marks = [];
     schedule.broadcasts.forEach(b => [b.start, b.end].forEach(t => { if (inAxis(t)) marks.push({ t, race: b.race }); }));
-    const keyTimes = [...marks.map(m => m.t), schedule.men.firstPassageTime, schedule.women.finish, schedule.men.finish];
+    const keyTimes = [...marks.map(m => m.t), schedule.men.firstRiderTime, schedule.women.finish, schedule.men.finish];
     for (let h = Math.ceil(axisStart / 60); h * 60 <= axisEnd; h++) {
       html.push(`<div class="htick" style="top:${y(h * 60)}px"></div>`);
       if (!keyTimes.some(t => Math.abs(t - h * 60) < 12)) html.push(`<div class="htick-label" style="top:${y(h * 60)}px">${h}u</div>`);
     }
     marks.forEach(m => html.push(`<div class="htick-label htick-label--${m.race}" style="top:${y(m.t)}px">${f.clock(m.t)}</div>`));
     // The two key lines also get their time in the hour column (the legend explains the colours).
-    const firstPassageMark = schedule.men.firstPassageTime, womenFinishMark = schedule.women.finish;
+    const firstPassageMark = schedule.men.firstRiderTime, womenFinishMark = schedule.women.finish;
     if (inAxis(firstPassageMark)) html.push(`<div class="htick-label htick-label--status" style="top:${y(firstPassageMark)}px">${f.clock(firstPassageMark)}</div>`);
     if (inAxis(womenFinishMark)) html.push(`<div class="htick-label htick-label--women-finish" style="top:${y(womenFinishMark)}px">${f.clock(womenFinishMark)}</div>`);
     const menFinishMark = schedule.men.finish;
@@ -302,12 +304,13 @@ KK.Timeline = class {
     marks.forEach(m => html.push(`<div class="hline hline--${m.race}-broadcast" style="top:${y(m.t)}px"></div>`));
 
     ['women', 'men'].forEach(lane => {
-      const c = schedule.closures[lane];
-      const a = this.clamp(c.start), z = this.clamp(c.end);
-      if (z > a) html.push(`<div class="closure closure--${lane} vlane--${lane}" style="top:${y(a)}px;height:${y(z) - y(a)}px" title="${this.closureTitle(c)}"></div>`);
+      const c = schedule.closures[lane], p = options.positions && options.positions[lane];
+      if (!p || p.state !== 'racing' || c.red + c.green <= 0) return;
+      const from = y(options.selectedTime - c.red), to = y(options.selectedTime + c.green);
+      html.push(this.flagBar(lane, c, `top:${from}px;height:${to - from}px`).replace('class="flagbar ', `class="flagbar vlane--${lane} `));
     });
 
-    const firstPassage = schedule.men.firstPassageTime;
+    const firstPassage = schedule.men.firstRiderTime;
     if (inAxis(firstPassage)) html.push(`<div class="hline hline--first-passage" style="top:${y(firstPassage)}px"></div>`);
     const womenFinish = schedule.women.finish;
     if (inAxis(womenFinish)) html.push(`<div class="hline hline--women-finish" style="top:${y(womenFinish)}px"></div>`);

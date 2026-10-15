@@ -95,6 +95,17 @@ KK.RouteMap = class {
       men: marker(start, 'map-rider map-rider--men', 'M'),
     };
 
+    // Red flag car (ahead of the riders) and green flag car (behind them), per race. The pole stands on the spot.
+    const flagSvg = '<svg viewBox="0 0 14 17" aria-hidden="true"><path class="pole-outline" d="M2 17V2"/><path class="pole" d="M2 17V2"/><path class="cloth" d="M2.8 1.6h10.2l-3.1 3.8 3.1 3.8H2.8z"/></svg>';
+    const flag = color => {
+      const m = marker(start, `map-flag map-flag--${color}`, flagSvg, { anchor: 'bottom-left', offset: [-2, 0] });
+      m.getElement().style.display = 'none';
+      return m;
+    };
+    this.flagMarkers = { women: { red: flag('red'), green: flag('green') }, men: { red: flag('red'), green: flag('green') } };
+    this.closureData = { type: 'FeatureCollection', features: [] };
+    if (this.flags) this.setFlags(this.flags);
+
     // Refit whenever the container changes size (window resize, print layout), so the routes never end up off screen.
     if (window.ResizeObserver) {
       let last = '';
@@ -109,6 +120,10 @@ KK.RouteMap = class {
   /** Adds the route lines. Runs after every style load, because a theme switch replaces the whole style. */
   addRouteLayers() {
     const map = this.map, r = this.routes, dark = this.theme === 'dark';
+    // The closed stretch of road (between the green and the red flag car) as a red glow under the route lines.
+    map.addSource('closure', { type: 'geojson', data: this.closureData || { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'closure-halo', type: 'line', source: 'closure', layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#E5484D', 'line-width': 22, 'line-opacity': 0.38 } });
     const add = (id, route, layers) => {
       map.addSource(id, { type: 'geojson',
         data: { type: 'Feature', geometry: { type: 'LineString', coordinates: route.latLngs.map(KK.RouteMap.lngLat) } } });
@@ -152,6 +167,49 @@ KK.RouteMap = class {
     });
   }
 
+  /** Position (lat, lon) of a place on the course: { route, fraction } from KK.flagPositions. */
+  latLngFor(place) {
+    return this.pointAt(this.routes[place.route], place.fraction);
+  }
+
+  /**
+   * Shows the red and the green flag and the stretch of road between them (from KK.flagPositions).
+   * flags = { women, men }; a race that is not on the road is null.
+   */
+  setFlags(flags) {
+    this.flags = flags;
+    if (!this.map || !this.flagMarkers) return;
+    const names = { women: 'vrouwen', men: 'mannen' };
+    const features = [];
+    ['women', 'men'].forEach(race => {
+      const info = flags[race];
+      ['red', 'green'].forEach(color => {
+        const marker = this.flagMarkers[race][color], place = info && info[color];
+        const el = marker.getElement();
+        el.style.display = place ? '' : 'none';
+        if (!place) return;
+        marker.setLngLat(KK.RouteMap.lngLat(this.latLngFor(place)));
+        el.title = color === 'red'
+          ? `Rode vlag ${names[race]}: ${info.redMinutes} min voor de eerste renner`
+          : `Groene vlag ${names[race]}: ${info.greenMinutes} min na de winnaar`;
+      });
+      if (info && info.stretch.length > 1) {
+        features.push({ type: 'Feature', properties: { race }, geometry: { type: 'LineString',
+          coordinates: info.stretch.map(place => KK.RouteMap.lngLat(this.latLngFor(place))) } });
+      }
+    });
+    this.closureData = { type: 'FeatureCollection', features };
+    try {
+      const source = this.map.getSource('closure');
+      if (source) source.setData(this.closureData);
+    } catch (e) { /* the style is reloading; the data is added again when it has loaded */ }
+  }
+
+  /** The red glow is left out of the printed map. */
+  setHaloVisible(visible) {
+    try { if (this.map.getLayer('closure-halo')) this.map.setLayoutProperty('closure-halo', 'visibility', visible ? 'visible' : 'none'); } catch (e) { /* not loaded */ }
+  }
+
   refreshSize() {
     if (this.map) { this.map.resize(); this.fit(); }
   }
@@ -167,6 +225,7 @@ KK.RouteMap = class {
     if (wait && !this.map.loaded()) {
       await new Promise(resolve => { this.map.once('idle', resolve); setTimeout(resolve, 4000); });
     }
+    this.setHaloVisible(false);
     this.map.redraw();
     if (!this.printImage) {
       this.printImage = document.createElement('img');
@@ -175,5 +234,6 @@ KK.RouteMap = class {
       this.map.getCanvas().after(this.printImage);
     }
     try { this.printImage.src = this.map.getCanvas().toDataURL('image/png'); } catch (e) { /* canvas unavailable */ }
+    this.setHaloVisible(true);
   }
 };

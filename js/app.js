@@ -94,11 +94,18 @@
     render();
   }
 
+  /** Minutes and seconds ("3:30") for a number of seconds, and back. Plain "3" means 3 minutes. Up to 15 minutes. */
+  const formatMss = seconds => `${Math.floor(seconds / 60)}:${String(Math.round(seconds) % 60).padStart(2, '0')}`;
+  function parseMss(text) {
+    const m = String(text).trim().match(/^(\d{1,2})(?::([0-5]?\d))?$/);
+    return m ? Math.min(900, Number(m[1]) * 60 + Number(m[2] || 0)) : null;
+  }
+
   function syncInputs() {
     document.querySelectorAll('[data-setting]').forEach(input => {
       const value = state.settings[input.dataset.setting];
       if (input.type === 'checkbox') input.checked = value !== false;
-      else if (document.activeElement !== input) input.value = value ?? '';
+      else if (document.activeElement !== input) input.value = input.dataset.format === 'mss' ? formatMss(value || 0) : (value ?? '');
     });
   }
 
@@ -122,8 +129,10 @@
     $('women-finish-detail').textContent = `${f.km(women.totalKm)} km aan ${f.km(women.speed)} km/u, podium tot ${f.clock(women.podiumEnd)}`;
     $('men-finish').textContent = f.clock(men.finish);
     $('men-finish-detail').textContent = `${f.km(men.totalKm)} km aan ${f.km(men.speed)} km/u, podium tot ${f.clock(men.podiumEnd)}`;
-    $('men-first-passage').textContent = f.clock(men.firstPassageTime);
-    $('men-first-passage-detail').textContent = `Na ${f.km(men.firstPassageKm)} km. Kruiskalsijde (km ${f.km(men.kruiskalsijdeKm)}) om ${f.clock(men.kruiskalsijdeTime)}`;
+    $('men-first-passage').textContent = f.clock(men.firstRiderTime);
+    $('men-first-passage-detail').textContent = men.breakaway > 0
+      ? `Vroege vlucht, ${formatMss(Math.round(men.breakaway * 60))} voor het peloton (peloton om ${f.clock(men.firstPassageTime)})`
+      : `Na ${f.km(men.firstPassageKm)} km. Kruiskalsijde (km ${f.km(men.kruiskalsijdeKm)}) om ${f.clock(men.kruiskalsijdeTime)}`;
 
     $('margin-value').textContent = `${margin.minutes} min`;
     $('margin-badge').textContent = margin.conflict ? 'Conflict' : { ok: 'Comfortabel', warn: 'Beperkt', bad: 'Onvoldoende' }[margin.status];
@@ -143,7 +152,7 @@
       `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
       `<b>Uitzending</b> ${sporza.join(', ')}`,
       `<b>Podium</b> ${Number(s.podiumDuration) || 0} min`,
-      `<b>Wegafsluiting</b> vrouwen ${schedule.closures.women.red} min voor, ${schedule.closures.women.green} min na; mannen ${schedule.closures.men.red} min voor, ${schedule.closures.men.green} min na`,
+      `<b>Wegafsluiting</b> vrouwen ${schedule.closures.women.red} min voor, ${schedule.closures.women.green} min na; mannen ${schedule.closures.men.red} min voor, ${schedule.closures.men.green} min na${men.breakaway > 0 ? `, vroege vlucht ${formatMss(Math.round(men.breakaway * 60))}` : ''}`,
     ].map(t => `<span>${t}</span>`).join('');
     $('print-link').textContent = new URL(shareUrl(), location.href).href;
 
@@ -151,9 +160,9 @@
     renderPassages($('men-passages'), men.passages);
 
     state.shownTime = state.selectedTime ?? women.start;
-    timeline.render(schedule, { selectedTime: state.shownTime, showQuarterGrid: state.showQuarterGrid });
-
     const positions = KK.riderPositions(schedule, state.shownTime);
+    timeline.render(schedule, { selectedTime: state.shownTime, positions, showQuarterGrid: state.showQuarterGrid });
+
     $('women-status').textContent = positions.women.label;
     $('women-status-detail').textContent = positions.women.detail;
     $('men-status').textContent = positions.men.label;
@@ -162,6 +171,7 @@
     $('time-value').textContent = f.clock(state.shownTime);
     routeMap.setTheme(state.theme);
     routeMap.setRiders(positions);
+    routeMap.setFlags(KK.flagPositions(schedule, state.shownTime));
     profile.render(schedule);
     profile.setRiders(positions);
   }
@@ -277,7 +287,12 @@
   function readInput(input, final = false) {
     const key = input.dataset.setting;
     if (input.type === 'checkbox') state.settings[key] = input.checked;
-    else if (input.type === 'number') {
+    else if (input.dataset.format === 'mss') {
+      const seconds = parseMss(input.value);
+      if (seconds === null) { if (final) input.value = formatMss(state.settings[key] || 0); return; }
+      state.settings[key] = seconds;
+      if (final) input.value = formatMss(seconds);
+    } else if (input.type === 'number') {
       const n = Number(input.value);
       if (input.value === '' || !Number.isFinite(n)) return;
       state.settings[key] = n;
@@ -309,7 +324,7 @@
 
   document.querySelectorAll('[data-setting]').forEach(input => {
     input.addEventListener(input.type === 'checkbox' ? 'change' : 'input', () => readInput(input));
-    if (input.type === 'time') input.addEventListener('blur', () => readInput(input, true)); // not 'change': that fires on every typed digit
+    if (input.type === 'time' || input.dataset.format === 'mss') input.addEventListener('blur', () => readInput(input, true)); // not 'change': that fires on every typed digit
     if (input.type === 'number') input.addEventListener('change', () => {
       const n = Number(input.value);
       input.value = clampToInput(input, Number.isFinite(n) && input.value !== '' ? n : state.settings[input.dataset.setting]);
@@ -318,7 +333,9 @@
   });
   document.querySelectorAll('[data-step-for]').forEach(button => button.addEventListener('click', () => {
     const input = document.querySelector(`[data-setting="${button.dataset.stepFor}"]`);
-    input.value = clampToInput(input, Number(state.settings[input.dataset.setting]) + Number(button.dataset.step));
+    if (input.dataset.format === 'mss') {
+      input.value = formatMss(Math.max(0, Math.min(900, Number(state.settings[input.dataset.setting] || 0) + Number(button.dataset.step))));
+    } else input.value = clampToInput(input, Number(state.settings[input.dataset.setting]) + Number(button.dataset.step));
     readInput(input, true);
   }));
   $('women-broadcast-reset').addEventListener('click', e => {
