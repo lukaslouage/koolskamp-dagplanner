@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=41">
+<link rel="stylesheet" href="css/styles.css?v=45">
 </head>
 <body>
 
@@ -197,9 +197,12 @@
         <div class="stat__detail" id="men-first-passage-detail"></div>
       </div>
       <div class="stat stat--margin" id="margin-card">
-        <div class="stat__label">Marge omloop <span class="badge" id="margin-badge"></span></div>
-        <div class="stat__value stat__value--status" id="margin-value"></div>
-        <div class="stat__detail" id="margin-detail"></div>
+        <div class="stat__main">
+          <div class="stat__label">Marge omloop <span class="badge" id="margin-badge"></span></div>
+          <div class="stat__value stat__value--status" id="margin-value"></div>
+          <div class="stat__detail" id="margin-detail"></div>
+        </div>
+        <div class="sum" id="margin-sum" aria-label="Opbouw van de marge"></div>
       </div>
     </section>
 
@@ -304,14 +307,14 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=41"></script>
-<script src="js/config.js?v=41"></script>
-<script src="js/format.js?v=41"></script>
-<script src="js/schedule.js?v=41"></script>
-<script src="js/timeline.js?v=41"></script>
-<script src="js/route-map.js?v=41"></script>
-<script src="js/profile.js?v=41"></script>
-<script src="js/pdf-export.js?v=41"></script>
-<script src="js/app.js?v=41"></script>
+<script src="data/route-data.js?v=45"></script>
+<script src="js/config.js?v=45"></script>
+<script src="js/format.js?v=45"></script>
+<script src="js/schedule.js?v=45"></script>
+<script src="js/timeline.js?v=45"></script>
+<script src="js/route-map.js?v=45"></script>
+<script src="js/profile.js?v=45"></script>
+<script src="js/pdf-export.js?v=45"></script>
+<script src="js/app.js?v=45"></script>
 </body>
 </html>

@@ -177,10 +177,19 @@ window.KK = window.KK || {};
     };
     const womenClear = Math.max(women.podiumEnd, closures.women.end);
     const marginRaw = closures.men.start - womenClear;
-    const marginMinutes = Math.round(marginRaw);
+    // The sum is shown with times rounded to the minute, so the margin is the difference of those rounded times
+    // (it can differ by a minute from the exact difference, but then the sum on the screen always adds up).
+    const marginMinutes = Math.round(closures.men.start) - Math.round(womenClear);
     const ok = Number(settings.marginOk) || 0, warn = Number(settings.marginWarn) || 0;
-    const status = marginRaw < 0 ? 'bad' : marginMinutes >= ok ? 'ok' : marginMinutes >= warn ? 'warn' : 'bad';
-    const margin = { raw: marginRaw, minutes: marginMinutes, status, conflict: marginRaw < 0, from: womenClear, to: closures.men.start };
+    const conflict = marginMinutes < 0;
+    const status = conflict ? 'bad' : marginMinutes >= ok ? 'ok' : marginMinutes >= warn ? 'warn' : 'bad';
+    const margin = { raw: marginRaw, minutes: marginMinutes, status, conflict, from: womenClear, to: closures.men.start,
+      // The parts of the sum: women clear = the later of the end of the podium and the green flag car of the women;
+      // men come = first rider (the break-away if there is one) minus the red flag car.
+      parts: { womenFinish: women.finish, podiumMinutes: minutes(settings.podiumDuration), podiumEnd: women.podiumEnd,
+        womenGreenMinutes: closures.women.green, womenGreenEnd: closures.women.end, womenClear,
+        menPeloton: men.firstPassageTime, menBreakawaySeconds: Math.round(men.breakaway * 60), menFirstRider: men.firstRiderTime,
+        menRedMinutes: closures.men.red, menRed: closures.men.start } };
 
     if (margin.conflict) {
       women.blocks.push({ id: 'women-conflict', lane: 'women', type: 'conflict', name: 'Conflict: omloop niet vrij', shortName: 'Conflict',

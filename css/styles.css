@@ -230,7 +230,7 @@ h1, h2, h3 { margin: 0; }
 .switch:focus-visible, .stepper__button:focus-visible { outline: none; box-shadow: var(--focus); }
 
 /* ---------- Stats ---------- */
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 3.2fr); gap: 12px; }
 .stat {
   background: var(--bg); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
   padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0;
@@ -239,7 +239,18 @@ h1, h2, h3 { margin: 0; }
 .stat__value { font-size: 28px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.2; }
 .stat__detail { font-size: 12.5px; color: var(--muted); }
 .stat__value--status { color: var(--status); }
-.stat--margin { border-color: color-mix(in oklch, var(--status) 45%, var(--line)); }
+.stat--margin { border-color: color-mix(in oklch, var(--status) 45%, var(--line)); flex-direction: row; gap: 18px; align-items: stretch; }
+.stat__main { display: flex; flex-direction: column; gap: 4px; flex: 0 0 176px; }
+/* The sum behind the margin: two columns (women clear, men come) and the result under them. */
+.sum { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; align-content: start; border-left: 1px solid var(--line); padding-left: 18px; font-size: 12px; }
+.sum__title { font-size: 11px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.sum__row { display: flex; justify-content: space-between; gap: 8px; line-height: 1.55; white-space: nowrap; }
+.sum__row b { font-weight: 500; white-space: nowrap; }
+.sum__row--muted { color: var(--muted); }
+.sum__row--total { margin-top: 2px; padding-top: 2px; border-top: 1px solid var(--line); font-weight: 600; }
+.sum__row--total b { font-weight: 700; }
+.sum__result { grid-column: 1 / -1; padding-top: 6px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 500; }
+.sum__result b { color: var(--status); font-weight: 700; }
 .badge {
   margin-left: auto; padding: 1px 8px; border-radius: 999px;
   font-size: 12px; font-weight: 600; color: var(--status);
@@ -536,6 +547,10 @@ html.is-printing .flagbar { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- Smaller screens ---------- */
+@media (max-width: 1399px) {
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stat--margin { grid-column: 1 / -1; }
+}
 @media (max-width: 1024px) {
   .shell { display: block; }
   .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
@@ -552,6 +567,9 @@ html.is-printing .flagbar { display: none; }
   .settings__group + .settings__group { border-top: 1px solid var(--line); padding-top: 16px; }
   .page { padding: 16px 12px 40px; gap: 12px; }
   .stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat--margin { flex-direction: column; gap: 12px; }
+  .stat__main { flex: 0 0 auto; }
+  .sum { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 12px; }
   .stat { padding: 12px; }
   .stat__label { font-size: 12px; }
   .stat__value { font-size: 22px; }
@@ -585,7 +603,10 @@ html.is-printing .print-head .brand__subtitle { font-size: 13px; }
 html.is-printing .print-summary { flex-wrap: wrap; gap: 4px 22px; font-size: 12.5px; color: var(--muted); }
 html.is-printing .print-summary b { color: var(--fg); font-weight: 600; }
 
-html.is-printing .stats { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+html.is-printing .stats { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 2.8fr); gap: 10px; }
+html.is-printing .stat--margin { grid-column: auto; flex-direction: row; gap: 18px; }
+html.is-printing .stat__main { flex: 0 0 176px; }
+html.is-printing .sum { border-left: 1px solid var(--line); padding-left: 18px; border-top: 0; padding-top: 0; }
 html.is-printing .stat, html.is-printing .card { box-shadow: none; break-inside: avoid; }
 html.is-printing .stat__value { font-size: 26px; }
 
