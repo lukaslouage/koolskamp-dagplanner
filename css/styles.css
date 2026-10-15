@@ -584,7 +584,7 @@ html.is-printing .flagbar { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- Smaller screens ---------- */
-@media (max-width: 1399px) {
+@media (max-width: 1519px) {
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .stat--margin { grid-column: 1 / -1; }
 }

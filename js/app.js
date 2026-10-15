@@ -140,7 +140,7 @@
 
     $('margin-value').textContent = `${margin.minutes} min`;
     $('margin-badge').textContent = margin.conflict ? 'Conflict' : { ok: 'Comfortabel', warn: 'Beperkt', bad: 'Onvoldoende' }[margin.status];
-    $('margin-detail').textContent = margin.conflict ? 'Omloop niet vrij voor de mannen' : 'Tijd tussen de koersen';
+    $('margin-detail').textContent = margin.conflict ? 'Vrouwen nog niet klaar als de weg dicht moet voor de mannen' : `Weg vrij ${f.clock(margin.parts.womenClear)}, weer dicht ${f.clock(margin.parts.menRed)}`;
     renderMarginSum(margin);
 
     $('women-total').textContent = `${f.km(women.totalKm)} km`;
@@ -192,8 +192,9 @@
     const p = margin.parts, minus = text => String(text).replace('-', '\u2212');
     const row = (label, value, kind = '', title = '') => `<div class="sum__row${kind ? ' sum__row--' + kind : ''}"${title ? ` title="${title}"` : ''}><span>${label}</span><b>${value}</b></div>`;
     const women = [
-      row('Einde podium', f.clock(p.podiumEnd), '', `Aankomst ${f.clock(p.womenFinish)} + podium ${p.podiumMinutes} min`),
-      row(`Groene vlag +${p.womenGreenMinutes} min`, f.clock(p.womenGreenEnd), 'muted', `Aankomst ${f.clock(p.womenFinish)} + ${p.womenGreenMinutes} min`),
+      row('Aankomst', f.clock(p.womenFinish), 'muted'),
+      row(`Groene vlag, +${p.womenGreenMinutes} min`, f.clock(p.womenGreenEnd), 'muted', `Aankomst ${f.clock(p.womenFinish)} + ${p.womenGreenMinutes} min`),
+      row(`Podium, +${p.podiumMinutes} min`, f.clock(p.podiumEnd), 'muted', `Aankomst ${f.clock(p.womenFinish)} + podium ${p.podiumMinutes} min`),
       row('Weg vrij vanaf', f.clock(p.womenClear), 'total', 'Het latere van het einde van het podium en de groene vlag'),
     ];
     const men = [
@@ -203,8 +204,8 @@
       row('Weg dicht vanaf', f.clock(p.menRed), 'total', 'Eerste passage min vroege vlucht min rode vlag'),
     ];
     $('margin-sum').innerHTML = `
-      <div class="sum__group"><div class="sum__title">Vrouwen klaar</div>${women.join('')}</div>
-      <div class="sum__group"><div class="sum__title">Mannen komen</div>${men.join('')}</div>
+      <div class="sum__group"><div class="sum__title">Vrouwen</div>${women.join('')}</div>
+      <div class="sum__group"><div class="sum__title">Mannen</div>${men.join('')}</div>
       <div class="sum__result">${f.clock(p.menRed)} \u2212 ${f.clock(p.womenClear)} = <b>${minus(margin.minutes)} min</b></div>`;
   }
 

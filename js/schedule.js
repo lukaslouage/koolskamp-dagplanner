@@ -192,7 +192,7 @@ window.KK = window.KK || {};
         menRedMinutes: closures.men.red, menRed: closures.men.start } };
 
     if (margin.conflict) {
-      women.blocks.push({ id: 'women-conflict', lane: 'women', type: 'conflict', name: 'Conflict: omloop niet vrij', shortName: 'Conflict',
+      women.blocks.push({ id: 'women-conflict', lane: 'women', type: 'conflict', name: 'Conflict: weg niet vrij', shortName: 'Conflict',
         start: closures.men.start, end: womenClear,
         details: [`Rode vlag mannen om ${f.exact(closures.men.start)} (eerste passage om ${f.exact(men.firstRiderTime)})`,
                   `Weg vrij na vrouwen om ${f.exact(womenClear)}`, `Tekort: ${f.duration(-marginRaw)}`] });
