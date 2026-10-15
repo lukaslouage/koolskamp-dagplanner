@@ -141,7 +141,7 @@
     $('margin-value').textContent = `${margin.minutes} min`;
     $('margin-badge').textContent = margin.conflict ? 'Conflict' : { ok: 'Comfortabel', warn: 'Beperkt', bad: 'Onvoldoende' }[margin.status];
     $('margin-detail').textContent = margin.conflict ? 'Vrouwen nog niet klaar als de weg dicht moet voor de mannen' : `Weg vrij ${f.clock(margin.parts.womenClear)}, weer dicht ${f.clock(margin.parts.menRed)}`;
-    renderMarginSum(margin);
+    renderMarginSum(margin, men.firstRiderTime);
 
     $('women-total').textContent = `${f.km(women.totalKm)} km`;
     $('men-total').textContent = `${f.km(men.totalKm)} km`;
@@ -188,7 +188,7 @@
    * of the podium and the green flag car) and when the road has to be closed for the men (first passage minus the
    * early break-away minus the red flag car). The margin is the difference of the two.
    */
-  function renderMarginSum(margin) {
+  function renderMarginSum(margin, firstRider) {
     const p = margin.parts, minus = text => String(text).replace('-', '\u2212');
     const row = (label, value, kind = '', title = '') => `<div class="sum__row${kind ? ' sum__row--' + kind : ''}"${title ? ` title="${title}"` : ''}><span>${label}</span><b>${value}</b></div>`;
     const women = [
@@ -198,10 +198,13 @@
       row('Weg vrij vanaf', f.clock(p.womenClear), 'total', 'Het latere van het einde van het podium en de groene vlag'),
     ];
     const men = [
-      row('Eerste passage', f.clock(p.menPeloton), p.menBreakawaySeconds > 0 ? 'muted' : ''),
-      ...(p.menBreakawaySeconds > 0 ? [row('Vroege vlucht', minus('-' + formatMss(p.menBreakawaySeconds)), '', 'De eerste renners zijn zoveel voor het peloton')] : []),
+      ...(p.menBreakawaySeconds > 0 ? [
+        row('Peloton', f.clock(p.menPeloton), 'muted'),
+        row('Vroege vlucht', minus('-' + formatMss(p.menBreakawaySeconds)), 'muted', 'De eerste renners zijn zoveel voor het peloton'),
+        row('Eerste passage', f.clock(firstRider), 'sub', 'Peloton min vroege vlucht'),
+      ] : [row('Eerste passage', f.clock(firstRider))]),
       row('Rode vlag', minus(`-${p.menRedMinutes} min`), '', 'De rode vlag rijdt zoveel voor de eerste renner'),
-      row('Weg dicht vanaf', f.clock(p.menRed), 'total', 'Eerste passage min vroege vlucht min rode vlag'),
+      row('Weg dicht vanaf', f.clock(p.menRed), 'total', 'Eerste passage min rode vlag'),
     ];
     $('margin-sum').innerHTML = `
       <div class="sum__group"><div class="sum__title">Vrouwen</div>${women.join('')}</div>

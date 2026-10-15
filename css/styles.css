@@ -273,6 +273,8 @@ h1, h2, h3 { margin: 0; }
 .sum__row { display: flex; justify-content: space-between; gap: 8px; line-height: 1.55; white-space: nowrap; }
 .sum__row b { font-weight: 500; white-space: nowrap; }
 .sum__row--muted { color: var(--muted); }
+.sum__row--sub { margin-top: 2px; padding-top: 2px; border-top: 1px solid var(--line); font-weight: 600; }
+.sum__row--sub b { font-weight: 600; }
 .sum__row--total { margin-top: 2px; padding-top: 2px; border-top: 1px solid var(--line); font-weight: 600; }
 .sum__row--total b { font-weight: 700; }
 .sum__result { grid-column: 1 / -1; padding-top: 6px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 500; }
