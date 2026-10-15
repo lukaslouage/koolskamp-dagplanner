@@ -454,14 +454,6 @@ h1, h2, h3 { margin: 0; }
 .tooltip__title { font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
 .tooltip__line { font-size: 12.5px; white-space: nowrap; opacity: .85; }
 
-.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font-size: 12.5px; color: var(--muted); padding-left: 112px; }
-.legend__item { display: flex; align-items: center; gap: 6px; }
-.legend__item[hidden] { display: none; }
-.legend__line { width: 0; height: 16px; margin-right: 2px; }
-.legend__line--women-broadcast { border-left: 2px dotted var(--broadcast-women); }
-.legend__line--men-broadcast { border-left: 2px dotted var(--broadcast-men); }
-.legend__lines { display: flex; align-items: center; gap: 4px; margin-right: 2px; }
-.legend__lines .legend__line { margin-right: 0; }
 
 /* ---------- Route ---------- */
 .playback { display: flex; align-items: center; gap: 12px; }
@@ -517,28 +509,6 @@ h1, h2, h3 { margin: 0; }
 .map-flag--green { color: #2F9E5B; }
 html.is-printing .map-flag { display: none !important; }
 
-/* ---------- Red and green flag at the selected time ---------- */
-.flagbar { position: absolute; z-index: 6; display: flex; height: 5px; }
-.flagbar__red, .flagbar__green { display: block; min-width: 0; }
-.flagbar__red { background: var(--bad); border-radius: 3px 0 0 3px; }
-.flagbar__green { background: var(--ok); border-radius: 0 3px 3px 0; }
-.flagbar__flag { position: absolute; bottom: 3px; width: 11px; height: 13px; overflow: visible; }
-.flagbar__flag path { fill: currentColor; stroke: none; }
-.flagbar__flag .pole { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
-.flagbar__flag--red { color: var(--bad); left: -1px; }
-.flagbar__flag--green { color: var(--ok); right: -10px; }
-/* Phones: a vertical bar in the gap in front of the lane, red above the line and green below. */
-.timeline__track--vertical .flagbar { width: 5px; height: auto; flex-direction: column; }
-.timeline__track--vertical .flagbar__red { border-radius: 3px 3px 0 0; }
-.timeline__track--vertical .flagbar__green { border-radius: 0 0 3px 3px; }
-.timeline__track--vertical .flagbar.vlane--women { left: calc(var(--axis) - 7px); }
-.timeline__track--vertical .flagbar.vlane--men { left: calc(var(--axis) + var(--lane) + 1px); }
-.timeline__track--vertical .flagbar__flag { left: 4px; right: auto; bottom: auto; }
-.timeline__track--vertical .flagbar__flag--red { top: -12px; }
-.timeline__track--vertical .flagbar__flag--green { bottom: -12px; top: auto; }
-.legend__flags { display: inline-flex; align-items: flex-end; gap: 2px; }
-.legend__flags .flagbar__flag { position: static; }
-html.is-printing .flagbar { display: none; }
 
 /* ---------- Elevation profile ---------- */
 .route__profile { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
@@ -630,7 +600,6 @@ html.is-printing .flagbar { display: none; }
   .stat__detail { font-size: 11.5px; }
   .card__head { padding: 10px 14px; }
   .card__body { padding: 12px 14px 14px; }
-  .legend { padding-left: 0; gap: 8px 16px; }
   .route__map { height: 420px; }
   .passages__table th, .passages__table td { padding: 7px 12px; }
   .passages__table th:nth-child(n+2), .passages__table td:nth-child(n+2) { width: 60px; }
@@ -666,7 +635,6 @@ html.is-printing .stat__value { font-size: 26px; }
 html.is-printing .timeline__scroll { overflow: visible; }
 html.is-printing .timeline__grid { min-width: 0; }
 html.is-printing .vline--selected { display: none; }
-html.is-printing .legend { padding-left: 112px; }
 html.is-printing .print-link { font-size: 11.5px; color: var(--muted); gap: 6px; }
 html.is-printing .print-link span { color: var(--fg); word-break: break-all; }
 
