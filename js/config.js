@@ -28,6 +28,10 @@ KK.config = {
     podiumDuration: 25,
     marginOk: 45,
     marginWarn: 30,
+    womenRedFlag: 5,          // minutes the red flag car drives ahead of the first rider (road closed from then on)
+    womenGreenFlag: 5,        // minutes the green flag car follows the winner (road open again after that)
+    menRedFlag: 5,
+    menGreenFlag: 5,
     vipArrival: '11:30',      // guests arrive, aperitif starts
     vipMenuStart: '12:45',    // three-course menu starts (roughly, tables do not start together)
     vipMenuEnd: '14:30',      // three-course menu is over (roughly)

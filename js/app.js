@@ -143,6 +143,7 @@
       `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
       `<b>Uitzending</b> ${sporza.join(', ')}`,
       `<b>Podium</b> ${Number(s.podiumDuration) || 0} min`,
+      `<b>Wegafsluiting</b> vrouwen ${schedule.closures.women.red} min voor, ${schedule.closures.women.green} min na; mannen ${schedule.closures.men.red} min voor, ${schedule.closures.men.green} min na`,
     ].map(t => `<span>${t}</span>`).join('');
     $('print-link').textContent = new URL(shareUrl(), location.href).href;
 

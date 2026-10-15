@@ -158,6 +158,7 @@ h1, h2, h3 { margin: 0; }
 .chip--women { background: var(--brand-yellow); }
 .chip--men { background: var(--men-chip); }
 .chip--vip { background: var(--vip-menu); }
+.chip--closure { background: var(--bad); }
 .chip--broadcast { background: var(--broadcast-women); }
 .chip--org { background: var(--org); box-shadow: inset 0 0 0 1px var(--org-border); }
 
@@ -452,6 +453,22 @@ h1, h2, h3 { margin: 0; }
 .map-rider--women { background: var(--brand-yellow); color: #000; box-shadow: inset 0 0 0 2px #000, 0 2px 8px rgba(0, 0, 0, .3); z-index: 2; }
 .map-rider--men { background: #000; color: var(--brand-yellow); box-shadow: inset 0 0 0 2px var(--brand-yellow), 0 2px 8px rgba(0, 0, 0, .3); z-index: 2; }
 .route__map .maplibregl-ctrl-attrib { font-size: 11px; }
+
+/* ---------- Road closure (red flag car to green flag car) ---------- */
+.closure { position: absolute; z-index: 4; height: 5px; border-radius: 3px; background: color-mix(in oklch, var(--bad) 55%, var(--bg)); }
+.closure::before, .closure::after { content: ''; position: absolute; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg); }
+.closure::before { left: -2px; background: var(--bad); }
+.closure::after { right: -2px; background: var(--ok); }
+/* Phones: a vertical bar in the gap in front of the lane. */
+.timeline__track--vertical .closure { height: auto; width: 5px; border-radius: 3px; }
+.timeline__track--vertical .closure::before { left: 50%; top: -2px; margin: 0 0 0 -4.5px; }
+.timeline__track--vertical .closure::after { left: 50%; top: auto; bottom: -2px; right: auto; margin: 0 0 0 -4.5px; }
+.timeline__track--vertical .closure.vlane--women { left: calc(var(--axis) - 7px); width: 5px; }
+.timeline__track--vertical .closure.vlane--men { left: calc(var(--axis) + var(--lane) + 1px); width: 5px; }
+.legend__closure { position: relative; display: inline-block; width: 26px; height: 5px; margin: 0 4px; border-radius: 3px; background: color-mix(in oklch, var(--bad) 55%, var(--bg)); }
+.legend__closure::before, .legend__closure::after { content: ''; position: absolute; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; }
+.legend__closure::before { left: -4px; background: var(--bad); }
+.legend__closure::after { right: -4px; background: var(--ok); }
 
 /* ---------- Elevation profile ---------- */
 .profile__body { display: flex; flex-direction: column; gap: 14px; }

@@ -90,6 +90,12 @@ KK.Timeline = class {
     return [0, 0];
   }
 
+  /** Text for hovering a closure bar. */
+  closureTitle(closure) {
+    const f = KK.format;
+    return `Weg gesloten aan de meet van ${f.clock(closure.start)} tot ${f.clock(closure.end)}: rode vlag ${closure.red} min voor de eerste renner, groene vlag ${closure.green} min na de winnaar`;
+  }
+
   /** Width of a flag label: the measured text, 2 x 10 px padding and the 18 px bend of the flag. */
   flagWidth(text) {
     this.measure = this.measure || document.createElement('canvas').getContext('2d');
@@ -192,6 +198,14 @@ KK.Timeline = class {
         <div class="vline-label vline-label--end${endSide} vline-label--${b.race}" style="left:${this.pct(b.end)}%">einde ${f.clock(b.end)}</div>`);
     });
 
+    // Road closure at the finish line: from the red flag car to the green flag car, as a thin bar under each race lane.
+    ['women', 'men'].forEach(lane => {
+      const c = schedule.closures[lane];
+      const a = this.clamp(c.start), z = this.clamp(c.end);
+      if (z > a) html.push(`<div class="closure closure--${lane}" style="top:${this.layout.laneTop[lane] + 94}px;left:${this.pct(a)}%;width:${this.pct(z) - this.pct(a)}%"
+        title="${this.closureTitle(c)}"></div>`);
+    });
+
     // Key moments: a line from the top of the lanes that bends into a label under the lanes, like a flag.
     // Each label prefers a side (the women's and the first-passage label point away from each other, the men's
     // finish points right), switches side when there is no room, and moves to a second row when it would touch
@@ -274,6 +288,12 @@ KK.Timeline = class {
     });
 
     marks.forEach(m => html.push(`<div class="hline hline--${m.race}-broadcast" style="top:${y(m.t)}px"></div>`));
+
+    ['women', 'men'].forEach(lane => {
+      const c = schedule.closures[lane];
+      const a = this.clamp(c.start), z = this.clamp(c.end);
+      if (z > a) html.push(`<div class="closure closure--${lane} vlane--${lane}" style="top:${y(a)}px;height:${y(z) - y(a)}px" title="${this.closureTitle(c)}"></div>`);
+    });
 
     const firstPassage = schedule.men.firstPassageTime;
     if (inAxis(firstPassage)) html.push(`<div class="hline hline--first-passage" style="top:${y(firstPassage)}px"></div>`);

@@ -60,7 +60,7 @@ window.KK = window.KK || {};
       ? { label: 'Aanloop', route: 'approach', fraction: d / D.approachToFinish }
       : locateLap(d, firstPassageKm, laps);
 
-    return { start, speed, laps, totalKm, timeAt, finish, podiumEnd, blocks, passages, locate };
+    return { start, speed, laps, totalKm, timeAt, finish, podiumEnd, firstPassageTime: timeAt(firstPassageKm), blocks, passages, locate };
   }
 
   function buildMen(s) {
@@ -157,21 +157,32 @@ window.KK = window.KK || {};
     const women = buildWomen(settings);
     const men = buildMen(settings);
 
-    const marginRaw = men.firstPassageTime - women.podiumEnd;
+    // The circuit must be clear for the men's red flag car, not only for the men: it passes the finish line
+    // menRedFlag minutes before the first rider. It is free for the men once the women are done: the end of
+    // the podium or, if later, the green flag car of the women's race.
+    const minutes = value => Math.max(0, Number(value) || 0);
+    const closures = {
+      women: { lane: 'women', start: women.firstPassageTime - minutes(settings.womenRedFlag), end: women.finish + minutes(settings.womenGreenFlag),
+        red: minutes(settings.womenRedFlag), green: minutes(settings.womenGreenFlag) },
+      men: { lane: 'men', start: men.firstPassageTime - minutes(settings.menRedFlag), end: men.finish + minutes(settings.menGreenFlag),
+        red: minutes(settings.menRedFlag), green: minutes(settings.menGreenFlag) },
+    };
+    const womenClear = Math.max(women.podiumEnd, closures.women.end);
+    const marginRaw = closures.men.start - womenClear;
     const marginMinutes = Math.round(marginRaw);
     const ok = Number(settings.marginOk) || 0, warn = Number(settings.marginWarn) || 0;
     const status = marginRaw < 0 ? 'bad' : marginMinutes >= ok ? 'ok' : marginMinutes >= warn ? 'warn' : 'bad';
-    const margin = { raw: marginRaw, minutes: marginMinutes, status, conflict: marginRaw < 0, from: women.podiumEnd, to: men.firstPassageTime };
+    const margin = { raw: marginRaw, minutes: marginMinutes, status, conflict: marginRaw < 0, from: womenClear, to: closures.men.start };
 
     if (margin.conflict) {
       women.blocks.push({ id: 'women-conflict', lane: 'women', type: 'conflict', name: 'Conflict: omloop niet vrij', shortName: 'Conflict',
-        start: men.firstPassageTime, end: women.podiumEnd,
-        details: [`Eerste passage mannen om ${f.exact(men.firstPassageTime)}`,
-                  `Einde podium vrouwen om ${f.exact(women.podiumEnd)}`, `Tekort: ${f.duration(-marginRaw)}`] });
+        start: closures.men.start, end: womenClear,
+        details: [`Rode vlag mannen om ${f.exact(closures.men.start)} (eerste passage om ${f.exact(men.firstPassageTime)})`,
+                  `Weg vrij na vrouwen om ${f.exact(womenClear)}`, `Tekort: ${f.duration(-marginRaw)}`] });
     } else {
       women.blocks.push({ id: 'women-margin', lane: 'women', type: 'org', name: `Marge ${marginMinutes} min`, shortName: `${marginMinutes} min`,
-        start: women.podiumEnd, end: men.firstPassageTime,
-        details: [`Eerste passage mannen om ${f.exact(men.firstPassageTime)}`] });
+        start: womenClear, end: closures.men.start,
+        details: [`Weg vrij na vrouwen om ${f.exact(womenClear)}`, `Rode vlag mannen om ${f.exact(closures.men.start)} (eerste passage om ${f.exact(men.firstPassageTime)})`] });
     }
 
     const womenBroadcastStart = settings.womenBroadcastStart
@@ -186,7 +197,7 @@ window.KK = window.KK || {};
 
     const vip = buildVip(settings, women, men);
     const blocks = [...women.blocks, ...men.blocks, ...vip.blocks];
-    return { women, men, vip, margin, broadcasts, blocks, blockById: Object.fromEntries(blocks.map(b => [b.id, b])) };
+    return { women, men, vip, margin, closures, broadcasts, blocks, blockById: Object.fromEntries(blocks.map(b => [b.id, b])) };
   };
 
   /** Position of each race at a given time, used by the map and the rider cards. */
