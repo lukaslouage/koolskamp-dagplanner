@@ -20,12 +20,15 @@ index.html            Page markup (Dutch copy)
 css/styles.css        All styling, light/dark theme variables, print rules
 js/config.js          Distances, fixed durations, default settings, limits
 js/format.js          Time and number formatting (10u15, 10:15:24, 117,5)
-js/schedule.js        Pure race calculations: blocks, passages, margin, broadcasts, rider positions
+js/schedule.js        Pure race calculations: blocks, passages, margin, broadcasts, rider positions, speed range
 js/timeline.js        Renders the two-lane timeline (horizontal, or vertical on phones), tooltips, click-to-select time
 js/route-map.js       MapLibre map (OpenFreeMap base map), GPX routes, rider markers, print snapshot
 js/profile.js         Elevation profiles (women, men) under the map, with the rider dots
 js/app.js             State, controls, cards, tables, theme, share link, playback, PDF export flow
 js/pdf-export.js      Turns the print layout into a downloadable two-page PDF
+js/scenarios.js       Saved scenarios in this browser, export and import
+js/variants.js        Variants A, B and C: tabs, storage, share link
+js/compare.js         Comparison view: cards, days on one axis, what changes, Zoek de grens
 data/route-data.js    Route coordinates generated from the GPX files
 data/gpx/             Source GPX files (Strava export)
 ```
