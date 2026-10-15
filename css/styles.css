@@ -427,8 +427,9 @@ h1, h2, h3 { margin: 0; }
 .playback__range { flex: 1; min-width: 0; }
 .playback__time { font-size: 18px; font-weight: 600; min-width: 64px; text-align: right; letter-spacing: -0.01em; }
 .route__body { display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch; }
+.route__main { flex: 3 1 min(100%, 560px); min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .route__map {
-  flex: 3 1 min(100%, 560px); min-height: 540px; border-radius: 8px; overflow: hidden;
+  flex: none; height: 540px; border-radius: 8px; overflow: hidden;
   background: var(--panel); border: 1px solid var(--line); z-index: 0;
 }
 .route__map--unavailable { display: flex; align-items: center; justify-content: center; color: var(--muted); }
@@ -497,7 +498,9 @@ html.is-printing .map-flag { display: none !important; }
 html.is-printing .flagbar { display: none; }
 
 /* ---------- Elevation profile ---------- */
-.profile__body { display: flex; flex-direction: column; gap: 14px; }
+.route__profile { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+.profile__title { font-size: 14px; font-weight: 600; }
+.profile__hint { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--muted); }
 .profile__head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 13px; }
 .profile__head b { font-weight: 600; }
 .profile svg { display: block; overflow: visible; max-width: 100%; height: auto; }
@@ -520,6 +523,14 @@ html.is-printing .flagbar { display: none; }
 .profile__rider--men circle { fill: #000; stroke: var(--brand-yellow); }
 .profile__rider--men text { fill: var(--brand-yellow); }
 .profile__note { margin: 0; font-size: 12px; color: var(--muted); }
+/* The closed stretch of road and the two flags on the profile */
+.profile__closure-area { fill: var(--bad); fill-opacity: .8; }
+.profile__closure-line { fill: none; stroke: var(--bad); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.profile__flag .pole-outline { fill: none; stroke: #FFF; stroke-width: 4; stroke-linecap: round; }
+.profile__flag .pole { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.profile__flag .cloth { fill: currentColor; stroke: #FFF; stroke-width: 1.2; stroke-linejoin: round; paint-order: stroke; }
+.profile__flag--red { color: #E5484D; }
+.profile__flag--green { color: #2F9E5B; }
 
 /* ---------- Passage tables ---------- */
 .passages { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; align-items: start; }
@@ -578,7 +589,7 @@ html.is-printing .flagbar { display: none; }
   .card__body { padding: 12px 14px 14px; }
   .legend { padding-left: 0; gap: 8px 16px; }
   .playback { flex-basis: 100%; }
-  .route__map { min-height: 400px; }
+  .route__map { height: 420px; }
   .passages__table th, .passages__table td { padding: 7px 12px; }
   .passages__table th:nth-child(n+2), .passages__table td:nth-child(n+2) { width: 60px; }
 }
@@ -617,16 +628,15 @@ html.is-printing .legend { padding-left: 112px; }
 html.is-printing .print-link { font-size: 11.5px; color: var(--muted); gap: 6px; }
 html.is-printing .print-link span { color: var(--fg); word-break: break-all; }
 
-html.is-printing .detail { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "route passages" "route profile"; gap: 14px; align-items: start; } /* the profile sits under the tables, next to the map */
-html.is-printing .route { grid-area: route; }
-html.is-printing .passages { grid-area: passages; }
-html.is-printing .profile { grid-area: profile; }
-html.is-printing .profile .card__head { min-height: 0; padding: 8px 14px; }
-html.is-printing .profile .card__body { padding: 8px 14px 10px; gap: 4px; }
-html.is-printing .route__body { display: block; }
-html.is-printing .route__map { flex: none; width: 540px; height: 540px; min-height: 0; } /* same size on screen during export, so the map snapshot fits */
-html.is-printing .route__side { margin-top: 12px; }
-html.is-printing .route-legend { border: 0; padding: 0; flex-direction: row; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; max-width: 540px; }
+html.is-printing .detail { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; }
+/* Under the map, in this order: the map, its legend, the elevation profile. */
+html.is-printing .route__body { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 10px; }
+html.is-printing .route__main { display: contents; }
+html.is-printing .route__map { order: 1; flex: none; width: 600px; height: 280px; } /* same size on screen during export, so the map snapshot fits */
+html.is-printing .route__side { order: 2; margin-top: 0; }
+html.is-printing .profile__note { display: none; }
+html.is-printing .route__profile { order: 3; border-top: 0; padding-top: 0; gap: 6px; width: 600px; } /* as wide as the map; otherwise the charts decide the width of the card */
+html.is-printing .route-legend { border: 0; padding: 0; flex-direction: row; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; max-width: 600px; }
 html.is-printing .maplibregl-canvas { visibility: hidden; }
 html.is-printing .map-print-image { display: block; }
 html.is-printing .maplibregl-ctrl-top-left, html.is-printing .maplibregl-ctrl-attrib-button, html.is-printing .map-rider { display: none !important; }

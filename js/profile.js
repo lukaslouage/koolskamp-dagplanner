@@ -5,7 +5,12 @@
 window.KK = window.KK || {};
 
 KK.Profile = class {
-  static LAYOUT = { height: 104, padLeft: 48, padRight: 12, padTop: 18, padBottom: 20, dotRadius: 9 };
+  static LAYOUT = { height: 104, printHeight: 64, padLeft: 48, padRight: 12, padTop: 18, padBottom: 20, dotRadius: 9 };
+
+  /** The charts are a little lower on paper, so the second page of the PDF fits. */
+  static height() {
+    return document.documentElement.classList.contains('is-printing') ? KK.Profile.LAYOUT.printHeight : KK.Profile.LAYOUT.height;
+  }
 
   constructor(containers, routeData) {
     this.containers = containers; // { women: element, men: element }
@@ -87,7 +92,7 @@ KK.Profile = class {
     if (width < 120) return;
     const races = { women: schedule.women, men: schedule.men };
     const segments = { women: this.segments(schedule.women), men: this.segments(schedule.men) };
-    const key = [width, ...['women', 'men'].map(r => segments[r].map(s => `${s.type}:${s.from}:${s.to}`).join(','))].join('|');
+    const key = [width, KK.Profile.height(), ...['women', 'men'].map(r => segments[r].map(s => `${s.type}:${s.from}:${s.to}`).join(','))].join('|');
     if (key !== this.key) {
       this.key = key;
       // Both charts share one scale, from 0 m to at least 100 m. The course is flat, and a tight scale would make
@@ -101,7 +106,8 @@ KK.Profile = class {
 
   build(raceKey, race, segments, width, yMin, yMax) {
     const f = KK.format, L = KK.Profile.LAYOUT;
-    const plotW = width - L.padLeft - L.padRight, plotH = L.height - L.padTop - L.padBottom;
+    const height = KK.Profile.height();
+    const plotW = width - L.padLeft - L.padRight, plotH = height - L.padTop - L.padBottom;
     const x = km => L.padLeft + (km / race.totalKm) * plotW;
     const y = m => L.padTop + (1 - (m - yMin) / (yMax - yMin)) * plotH;
     const base = L.padTop + plotH;
@@ -131,6 +137,8 @@ KK.Profile = class {
     });
     // Separators between the parts.
     segments.slice(1).forEach(s => parts.push(`<line class="profile__separator" x1="${x(s.from)}" x2="${x(s.from)}" y1="${L.padTop - 2}" y2="${base}"/>`));
+    // The closed stretch and the two flags (filled in by setFlags), under the dot.
+    parts.push(`<g class="profile__flags" data-flags="${raceKey}"></g>`);
     // The dot of this race (moved by setRiders).
     const dot = raceKey === 'women' ? ['V', 'women'] : ['M', 'men'];
     parts.push(`<g class="profile__rider profile__rider--${dot[1]}" data-rider="${raceKey}" opacity="0.5">
@@ -140,9 +148,44 @@ KK.Profile = class {
     const chip = raceKey === 'women' ? 'chip--women' : 'chip--men';
     this.containers[raceKey].innerHTML = `<div class="profile__head"><span class="chip ${chip}"></span><b>${title}</b>
       <span class="muted">${f.km(race.totalKm)} km, klim ongeveer ${climb} m</span></div>
-      <svg viewBox="0 0 ${width} ${L.height}" width="${width}" height="${L.height}" role="img" aria-label="Hoogteprofiel ${title.toLowerCase()}">${parts.join('')}</svg>`;
+      <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="Hoogteprofiel ${title.toLowerCase()}">${parts.join('')}</svg>`;
     const rider = this.containers[raceKey].querySelector('[data-rider]');
-    this.charts[raceKey] = { rider, guide: rider.querySelector('.profile__guide'), x, y, base, segments, total: race.totalKm };
+    this.charts[raceKey] = { rider, guide: rider.querySelector('.profile__guide'), flags: this.containers[raceKey].querySelector('[data-flags]'), x, y, base, segments, total: race.totalKm };
+    if (this.flagData) this.setFlags(this.flagData);
+  }
+
+  /** Elevation at a distance (km) along a race. */
+  eleAtKm(chart, km) {
+    const segment = chart.segments.find(s => km >= s.from && km <= s.to) || chart.segments[chart.segments.length - 1];
+    const length = segment.to - segment.from;
+    return this.eleAt(this.routes[segment.routeKey], length ? (km - segment.from) / length : 0);
+  }
+
+  /**
+   * Draws the closed stretch of road in red on the profile (from the green to the red flag car) and the two flags
+   * standing on the line. `flags` is the result of KK.flagPositions: { women, men }, null for a race that is not on the road.
+   */
+  setFlags(flags) {
+    this.flagData = flags;
+    ['women', 'men'].forEach(raceKey => {
+      const chart = this.charts[raceKey], info = flags && flags[raceKey];
+      if (!chart || !chart.flags) return;
+      if (!info) { chart.flags.innerHTML = ''; return; }
+      const from = info.stretch[0].km, to = info.stretch[info.stretch.length - 1].km;
+      const points = [];
+      for (let km = from; km < to; km += 0.15) points.push([km, this.eleAtKm(chart, km)]);
+      points.push([to, this.eleAtKm(chart, to)]);
+      const line = points.map(([km, m]) => `${chart.x(km).toFixed(1)},${chart.y(m).toFixed(1)}`);
+      const flag = (color, km, title) => {
+        const x = chart.x(km).toFixed(1), y = chart.y(this.eleAtKm(chart, km)).toFixed(1);
+        return `<g class="profile__flag profile__flag--${color}" transform="translate(${x} ${y})"><title>${title}</title>
+          <path class="pole-outline" d="M0 0V-17"/><path class="pole" d="M0 0V-17"/><path class="cloth" d="M0.8 -16.4h8.4l-2.6 3.1 2.6 3.1H0.8z"/></g>`;
+      };
+      chart.flags.innerHTML = `<polygon class="profile__closure-area" points="${chart.x(from).toFixed(1)},${chart.base} ${line.join(' ')} ${chart.x(to).toFixed(1)},${chart.base}"/>
+        <polyline class="profile__closure-line" points="${line.join(' ')}"/>`
+        + (info.green ? flag('green', info.green.km, `Groene vlag: ${info.greenMinutes} min na de winnaar`) : '')
+        + (info.red ? flag('red', info.red.km, `Rode vlag: ${info.redMinutes} min voor de eerste renner`) : '');
+    });
   }
 
   /** Moves the dots to the positions of the riders (from KK.riderPositions). */

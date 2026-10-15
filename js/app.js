@@ -171,9 +171,11 @@
     $('time-value').textContent = f.clock(state.shownTime);
     routeMap.setTheme(state.theme);
     routeMap.setRiders(positions);
-    routeMap.setFlags(KK.flagPositions(schedule, state.shownTime));
+    const flags = KK.flagPositions(schedule, state.shownTime);
+    routeMap.setFlags(flags);
     profile.render(schedule);
     profile.setRiders(positions);
+    profile.setFlags(flags);
   }
 
   /**
