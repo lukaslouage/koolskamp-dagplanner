@@ -406,12 +406,8 @@ h1, h2, h3 { margin: 0; }
 .legend__line { width: 0; height: 16px; margin-right: 2px; }
 .legend__line--women-broadcast { border-left: 2px dotted var(--broadcast-women); }
 .legend__line--men-broadcast { border-left: 2px dotted var(--broadcast-men); }
-.legend__line--status { border-left: 2px solid var(--status); }
-.legend__line--women-finish { border-left: 2px solid var(--women-line); }
-.legend__line--men-finish { border-left: 2px solid var(--men-chip); }
 .legend__lines { display: flex; align-items: center; gap: 4px; margin-right: 2px; }
 .legend__lines .legend__line { margin-right: 0; }
-.legend__swatch { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
 
 /* ---------- Route ---------- */
 .playback { display: flex; align-items: center; gap: 12px; flex: 1 1 360px; max-width: 640px; }
