@@ -291,6 +291,10 @@ h1, h2, h3 { margin: 0; }
 .block__title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; }
 .block__time { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; opacity: .8; }
 .block--compact .block__time { font-size: 11px; }
+/* Narrow blocks: the title is turned 90 degrees (read from bottom to top), the times stay next to it when there is room. */
+.block--vtitle { flex-direction: row; align-items: center; justify-content: center; gap: 6px; }
+.block__title--vertical { writing-mode: vertical-rl; transform: rotate(180deg); overflow: visible; font-size: 12.5px; line-height: 1.2; }
+.block__times { display: flex; flex-direction: column; gap: 2px; }
 
 .block--women-intro { background: var(--women-intro); color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--brand-yellow); }
 .block--women-approach { background: var(--brand-yellow-light); color: #000; }

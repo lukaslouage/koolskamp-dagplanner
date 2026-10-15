@@ -111,13 +111,22 @@ KK.Timeline = class {
       return { mode: 'full', title: nameFits ? block.name : block.shortName,
         lines: [block.segment ? f.clock(block.end) : `${f.clock(block.start)}-${f.clock(block.end)}`], pad: 10 };
     }
-    // A title is only shown when the whole word fits (about 7.8 px per character plus padding).
+    // A title is only shown when the whole word fits (about 7.8 px per character plus padding). When it does not
+    // fit sideways it is turned 90 degrees, as long as it fits in the height of the block.
     const shortFits = pad => block.shortName.length * 7.8 + pad * 2 <= widthPx;
+    const blockHeight = block.lane === 'vip' ? this.layout.vipBlockHeight : 84;
+    const fitsUpright = block.shortName.length * 7.8 <= blockHeight - 12;
+    const times = block.segment ? [f.clock(block.end)] : [f.clock(block.start), f.clock(block.end)];
     if (widthPx >= 52) {
-      return { mode: 'compact', title: shortFits(5) ? block.shortName : '',
-        lines: block.segment ? [f.clock(block.end)] : [f.clock(block.start), f.clock(block.end)], pad: 5 };
+      if (shortFits(5)) return { mode: 'compact', title: block.shortName, lines: times, pad: 5 };
+      // The times only stay next to the turned title when there is room for both (about 72 px).
+      if (fitsUpright) return { mode: 'compact', title: block.shortName, vertical: true, lines: widthPx >= 72 ? times : [], pad: 6 };
+      return { mode: 'compact', title: '', lines: times, pad: 5 };
     }
-    if (widthPx >= 22) return { mode: 'tiny', title: shortFits(3) ? block.shortName : '', lines: [], pad: 3 };
+    if (widthPx >= 18) {
+      if (widthPx >= 22 && shortFits(3)) return { mode: 'tiny', title: block.shortName, lines: [], pad: 3 };
+      if (fitsUpright) return { mode: 'tiny', title: block.shortName, vertical: true, lines: [], pad: 1 };
+    }
     return { mode: 'none', title: '', lines: [], pad: 0 };
   }
 
@@ -183,9 +192,12 @@ KK.Timeline = class {
       const top = this.layout.laneTop[block.lane] + 8;
       const [shift, grow] = this.fadeOverlap(block);
       const height = block.lane === 'vip' ? `height:${this.layout.vipBlockHeight}px;` : '';
-      html.push(`<div class="block block--${block.type}${label.mode === 'compact' ? ' block--compact' : ''}" data-block-id="${block.id}"
+      const content = label.vertical
+        ? `<div class="block__title block__title--vertical">${label.title}</div>${label.lines.length ? `<div class="block__times">${label.lines.map(l => `<div class="block__time">${l}</div>`).join('')}</div>` : ''}`
+        : `<div class="block__title">${label.title}</div>${label.lines.map(l => `<div class="block__time">${l}</div>`).join('')}`;
+      html.push(`<div class="block block--${block.type}${label.mode === 'compact' ? ' block--compact' : ''}${label.vertical ? ' block--vtitle' : ''}" data-block-id="${block.id}"
         style="top:${top}px;${height}left:calc(${this.pct(a)}% + ${gap - shift}px);width:calc(${this.pct(z) - this.pct(a)}% - ${gap * 2 - shift - grow}px);padding:0 ${label.pad}px">
-        <div class="block__title">${label.title}</div>${label.lines.map(l => `<div class="block__time">${l}</div>`).join('')}</div>`);
+        ${content}</div>`);
     });
 
     const inAxis = t => t >= axisStart && t <= axisEnd;
