@@ -122,8 +122,11 @@ KK.RouteMap = class {
     const map = this.map, r = this.routes, dark = this.theme === 'dark';
     // The closed stretch of road (between the green and the red flag car) as a red glow under the route lines.
     map.addSource('closure', { type: 'geojson', data: this.closureData || { type: 'FeatureCollection', features: [] } });
+    // Drawn in one solid colour (red at about 38% over the map, mixed in advance): a see-through line gets darker
+    // where it overlaps itself in bends and at the ends. It goes under the place names so those stay readable.
+    const firstLabel = map.getStyle().layers.find(layer => layer.type === 'symbol');
     map.addLayer({ id: 'closure-halo', type: 'line', source: 'closure', layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': '#E5484D', 'line-width': 22, 'line-opacity': 0.38 } });
+      paint: { 'line-color': dark ? '#5F2325' : '#EDB4B4', 'line-width': 22 } }, firstLabel && firstLabel.id);
     const add = (id, route, layers) => {
       map.addSource(id, { type: 'geojson',
         data: { type: 'Feature', geometry: { type: 'LineString', coordinates: route.latLngs.map(KK.RouteMap.lngLat) } } });
