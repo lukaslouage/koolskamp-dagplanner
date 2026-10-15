@@ -661,8 +661,8 @@ html.is-printing .detail { display: grid; grid-template-columns: auto minmax(0, 
 /* Under the map, in this order: the map, its legend, the elevation profile. */
 html.is-printing .route__body { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 10px; }
 html.is-printing .route__main { display: contents; }
-html.is-printing .route__map { order: 1; flex: none; width: 600px; height: 280px; } /* same size on screen during export, so the map snapshot fits */
-html.is-printing .route__side { order: 2; margin-top: 0; }
+html.is-printing .route__map { order: 1; flex: none; width: 600px; height: 420px; } /* same size on screen during export, so the map snapshot fits */
+html.is-printing .route__side { order: 2; flex: none; margin-top: 0; } /* flex-basis 240px would be a height in this column */
 html.is-printing .profile__note { display: none; }
 html.is-printing .route__profile { order: 3; border-top: 0; padding-top: 0; gap: 6px; width: 600px; } /* as wide as the map; otherwise the charts decide the width of the card */
 html.is-printing .route-legend { border: 0; padding: 0; flex-direction: row; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; max-width: 600px; }

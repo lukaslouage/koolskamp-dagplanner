@@ -217,6 +217,18 @@ KK.RouteMap = class {
     if (this.map) { this.map.resize(); this.fit(); }
   }
 
+  /** Resolves when style and tiles are loaded and the map stands still (or after the timeout). */
+  whenSettled(timeout) {
+    const map = this.map, t0 = Date.now();
+    return new Promise(resolve => {
+      const check = () => {
+        const ready = map.isStyleLoaded() && map.areTilesLoaded() && !map.isMoving();
+        if (ready || Date.now() - t0 > timeout) resolve(); else setTimeout(check, 150);
+      };
+      setTimeout(check, 500); // gives the render after the resize and the refit time to ask for its tiles
+    });
+  }
+
   /**
    * Browsers do not reliably print a WebGL canvas, so the map is printed as a still image.
    * Call after the print layout class is set: the container then already has its print size.
@@ -225,9 +237,7 @@ KK.RouteMap = class {
   async snapshotForPrint(wait) {
     if (!this.map) return;
     this.refreshSize();
-    if (wait && !this.map.loaded()) {
-      await new Promise(resolve => { this.map.once('idle', resolve); setTimeout(resolve, 4000); });
-    }
+    if (wait) await this.whenSettled(10000);
     this.setHaloVisible(false);
     this.map.redraw();
     if (!this.printImage) {

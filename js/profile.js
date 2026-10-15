@@ -5,7 +5,7 @@
 window.KK = window.KK || {};
 
 KK.Profile = class {
-  static LAYOUT = { height: 84, printHeight: 64, padLeft: 48, padRight: 12, padTop: 18, padBottom: 20, dotRadius: 9 };
+  static LAYOUT = { height: 84, printHeight: 76, padLeft: 48, padRight: 12, padTop: 18, padBottom: 20, dotRadius: 9 };
 
   /** The charts are a little lower on paper, so the second page of the PDF fits. */
   static height() {
