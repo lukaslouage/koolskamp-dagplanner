@@ -259,9 +259,10 @@
     const worst = range.worst.margin.minutes, best = range.best.margin.minutes;
     const ok = Number(s.marginOk), warn = Number(s.marginWarn), minus = KK.Compare.minus;
     const worstStatus = KK.Compare.statusOf(worst, ok, warn);
-    const text = `Traag of snel rijden: ${minus(worst)} tot ${minus(best)} min${worstStatus === 'bad' ? '. Let op: in het slechtste geval onder de minimummarge.' : ''}`;
-    $('margin-range').innerHTML = `${KK.Compare.rangeBar({ worst, expected: margin.minutes, best, ok, warn })}
-      <div class="mrange__text${worstStatus === 'bad' ? ' is-bad' : ''}" title="Vrouwen ${f.km(range.worst.women.speed)} km/u en mannen ${f.km(range.worst.men.speed)} km/u geeft ${minus(worst)} min; vrouwen ${f.km(range.best.women.speed)} en mannen ${f.km(range.best.men.speed)} km/u geeft ${minus(best)} min">${text}</div>`;
+    const warning = worstStatus === 'bad' ? 'Slechtste geval onder de minimummarge' : '';
+    $('margin-range').innerHTML = `${KK.Compare.rangeBar({ worst, expected: margin.minutes, best, ok, warn, compact: true })}
+      <div class="mrange__text is-bad"${warning ? '' : ' hidden'}>${warning}</div>`;
+    $('margin-range').title = `Vrouwen ${f.km(range.worst.women.speed)} km/u en mannen ${f.km(range.worst.men.speed)} km/u geeft ${minus(worst)} min; vrouwen ${f.km(range.best.women.speed)} en mannen ${f.km(range.best.men.speed)} km/u geeft ${minus(best)} min`;
   }
 
   function renderPassages(tbody, passages) {

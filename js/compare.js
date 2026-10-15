@@ -73,14 +73,29 @@ KK.Compare = class {
    * A bar from the worst to the best margin, with a dot at the expected margin, on the red, orange and green
    * zones of the minimum and the target margin. Used in the margin card and in the comparison cards.
    */
-  static rangeBar({ worst, expected, best, ok, warn }) {
+  static rangeBar({ worst, expected, best, ok, warn, compact = false }) {
     const lo = Math.floor((Math.min(worst, 0) - 5) / 5) * 5, hi = Math.ceil((Math.max(best, ok + 10) + 5) / 5) * 5;
     const pct = v => ((Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)) * 100;
     const zone = (cls, a, z) => (z > a ? `<span class="rbar__zone rbar__zone--${cls}" style="left:${pct(a)}%;width:${pct(z) - pct(a)}%"></span>` : '');
-    return `<div class="rbar" role="img" aria-label="Marge tussen ${worst} en ${best} min, verwacht ${expected} min">
-      ${zone('bad', lo, Math.max(lo, warn))}${zone('warn', Math.max(lo, warn), ok)}${zone('ok', ok, hi)}
-      <span class="rbar__span" style="left:${pct(worst)}%;width:${Math.max(0.6, pct(best) - pct(worst))}%"></span>
-      <span class="rbar__dot" style="left:${pct(expected)}%"></span>
+    // The worst and the best margin stand under the ends of the grey stretch; when they are too close together
+    // to read apart, they are shown together under its middle.
+    const minus = KK.Compare.minus, a = pct(worst), z = pct(best);
+    const place = p => (p < 14 ? `left:${p}%` : p > 86 ? `right:${100 - p}%` : `left:${p}%;transform:translateX(-50%)`);
+    const align = p => (p < 14 ? 'start' : p > 86 ? 'end' : 'middle');
+    const label = (p, value, caption) => `<span class="rbar__label rbar__label--${align(p)}" style="${place(p)}"><b>${value}</b><small>${caption}</small></span>`;
+    // In a narrow card (compact) the two values go to the left and right end of the bar instead.
+    const labels = compact
+      ? `<span class="rbar__end"><small>slechtst</small><b>${minus(worst)} min</b></span><span class="rbar__end rbar__end--best"><small>best</small><b>${minus(best)} min</b></span>`
+      : z - a < 30
+      ? label((a + z) / 2, `${minus(worst)} tot ${minus(best)} min`, 'slechtst tot best')
+      : label(a, `${minus(worst)} min`, 'slechtst') + label(z, `${minus(best)} min`, 'best');
+    return `<div class="rbar-wrap">
+      <div class="rbar" role="img" aria-label="Marge tussen ${worst} en ${best} min, verwacht ${expected} min">
+        ${zone('bad', lo, Math.max(lo, warn))}${zone('warn', Math.max(lo, warn), ok)}${zone('ok', ok, hi)}
+        <span class="rbar__span" style="left:${a}%;width:${Math.max(0.6, z - a)}%"></span>
+        <span class="rbar__dot" style="left:${pct(expected)}%"></span>
+      </div>
+      <div class="rbar__labels${compact ? ' rbar__labels--ends' : ''}">${labels}</div>
     </div>`;
   }
 
@@ -166,7 +181,7 @@ KK.Compare = class {
         <div class="cmp-card__margin"><b>${minus(m.minutes)} min</b><span class="badge">${KK.Compare.statusText(m)}</span></div>
         <div class="cmp-card__delta">${deltaText}</div>
         ${KK.Compare.rangeBar({ worst, expected: m.minutes, best, ok: Number(s.marginOk), warn: Number(s.marginWarn) })}
-        <div class="cmp-card__range${worstStatus !== 'ok' ? ' is-' + worstStatus : ''}">Traag of snel rijden: ${minus(worst)} tot ${minus(best)} min</div>
+        ${worstStatus === 'bad' ? '<div class="cmp-card__range is-bad">Slechtste geval onder de minimummarge</div>' : ''}
         <ul class="cmp-card__diffs">${diffList}</ul>
         ${isRef ? '' : `<button type="button" class="link-button" data-action="reference" data-index="${v.index}">Gebruik als referentie</button>`}
       </article>`;
