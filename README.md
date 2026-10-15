@@ -89,3 +89,14 @@ Base maps come from OpenFreeMap (light: `positron`, dark: `dark`) and need an in
 ## Collapsing the settings
 
 The button in the heading of the sidebar folds the settings in. On wide screens a narrow strip with only the button stays and the page gets the extra width (timeline, map and profiles follow through their resize observers); on a phone the settings fold away under their heading. The choice is kept per browser in `localStorage` (`kk-dagplanner-sidebar`), not in the settings or the share link.
+
+## Scenarios
+
+`js/scenarios.js` (`KK.Scenarios`) keeps named scenarios in this browser: `localStorage` key `kk-dagplanner-scenarios-v1`, a list of `{ id, name, settings, savedAt }` where `settings` holds only the values that differ from the defaults (the same rule as the share link, so a new default also reaches saved scenarios that did not change that value). The open scenario is kept under `kk-dagplanner-active-scenario`.
+
+- The "Scenario" block at the top of the sidebar: pick a scenario, "Opslaan" (overwrites the open one), "Opslaan als" (new name), and under the dots: rename, delete, export to and import from a `.json` file. Switching away from unsaved changes asks first.
+- The share link carries `scenario=<name>` when the screen shows exactly a saved scenario. Whoever opens it sees "Gedeeld scenario ..." and can save it under that name. The name is ignored by the settings, so old links keep working.
+- Export file: `{ app: 'koolskamp-dagplanner', version: 1, scenarios: [{ name, settings }] }`. Import adds the scenarios it does not have yet (same name and same settings are skipped, a clash in name gets " (2)").
+- The PDF summary starts with the scenario name ("(gewijzigd)" when the screen differs from the saved version).
+
+`js/compare.js` (`KK.Compare`) shows up to three scenarios side by side in a dialog: the screen, the defaults or any saved scenario per column. It lists the key figures (margin with status, road clear and closed, start, arrival, distance and broadcast per race), the settings that differ, and a small day overview per scenario on the timeline axis. A value that differs from the first column is marked. The dialog is not part of the PDF.

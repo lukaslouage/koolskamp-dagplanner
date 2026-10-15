@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=63">
+<link rel="stylesheet" href="css/styles.css?v=65">
 </head>
 <body>
 
@@ -42,6 +42,31 @@
     </div>
 
     <div class="settings" id="settings">
+<section class="settings__group scenario">
+<h3 class="settings__heading">Scenario</h3>
+<select class="scenario__select" id="scenario-select" aria-label="Open een opgeslagen scenario"></select>
+<div class="scenario__actions">
+<button type="button" class="btn btn--secondary btn--small" id="scenario-save">Opslaan</button>
+<button type="button" class="btn btn--secondary btn--small" id="scenario-save-as">Opslaan als</button>
+<details class="menu" id="scenario-menu">
+<summary class="btn btn--ghost btn--small menu__button" aria-label="Meer acties" title="Meer acties"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></summary>
+<div class="menu__list" role="menu">
+<button type="button" role="menuitem" data-scenario-action="rename">Hernoemen</button>
+<button type="button" role="menuitem" data-scenario-action="delete">Verwijderen</button>
+<button type="button" role="menuitem" data-scenario-action="export">Exporteren naar bestand</button>
+<button type="button" role="menuitem" data-scenario-action="import">Importeren uit bestand</button>
+</div>
+</details>
+</div>
+<form class="scenario__form" id="scenario-name-form" hidden>
+<input type="text" id="scenario-name" maxlength="60" autocomplete="off" placeholder="Naam, bv. Start 10u30" aria-label="Naam van het scenario">
+<button type="submit" class="btn btn--primary btn--small">Bewaar</button>
+<button type="button" class="btn btn--ghost btn--small" id="scenario-name-cancel">Annuleer</button>
+</form>
+<p class="scenario__status" id="scenario-status" hidden></p>
+<button type="button" class="btn btn--secondary btn--small scenario__compare" id="compare-button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="16" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>Scenario's vergelijken</button>
+<input type="file" id="scenario-file" accept=".json,application/json" hidden>
+</section>
 <section class="settings__group">
 <h3 class="settings__heading"><span class="chip chip--women"></span>Vrouwen</h3>
 <label class="field"><span class="field__label">Starttijd</span><input type="time" data-setting="womenStart"></label>
@@ -289,17 +314,27 @@
   </main>
 </div>
 
+<dialog class="compare no-print" id="compare-dialog" aria-labelledby="compare-title">
+  <div class="compare__head">
+    <h2 class="compare__title" id="compare-title">Scenario's vergelijken</h2>
+    <button type="button" class="btn btn--ghost btn--small compare__close" aria-label="Sluiten" title="Sluiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="compare__body"></div>
+</dialog>
+
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=63"></script>
-<script src="js/config.js?v=63"></script>
-<script src="js/format.js?v=63"></script>
-<script src="js/schedule.js?v=63"></script>
-<script src="js/timeline.js?v=63"></script>
-<script src="js/route-map.js?v=63"></script>
-<script src="js/profile.js?v=63"></script>
-<script src="js/pdf-export.js?v=63"></script>
-<script src="js/app.js?v=63"></script>
+<script src="data/route-data.js?v=65"></script>
+<script src="js/config.js?v=65"></script>
+<script src="js/format.js?v=65"></script>
+<script src="js/schedule.js?v=65"></script>
+<script src="js/timeline.js?v=65"></script>
+<script src="js/route-map.js?v=65"></script>
+<script src="js/profile.js?v=65"></script>
+<script src="js/pdf-export.js?v=65"></script>
+<script src="js/scenarios.js?v=65"></script>
+<script src="js/compare.js?v=65"></script>
+<script src="js/app.js?v=65"></script>
 </body>
 </html>

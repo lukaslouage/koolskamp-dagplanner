@@ -15,6 +15,9 @@
   const timeline = new KK.Timeline($('timeline-track'), { onSelectTime: t => { state.selectedTime = t; render(); } });
   const routeMap = new KK.RouteMap($('route-map'), KK.routeData);
   const profile = new KK.Profile({ women: $('profile-women'), men: $('profile-men') }, KK.routeData);
+  let scenarios = null; // KK.Scenarios, created once the settings are loaded
+
+  const escapeHtml = text => String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   /** Keeps only known settings with a valid value, so a hand-edited link or old saved data cannot break the page. */
   function cleanSettings(raw) {
@@ -40,12 +43,23 @@
     const fromLink = cleanSettings(Object.fromEntries(new URLSearchParams(location.hash.slice(1))));
     let saved = {};
     try { saved = cleanSettings(JSON.parse(localStorage.getItem(config.storageKey) || '{}')); } catch (e) { /* storage unavailable */ }
-    const settings = { ...config.defaults, ...(Object.keys(fromLink).length ? fromLink : saved) };
-    if (settings.marginWarn > settings.marginOk) settings.marginWarn = settings.marginOk; // hand-edited link
+    return normalizeSettings(Object.keys(fromLink).length ? fromLink : saved);
+  }
+
+  /** Full settings from cleaned values: defaults filled in, and rules a hand-edited link or file could break put right. */
+  function normalizeSettings(clean) {
+    const settings = { ...config.defaults, ...clean };
+    if (settings.marginWarn > settings.marginOk) settings.marginWarn = settings.marginOk;
     const [arrival, start, end] = ['vipArrival', 'vipMenuStart', 'vipMenuEnd'].map(k => f.parseTime(settings[k]));
     if (start < arrival) settings.vipMenuStart = settings.vipArrival;
     if (end < Math.max(start, arrival)) settings.vipMenuEnd = settings.vipMenuStart;
     return settings;
+  }
+
+  /** Only the values of a settings object that differ from the defaults (after cleaning). */
+  function changesOf(raw) {
+    const settings = normalizeSettings(cleanSettings(raw || {}));
+    return Object.fromEntries(Object.entries(settings).filter(([key, value]) => String(value) !== String(config.defaults[key])));
   }
 
   /**
@@ -63,7 +77,10 @@
 
   /** Link to the current scenario. */
   function shareUrl() {
-    const hash = new URLSearchParams(changedSettings()).toString();
+    const params = new URLSearchParams(changedSettings());
+    const name = scenarios && scenarios.cleanName();
+    if (name) params.set('scenario', name); // only a name, so whoever opens the link can save it under that name
+    const hash = params.toString();
     return location.pathname + location.search + (hash ? '#' + hash : '');
   }
 
@@ -151,6 +168,7 @@
     if (!womenBroadcast) sporza.unshift('vrouwen niet');
     const vip = schedule.vip;
     $('print-summary').innerHTML = [
+      scenarios && scenarios.label() && `<b>Scenario</b> ${escapeHtml(scenarios.label())}`,
       `<b>Vrouwen</b> start ${f.clock(women.start)}, ${f.km(women.speed)} km/u, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
       `<b>Mannen</b> start ${f.clock(men.start)}, ${f.km(men.speed)} km/u, ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
       s.showVip !== false && `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
@@ -165,6 +183,7 @@
 
     state.shownTime = state.selectedTime ?? women.start;
     const positions = KK.riderPositions(schedule, state.shownTime);
+    if (scenarios) scenarios.update();
     timeline.render(schedule, { selectedTime: state.shownTime, positions, showQuarterGrid: state.showQuarterGrid,
       showBroadcast: s.showBroadcast !== false, showVip: s.showVip !== false });
 
@@ -405,7 +424,27 @@
   $('play-button').addEventListener('click', togglePlayback);
   $('export-button').addEventListener('click', exportPdf);
   $('share-button').addEventListener('click', shareScenario);
-  window.addEventListener('hashchange', () => { state.settings = loadSettings(); saveSettings(); syncInputs(); render(); });
+  window.addEventListener('hashchange', () => { state.settings = loadSettings(); scenarios.restoreActive(); saveSettings(); syncInputs(); render(); });
+
+  /** Puts a set of settings (changes only) on screen, as if they were typed in. */
+  function applySettings(changes) {
+    state.settings = normalizeSettings(cleanSettings(changes));
+    saveSettings(); syncInputs(); render();
+  }
+  scenarios = new KK.Scenarios({
+    current: () => Object.fromEntries(changedSettings()),
+    changesOf,
+    apply: applySettings,
+    onChange: () => { saveSettings(); render(); },
+  });
+  const compare = new KK.Compare($('compare-dialog'), {
+    current: () => ({ name: scenarios.label(), settings: Object.fromEntries(changedSettings()) }),
+    scenarios: () => scenarios.all(),
+    full: changes => normalizeSettings(cleanSettings(changes)),
+    activeId: () => scenarios.activeId,
+    open: id => scenarios.open(id),
+  });
+  $('compare-button').addEventListener('click', () => compare.show());
 
   syncInputs();
   saveSettings();

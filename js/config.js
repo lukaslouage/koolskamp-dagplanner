@@ -50,6 +50,8 @@ KK.config = {
   },
 
   storageKey: 'kk-dagplanner-settings-v2', // v2 stores only changed values; v1 held all old defaults
+  scenariosStorageKey: 'kk-dagplanner-scenarios-v1', // saved scenarios: [{ id, name, settings (changes only), savedAt }]
+  activeScenarioKey: 'kk-dagplanner-active-scenario',
   sidebarStorageKey: 'kk-dagplanner-sidebar',
   themeStorageKey: 'kk-dagplanner-theme',
 };
