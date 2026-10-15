@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=75">
+<link rel="stylesheet" href="css/styles.css?v=79">
 </head>
 <body>
 
@@ -43,7 +43,7 @@
 
     <div class="settings" id="settings">
 <section class="settings__group scenario">
-<h3 class="settings__heading">Scenario</h3>
+<h3 class="settings__heading">Scenario <button type="button" class="info no-print" data-info="Bewaar de instellingen als scenario om er later naar terug te keren. Scenario&#x27;s staan enkel in deze browser; met Exporteren (onder de drie puntjes) geef je ze door." aria-label="Uitleg" aria-expanded="false">i</button></h3>
 <select class="scenario__select" id="scenario-select" aria-label="Open een opgeslagen scenario"></select>
 <div class="scenario__actions">
 <button type="button" class="btn btn--secondary btn--small" id="scenario-save">Opslaan</button>
@@ -70,24 +70,24 @@
 <section class="settings__group">
 <h3 class="settings__heading"><span class="chip chip--women"></span>Vrouwen</h3>
 <label class="field"><span class="field__label">Starttijd</span><input type="time" data-setting="womenStart"></label>
-<div class="field"><span class="field__label">Ploegvoorstelling <span class="muted">min</span></span>
+<div class="field"><span class="field__label">Ploegvoorstelling <button type="button" class="info no-print" data-info="Duur van de ploegvoorstelling in minuten. Ze eindigt bij de start. 0 betekent geen ploegvoorstelling." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="womenIntroDuration" data-step="-5" aria-label="5 minuten korter">−</button>
 <input type="number" inputmode="decimal" min="0" max="180" step="1" data-setting="womenIntroDuration" aria-label="Duur ploegvoorstelling vrouwen">
 <button type="button" class="stepper__button" data-step-for="womenIntroDuration" data-step="5" aria-label="5 minuten langer">+</button>
 </div>
 </div>
-<div class="field"><span class="field__label">Gemiddelde snelheid <span class="muted">km/u</span></span>
+<div class="field"><span class="field__label">Snelheid <span class="muted">km/u</span> <button type="button" class="info no-print" data-info="Verwachte gemiddelde snelheid van de winnaar. Hiermee rekent de hele planning." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="womenSpeed" data-step="-0.5" aria-label="Trager">−</button>
 <input type="number" inputmode="decimal" min="36" max="46" step="0.5" data-setting="womenSpeed" aria-label="Gemiddelde snelheid vrouwen">
 <button type="button" class="stepper__button" data-step-for="womenSpeed" data-step="0.5" aria-label="Sneller">+</button>
 </div>
 </div>
-<div class="field field--range"><span class="field__stack"><span class="field__label">Traag tot snel</span><span class="field__hint">Vlakke 1.1/1.2: 38,5 tot 42</span></span>
+<div class="field field--range"><span class="field__label">Bereik <button type="button" class="info no-print" data-info="Traag tot snel, in km/u: het bereik voor het slechtste en het beste geval van de marge. Vlakke Vlaamse 1.1- en 1.2-vrouwenkoersen reden van 2022 tot 2026 meestal 38,5 tot 42 km/u, gemiddeld 40,7 (ProCyclingStats)." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <span class="field__controls range-inputs"><input type="number" inputmode="decimal" min="34" max="48" step="0.5" data-setting="womenSpeedSlow" aria-label="Trage gemiddelde snelheid vrouwen"><span class="muted">tot</span><input type="number" inputmode="decimal" min="34" max="48" step="0.5" data-setting="womenSpeedFast" aria-label="Snelle gemiddelde snelheid vrouwen"></span>
 </div>
-<div class="field"><span class="field__label">Lokale rondes <span class="muted">x 15 km</span></span>
+<div class="field"><span class="field__label">Lokale rondes <button type="button" class="info no-print" data-info="Ronde van 15 km in Koolskamp, met de finishlijn." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="womenLaps" data-step="-1" aria-label="Een ronde minder">−</button>
 <input type="number" inputmode="decimal" min="1" max="15" step="1" data-setting="womenLaps" aria-label="Rondes vrouwen">
@@ -98,38 +98,38 @@
 <section class="settings__group">
 <h3 class="settings__heading"><span class="chip chip--men"></span>Mannen</h3>
 <label class="field"><span class="field__label">Starttijd</span><input type="time" data-setting="menStart"></label>
-<div class="field"><span class="field__label">Ploegvoorstelling <span class="muted">min</span></span>
+<div class="field"><span class="field__label">Ploegvoorstelling <button type="button" class="info no-print" data-info="Duur van de ploegvoorstelling in minuten. Ze eindigt bij de start. 0 betekent geen ploegvoorstelling." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="menIntroDuration" data-step="-5" aria-label="5 minuten korter">−</button>
 <input type="number" inputmode="decimal" min="0" max="180" step="1" data-setting="menIntroDuration" aria-label="Duur ploegvoorstelling mannen">
 <button type="button" class="stepper__button" data-step-for="menIntroDuration" data-step="5" aria-label="5 minuten langer">+</button>
 </div>
 </div>
-<div class="field"><span class="field__label">Gemiddelde snelheid <span class="muted">km/u</span></span>
+<div class="field"><span class="field__label">Snelheid <span class="muted">km/u</span> <button type="button" class="info no-print" data-info="Verwachte gemiddelde snelheid van de winnaar. Hiermee rekent de hele planning." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="menSpeed" data-step="-0.5" aria-label="Trager">−</button>
 <input type="number" inputmode="decimal" min="42" max="50" step="0.5" data-setting="menSpeed" aria-label="Gemiddelde snelheid mannen">
 <button type="button" class="stepper__button" data-step-for="menSpeed" data-step="0.5" aria-label="Sneller">+</button>
 </div>
 </div>
-<div class="field field--range"><span class="field__stack"><span class="field__label">Traag tot snel</span><span class="field__hint">Koolskamp sinds 2021: 44,6 tot 48</span></span>
+<div class="field field--range"><span class="field__label">Bereik <button type="button" class="info no-print" data-info="Traag tot snel, in km/u: het bereik voor het slechtste en het beste geval van de marge. Het Kampioenschap van Vlaanderen reed van 2021 tot 2026 tussen 44,6 en 48,0 km/u, gemiddeld 46,5 (ProCyclingStats)." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <span class="field__controls range-inputs"><input type="number" inputmode="decimal" min="40" max="52" step="0.5" data-setting="menSpeedSlow" aria-label="Trage gemiddelde snelheid mannen"><span class="muted">tot</span><input type="number" inputmode="decimal" min="40" max="52" step="0.5" data-setting="menSpeedFast" aria-label="Snelle gemiddelde snelheid mannen"></span>
 </div>
-<div class="field"><span class="field__label">Lussen Ardooie <span class="muted">x 16 km</span></span>
+<div class="field"><span class="field__label">Lussen Ardooie <button type="button" class="info no-print" data-info="Lus van 16 km rond Ardooie, voor de aanloop naar Koolskamp." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="menLoops" data-step="-1" aria-label="Een lus minder">−</button>
 <input type="number" inputmode="decimal" min="0" max="10" step="1" data-setting="menLoops" aria-label="Lussen Ardooie">
 <button type="button" class="stepper__button" data-step-for="menLoops" data-step="1" aria-label="Een lus meer">+</button>
 </div>
 </div>
-<div class="field"><span class="field__label">Lokale rondes <span class="muted">x 15 km</span></span>
+<div class="field"><span class="field__label">Lokale rondes <button type="button" class="info no-print" data-info="Ronde van 15 km in Koolskamp, met de finishlijn." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="menLaps" data-step="-1" aria-label="Een ronde minder">−</button>
 <input type="number" inputmode="decimal" min="1" max="15" step="1" data-setting="menLaps" aria-label="Rondes mannen">
 <button type="button" class="stepper__button" data-step-for="menLaps" data-step="1" aria-label="Een ronde meer">+</button>
 </div>
 </div>
-<div class="field" title="Voorsprong van de vroege vlucht op het peloton bij de eerste passage aan de meet"><span class="field__stack"><span class="field__label">Vroege vlucht</span><span class="field__hint">voorsprong, m:ss</span></span>
+<div class="field"><span class="field__label">Vroege vlucht <button type="button" class="info no-print" data-info="Voorsprong van de vroege vlucht op het peloton bij de eerste passage aan de meet, in minuten en seconden (m:ss). De rode vlag rijdt voor de vroege vlucht uit, dus de weg moet vroeger dicht." aria-label="Uitleg" aria-expanded="false">i</button></span>
 <div class="stepper">
 <button type="button" class="stepper__button" data-step-for="menBreakaway" data-step="-30" aria-label="30 seconden minder">−</button>
 <input type="text" inputmode="numeric" autocomplete="off" data-setting="menBreakaway" data-format="mss" aria-label="Voorsprong vroege vlucht mannen, minuten en seconden">
@@ -138,7 +138,7 @@
 </div>
 </section>
 <section class="settings__group">
-<h3 class="settings__heading"><span class="chip chip--closure"></span>Wegafsluiting</h3>
+<h3 class="settings__heading"><span class="chip chip--closure"></span>Wegafsluiting <button type="button" class="info no-print" data-info="Rode vlag: zoveel minuten rijdt de wagen met de rode vlag voor de eerste renner uit; vanaf dan is de weg dicht. Groene vlag: zoveel minuten na de winnaar of winnares; daarna is de weg weer open." aria-label="Uitleg" aria-expanded="false">i</button></h3>
 <div class="closure">
 <div class="closure__row closure__row--head"><span></span><span>Vrouwen</span><span>Mannen</span></div>
 <div class="closure__row"><span class="closure__label">Rode vlag</span><div class="stepper stepper--compact">
@@ -160,20 +160,19 @@
 <button type="button" class="stepper__button" data-step-for="menGreenFlag" data-step="1" aria-label="Een minuut meer">+</button>
 </div></div>
 </div>
-<p class="settings__note">Rode vlag: minuten voor de eerste renner. Groene vlag: minuten na de winnaar of winnares.</p>
 </section>
 <section class="settings__group">
 <h3 class="settings__heading"><span class="chip chip--org"></span>Marge en podium</h3>
-<label class="field"><span class="field__label">Podiumduur <span class="muted">min</span></span><input type="number" min="0" max="90" step="1" data-setting="podiumDuration"></label>
-<label class="field"><span class="field__stack"><span class="field__label">Streefmarge <span class="muted">min</span></span><span class="field__hint">Comfortabel vanaf</span></span><input type="number" min="0" max="180" step="1" data-setting="marginOk"></label>
-<label class="field"><span class="field__stack"><span class="field__label">Minimummarge <span class="muted">min</span></span><span class="field__hint">Onvoldoende eronder</span></span><input type="number" min="0" max="180" step="1" data-setting="marginWarn"></label>
+<label class="field"><span class="field__label">Podiumduur <span class="muted">min</span> <button type="button" class="info no-print" data-info="Het podium begint bij de aankomst. De weg is vrij na het podium of na de groene vlag, wat het laatst komt." aria-label="Uitleg" aria-expanded="false">i</button></span><input type="number" min="0" max="90" step="1" data-setting="podiumDuration"></label>
+<label class="field"><span class="field__label">Streefmarge <span class="muted">min</span> <button type="button" class="info no-print" data-info="Vanaf deze marge is de planning comfortabel (groen)." aria-label="Uitleg" aria-expanded="false">i</button></span><input type="number" min="0" max="180" step="1" data-setting="marginOk"></label>
+<label class="field"><span class="field__label">Minimummarge <span class="muted">min</span> <button type="button" class="info no-print" data-info="Onder deze marge is de planning onvoldoende (rood). Tussen de minimum- en de streefmarge is ze beperkt (oranje)." aria-label="Uitleg" aria-expanded="false">i</button></span><input type="number" min="0" max="180" step="1" data-setting="marginWarn"></label>
 </section>
 <section class="settings__group" data-view-group="showBroadcast">
 <h3 class="settings__heading"><span class="chip chip--broadcast"></span>Uitzending<button type="button" class="eye" data-toggle-view="showBroadcast" aria-pressed="true" aria-label="Uitzending tonen in de tijdlijn" title="Tonen of verbergen in de tijdlijn"><svg class="eye__open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye__shut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a18 18 0 0 1 4.1-5.1M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-2.2 3.2"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg></button></h3>
 <div class="settings__body">
 <div class="field" id="women-broadcast-field">
-<span class="field__stack"><span class="field__label">Vrouwen vanaf</span>
-<span class="field__hint" id="women-broadcast-auto">Auto: 50 min voor finish</span>
+<span class="field__stack"><span class="field__label">Vrouwen <button type="button" class="info no-print" data-info="Start van de uitzending van de vrouwen; ze loopt tot het einde van het podium. Leeg betekent automatisch: 50 min voor de aankomst van de vrouwen. Met de schakelaar zet je de uitzending van de vrouwen aan of uit." aria-label="Uitleg" aria-expanded="false">i</button></span>
+
 <button type="button" class="link-button" id="women-broadcast-reset" hidden>Terug naar automatisch</button>
 </span>
 <span class="field__controls">
@@ -181,15 +180,15 @@
 <input type="time" data-setting="womenBroadcastStart" aria-label="Starttijd uitzending vrouwen">
 </span>
 </div>
-<label class="field"><span class="field__label">Mannen vanaf</span><input type="time" data-setting="menBroadcastStart"></label>
+<label class="field"><span class="field__label">Mannen <button type="button" class="info no-print" data-info="Start van de uitzending van de mannen; ze loopt tot het einde van het podium." aria-label="Uitleg" aria-expanded="false">i</button></span><input type="time" data-setting="menBroadcastStart"></label>
 </div>
 </section>
 <section class="settings__group" data-view-group="showVip">
 <h3 class="settings__heading"><span class="chip chip--vip"></span>VIP-tent<button type="button" class="eye" data-toggle-view="showVip" aria-pressed="true" aria-label="VIP-tent tonen in de tijdlijn" title="Tonen of verbergen in de tijdlijn"><svg class="eye__open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye__shut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a18 18 0 0 1 4.1-5.1M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a18 18 0 0 1-2.2 3.2"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M2 2l20 20"/></svg></button></h3>
 <div class="settings__body">
 <label class="field"><span class="field__label">Aankomst gasten</span><input type="time" data-setting="vipArrival"></label>
-<label class="field"><span class="field__stack"><span class="field__label">Menu start</span><span class="field__hint">Ongeveer, niet alle tafels tegelijk</span></span><input type="time" data-setting="vipMenuStart"></label>
-<label class="field"><span class="field__stack"><span class="field__label">Menu klaar</span><span class="field__hint">Daarna vrij tot einde koers</span></span><input type="time" data-setting="vipMenuEnd"></label>
+<label class="field"><span class="field__label">Menu start <button type="button" class="info no-print" data-info="Ongeveer: niet alle tafels beginnen tegelijk." aria-label="Uitleg" aria-expanded="false">i</button></span><input type="time" data-setting="vipMenuStart"></label>
+<label class="field"><span class="field__label">Menu klaar <button type="button" class="info no-print" data-info="Daarna is de tent vrij tot het einde van de mannenkoers." aria-label="Uitleg" aria-expanded="false">i</button></span><input type="time" data-setting="vipMenuEnd"></label>
 </div>
 </section>
 </div>
@@ -235,7 +234,7 @@
       </div>
       <div class="stat stat--margin" id="margin-card">
         <div class="stat__main">
-          <div class="stat__label">Marge <span class="badge" id="margin-badge"></span></div>
+          <div class="stat__label">Marge <button type="button" class="info no-print" data-info="Tijd tussen het moment dat de weg vrij is na de vrouwen en het moment dat de rode vlag van de mannen komt. De balk toont de marge van het slechtste geval (vrouwen traag, mannen snel) tot het beste geval; het bolletje is de verwachte marge." aria-label="Uitleg" aria-expanded="false">i</button> <span class="badge" id="margin-badge"></span></div>
           <div class="stat__value stat__value--status" id="margin-value"></div>
           <div class="stat__detail" id="margin-detail"></div>
           <div class="mrange" id="margin-range"></div>
@@ -246,8 +245,8 @@
 
     <section class="card timeline">
       <div class="card__head">
-        <h2 class="card__title">Tijdlijn</h2>
-        <span class="card__hint no-print">Klik of tik op een blok voor details</span>
+        <h2 class="card__title">Tijdlijn <button type="button" class="info no-print" data-info="Klik of tik op een blok voor details, of ergens op de tijdlijn om dat tijdstip te kiezen. Gearceerd: waar het einde van de vrouwen en de rode vlag van de mannen kunnen vallen bij traag of snel rijden." aria-label="Uitleg" aria-expanded="false">i</button></h2>
+        
       </div>
       <div class="card__body">
         <div class="timeline__scroll">
@@ -276,7 +275,7 @@
     <div class="detail page-break">
       <section class="card route">
         <div class="card__head">
-          <h2 class="card__title">Parcours</h2>
+          <h2 class="card__title">Parcours <button type="button" class="info no-print" data-info="Klik op de tijdlijn of gebruik de schuifregelaar; de posities volgen uit de verwachte snelheden. Hoogteprofiel: hoogte volgens de GPX-bestanden, afgevlakt, de klim is een schatting. Het rode stuk is de gesloten weg tussen de groene en de rode vlag." aria-label="Uitleg" aria-expanded="false">i</button></h2>
         </div>
         <div class="card__body route__body">
           <div class="route__main">
@@ -289,7 +288,7 @@
             <div class="profile route__profile">
               <div class="profile__chart" id="profile-women"></div>
               <div class="profile__chart" id="profile-men"></div>
-              <p class="profile__note">Hoogte volgens de GPX-bestanden, afgevlakt. De klim is een schatting. Het rode stuk is de gesloten weg tussen de groene en de rode vlag.</p>
+              
             </div>
           </div>
           <div class="route__side">
@@ -307,7 +306,7 @@
               <div class="route-legend__item"><span class="route-legend__line route-legend__line--lap"></span>Lokale ronde (15 km)</div>
               <div class="route-legend__item"><span class="route-legend__line route-legend__line--approach"></span>Aanloop tot finishlijn (12,5 km)</div>
               <div class="route-legend__item"><span class="route-legend__line route-legend__line--loop"></span><span id="loop-legend"></span></div>
-              <div class="route-legend__note no-print">Klik op de tijdlijn of gebruik de schuifregelaar. Posities volgen uit de gemiddelde snelheden.</div>
+              
             </div>
           </div>
         </div>
@@ -336,17 +335,18 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=75"></script>
-<script src="js/config.js?v=75"></script>
-<script src="js/format.js?v=75"></script>
-<script src="js/schedule.js?v=75"></script>
-<script src="js/timeline.js?v=75"></script>
-<script src="js/route-map.js?v=75"></script>
-<script src="js/profile.js?v=75"></script>
-<script src="js/pdf-export.js?v=75"></script>
-<script src="js/scenarios.js?v=75"></script>
-<script src="js/compare.js?v=75"></script>
-<script src="js/variants.js?v=75"></script>
-<script src="js/app.js?v=75"></script>
+<script src="data/route-data.js?v=79"></script>
+<script src="js/config.js?v=79"></script>
+<script src="js/format.js?v=79"></script>
+<script src="js/schedule.js?v=79"></script>
+<script src="js/timeline.js?v=79"></script>
+<script src="js/route-map.js?v=79"></script>
+<script src="js/profile.js?v=79"></script>
+<script src="js/pdf-export.js?v=79"></script>
+<script src="js/info.js?v=79"></script>
+<script src="js/scenarios.js?v=79"></script>
+<script src="js/compare.js?v=79"></script>
+<script src="js/variants.js?v=79"></script>
+<script src="js/app.js?v=79"></script>
 </body>
 </html>

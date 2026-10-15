@@ -26,6 +26,7 @@ js/route-map.js       MapLibre map (OpenFreeMap base map), GPX routes, rider mar
 js/profile.js         Elevation profiles (women, men) under the map, with the rider dots
 js/app.js             State, controls, cards, tables, theme, share link, playback, PDF export flow
 js/pdf-export.js      Turns the print layout into a downloadable two-page PDF
+js/info.js            Small "i" buttons with an explanation in a floating tooltip (hover, focus or tap)
 js/scenarios.js       Saved scenarios in this browser, export and import
 js/variants.js        Variants A, B and C: tabs, storage, share link
 js/compare.js         Comparison view: cards, days on one axis, what changes, Zoek de grens
@@ -125,3 +126,7 @@ Variants are saved in this browser (`kk-dagplanner-variants-v1`) and all go into
 - "Dagverloop": the blocks of each variant on one time axis, with the hatched uncertainty and dashed lines where the road is clear and closed in the reference;
 - "Wat verandert er": key times and margins with the difference against the reference (rows without differences are left out);
 - "Zoek de grens": one setting of the active variant (start, speed, laps, loops, podium, break-away) run over a range. A chart shows the expected margin and the band between the worst and the best case over the zones, and a table answers up to which value the margin stays comfortable or above the minimum, both at the expected speeds and in the worst case. A value picked in the chart can be put in the active variant or in a new variant. When the expected speed is run, the slow and fast speed move along with it.
+
+## Explanations ("i" buttons)
+
+Longer explanations are not printed under the fields but sit behind a small "i" button: `<button class="info" data-info="...">i</button>` (`KK.info.button(text)` builds one in JavaScript). `js/info.js` shows the text in one floating tooltip on hover or keyboard focus, and pins it on a click or tap (a second tap, a tap elsewhere, Escape or scrolling closes it). The tooltip is `position: fixed`, so a scrolling sidebar does not cut it off. The buttons are left out of the PDF. Keep labels short enough to stay on one line with the button; put units and details in the explanation when space is tight.

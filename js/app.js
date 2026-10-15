@@ -156,7 +156,6 @@
       button.setAttribute('aria-pressed', String(shown));
       button.closest('.settings__group').classList.toggle('is-hidden', !shown);
     });
-    $('women-broadcast-auto').hidden = !!s.womenBroadcastStart;
     $('women-broadcast-reset').hidden = !s.womenBroadcastStart;
 
     $('women-finish').textContent = f.clock(women.finish);

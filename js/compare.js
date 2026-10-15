@@ -131,11 +131,10 @@ KK.Compare = class {
     const { variants } = data, several = variants.length > 1;
     // A new active variant starts "Zoek de grens" around its own value.
     if (this.sweep.variant !== data.active) this.sweep = { ...this.sweep, from: null, to: null, selected: null, variant: data.active };
-    const intro = several
-      ? 'Klik op een kaartje om die variant in de zijbalk aan te passen. Verschillen staan tegenover de referentie.'
-      : 'Voeg een variant toe met de knop "Variant" bovenaan en pas ze aan in de zijbalk. Zoek de grens werkt ook met één variant.';
+    const intro = 'Elke variant is een versie van de instellingen. Klik op een kaartje of een tabblad om die variant in de zijbalk aan te passen. '
+      + 'Verschillen staan tegenover de referentie (kies een andere met "Gebruik als referentie"). Traag of snel rijden: de marge als de vrouwen traag en de mannen snel rijden, tot omgekeerd.';
     this.el.innerHTML = `
-      <div class="cmp-head"><h2 class="cmp-head__title">Vergelijken</h2><p class="cmp-head__intro">${intro}</p></div>
+      <div class="cmp-head"><h2 class="cmp-head__title">Vergelijken ${KK.info.button(intro)}</h2></div>
       ${several ? `${this.cardsHtml(data)}${this.daysHtml(data)}${this.tableHtml(data)}`
         : `<div class="card cmp-empty"><p>Er is nog maar één variant. Maak een kopie en verander er iets aan, bijvoorbeeld de starttijd van de vrouwen.</p>
            <button type="button" class="btn btn--primary btn--small" data-action="copy">Kopie van ${esc(variants[0].letter)} toevoegen</button></div>`}
@@ -200,7 +199,7 @@ KK.Compare = class {
       </div>`;
     }).join('');
     return `<section class="card cmp-section">
-      <div class="card__head"><h3 class="card__title">Dagverloop</h3><span class="card__hint">Bovenste rij vrouwen, onderste mannen. Gearceerd: speling door traag of snel rijden. Stippellijnen: weg vrij en dicht bij ${refLetter}.</span></div>
+      <div class="card__head"><h3 class="card__title">Dagverloop ${KK.info.button(`Per variant: bovenste rij vrouwen, onderste rij mannen. Gearceerd: waar de weg vrij en dicht kan vallen bij traag of snel rijden. Stippellijnen: weg vrij en dicht bij ${refLetter}, de referentie.`)}</h3></div>
       <div class="card__body mtl">
         <div class="mtl__row mtl__row--axis"><span></span><div class="mtl__axis">${ticks.join('')}</div><span></span></div>
         ${rows}
@@ -346,7 +345,7 @@ KK.Compare = class {
         </div>
       </div>` : '<p class="sweep__hint">Klik in de grafiek om een waarde te kiezen en over te nemen in een variant.</p>';
     return `<section class="card cmp-section sweep">
-      <div class="card__head"><h3 class="card__title">Zoek de grens</h3><span class="card__hint">Variant ${esc(v.letter)}${v.label ? `: ${esc(v.label)}` : ''}, met één instelling over een bereik</span></div>
+      <div class="card__head"><h3 class="card__title">Zoek de grens ${KK.info.button('Kies een instelling en een bereik. De grafiek toont de marge voor elke waarde, op basis van de actieve variant: de lijn bij de verwachte snelheden, de grijze band van het slechtste tot het beste geval. De tabel zegt tot waar de marge comfortabel blijft of boven de minimummarge.')}</h3><span class="card__hint">Variant ${esc(v.letter)}${v.label ? `: ${esc(v.label)}` : ''}, met één instelling over een bereik</span></div>
       <div class="card__body">
         <div class="sweep__controls">
           <label class="sweep__field">Instelling <select class="field__select" data-sweep="key">${options}</select></label>

@@ -601,6 +601,22 @@ html.is-printing .map-flag { display: none !important; }
 .menu__list button:hover:not(:disabled) { background: var(--panel); }
 .menu__list button:disabled { color: var(--muted); opacity: .6; cursor: default; }
 
+/* ---------- "i" buttons with an explanation in a tooltip (js/info.js) ---------- */
+.info {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 16px; height: 16px; margin: 0 0 0 4px;
+  padding: 0; border: 1px solid var(--line-strong); border-radius: 50%; background: var(--bg); color: var(--muted);
+  font: 700 10.5px/1 Georgia, 'Times New Roman', serif; font-style: italic; vertical-align: 1px; cursor: help;
+}
+.info:hover, .info[aria-expanded="true"] { color: var(--bg); background: var(--fg); border-color: var(--fg); }
+.info:focus-visible { outline: none; box-shadow: var(--focus); }
+.info-tip {
+  position: fixed; z-index: 2000; max-width: min(300px, calc(100vw - 16px)); padding: 9px 11px; border-radius: 8px;
+  background: var(--fg); color: var(--bg); font-size: 12.5px; font-weight: 400; line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .22); pointer-events: none;
+}
+.info-tip[hidden] { display: none; }
+.card__title .info, .cmp-head__title .info { vertical-align: 2px; }
+
 /* ---------- Variants (tabs above the page) ---------- */
 .variants { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .variants__tabs { display: flex; gap: 6px; flex-wrap: wrap; min-width: 0; }

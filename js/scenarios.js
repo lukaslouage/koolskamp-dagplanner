@@ -261,7 +261,6 @@ KK.Scenarios = class {
     if (active && dirty) { status = 'Wijzigingen niet opgeslagen'; kind = 'warn'; }
     else if (this.flashText) { status = this.flashText; kind = 'ok'; }
     else if (!active && this.sharedName) { status = `Gedeeld scenario "${this.sharedName}", nog niet bij jou opgeslagen`; kind = 'info'; }
-    else if (!active && !this.list.length) status = 'Bewaar instellingen als scenario om later terug te keren of te vergelijken.';
     el.status.textContent = status;
     el.status.dataset.kind = kind;
     el.status.hidden = !status;
