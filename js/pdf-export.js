@@ -119,7 +119,7 @@ KK.pdfExport = (function () {
       const x = PAGE.margin + (maxWidth - part.width * fit) / 2;
       pdf.addImage(part.url, 'JPEG', x, PAGE.margin, part.width * fit, part.height * fit);
     });
-    pdf.setProperties({ title: 'Koolskamp Koers Dagplanner' });
+    pdf.setProperties({ title: 'Koolskamp Koers Raceday' });
     return pdf.output('blob');
   }
 

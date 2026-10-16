@@ -163,7 +163,7 @@ KK.Scenarios = class {
     let data;
     try { data = JSON.parse(await file.text()); } catch (e) { data = null; }
     const items = data && data.app === KK.Scenarios.FILE_APP && Array.isArray(data.scenarios) ? data.scenarios : null;
-    if (!items) { window.alert('Dit bestand is geen scenariobestand van de Koolskamp Koers Dagplanner.'); return; }
+    if (!items) { window.alert('Dit bestand is geen scenariobestand van de Koolskamp Koers Raceday.'); return; }
     let added = 0, same = 0;
     items.forEach(item => {
       if (!item || typeof item.name !== 'string' || !item.name.trim()) return;

@@ -1,4 +1,4 @@
-/* Koolskamp Koers Dagplanner */
+/* Koolskamp Koers Raceday */
 
 /* ---------- Tokens ---------- */
 :root {
@@ -666,7 +666,7 @@ html.is-printing .map-flag { display: none !important; }
 
 /* The comparison view replaces the planning while it is open. */
 .compare-view { display: none; }
-.page.is-comparing > :not(.variants):not(.compare-view) { display: none; }
+.page.is-comparing > :not(.variants):not(.compare-view):not(.credits) { display: none; }
 .page.is-comparing > .compare-view { display: flex; flex-direction: column; gap: 16px; }
 
 /* ---------- Speed range (sidebar) and margin range ---------- */
@@ -829,6 +829,15 @@ html.is-printing .map-flag { display: none !important; }
   .mtl__margin { text-align: left; }
   .vtab__name { max-width: 110px; }
 }
+
+/* ---------- Credits (footer) ---------- */
+.credits { margin-top: 8px; padding: 18px 0 4px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+.credits b { color: var(--fg); font-weight: 600; }
+.credits__main, .credits__more { display: flex; flex-wrap: wrap; gap: 2px 8px; }
+.credits__more { font-size: 12px; }
+.credits__sep { opacity: .6; }
+html.is-printing .credits { padding-top: 8px; font-size: 10.5px; }
+html.is-printing .credits__more { font-size: 10px; }
 
 /* ---------- Export overlay ---------- */
 .export-overlay {

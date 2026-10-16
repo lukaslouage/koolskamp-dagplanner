@@ -1,6 +1,6 @@
-# Koolskamp Koers Dagplanner
+# Koolskamp Koers Raceday
 
-Interactive day planning for Koolskamp Koers, to check with the organisation whether a women's race fits on the same day as the men's race. It shows a two-lane timeline, live summary cards, Sporza broadcast windows, a route map with rider positions and passage tables.
+Interactive day planning for Koolskamp Koers (the tool is called Koolskamp Koers Raceday), to check with the organisation whether a women's race fits on the same day as the men's race. It shows a two-lane timeline, live summary cards, Sporza broadcast windows, a route map with rider positions and passage tables.
 
 Static site: plain HTML, CSS and JavaScript. No build step, no dependencies to install. Open `index.html` in a browser, or serve the folder with GitHub Pages.
 
@@ -137,3 +137,7 @@ Longer explanations are not printed under the fields but sit behind a small "i" 
 - The map waits until the base map is really drawn, roads and place names (`RouteMap.whenSettled` with `hasBaseMap`), with a 15 s limit. After a switch from dark to light the map can report itself loaded before the new tiles and fonts are even asked for.
 - On paper nothing moves: the rider dots and the flags are left out of the map and the elevation profile.
 - The margin sum lists only the part that decides when the women are clear: the podium, or the green flag car when that comes later. The other one is in the tooltip of "Weg vrij vanaf".
+
+## Versions and credits
+
+The site has a version `v1.<n>` (`version` and `released` in `js/config.js`), shown in the footer next to the maker's name and the sources. The same number is used as `?v=` on the CSS and JS files in `index.html`. `v1.0` is the first complete version (commit `8824e32`, 14 October 2026: timeline, margin, map with elevation profile, PDF, share link, phone layout, VIP tent). Every published change that users can see since then is a version up: the git tags `v1.0` to `v1.24` mark them, and this release is `v1.25` (name Koolskamp Koers Raceday, credits and version). The link of the site and the name of the repository still say "dagplanner", on purpose, so shared links keep working. In the PDF the footer is a smaller line at the bottom of page 2.

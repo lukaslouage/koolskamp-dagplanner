@@ -6,11 +6,11 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Interactieve dagtijdlijn om te controleren of een vrouwenkoers past op de dag van Koolskamp Koers.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23FFD201'/%3E%3Ctext x='16' y='21.5' font-family='Arial' font-weight='800' font-size='14' text-anchor='middle'%3EKK%3C/text%3E%3C/svg%3E">
-<title>Koolskamp Koers Dagplanner</title>
+<title>Koolskamp Koers Raceday</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=85">
+<link rel="stylesheet" href="css/styles.css?v=1.25">
 </head>
 <body>
 
@@ -18,7 +18,7 @@
   <div class="brand">
     <div class="brand__logo">KK</div>
     <div class="brand__text">
-      <div class="brand__title">Koolskamp Koers Dagplanner</div>
+      <div class="brand__title">Koolskamp Koers Raceday</div>
       <div class="brand__subtitle">Past een vrouwenkoers op de dag van de mannenkoers?</div>
     </div>
   </div>
@@ -198,7 +198,7 @@
     <div class="print-only print-head">
       <div class="brand__logo">KK</div>
       <div class="brand__text">
-        <div class="brand__title">Koolskamp Koers Dagplanner</div>
+        <div class="brand__title">Koolskamp Koers Raceday</div>
         <div class="brand__subtitle">Past een vrouwenkoers op de dag van de mannenkoers?</div>
       </div>
       <div class="print-head__meta" id="print-meta"></div>
@@ -330,24 +330,32 @@
         </div>
       </section>
     </div>
+    <footer class="credits" id="credits">
+      <div class="credits__main"><span>Gemaakt door <b>Lukas Louage</b></span><span class="credits__sep" aria-hidden="true">·</span><span>Koolskamp Koers Raceday <span id="credits-version"></span></span></div>
+      <div class="credits__more">
+        <span>Snelheden: ProCyclingStats</span><span class="credits__sep" aria-hidden="true">·</span>
+        <span>Kaart: OpenFreeMap en OpenStreetMap</span><span class="credits__sep" aria-hidden="true">·</span>
+        <span>Indicatieve planning: de aannames over snelheden en wegafsluiting bevestigen met de politie en de wedstrijdleiding</span>
+      </div>
+    </footer>
   </main>
 </div>
 
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>PDF wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=85"></script>
-<script src="js/config.js?v=85"></script>
-<script src="js/format.js?v=85"></script>
-<script src="js/schedule.js?v=85"></script>
-<script src="js/timeline.js?v=85"></script>
-<script src="js/route-map.js?v=85"></script>
-<script src="js/profile.js?v=85"></script>
-<script src="js/pdf-export.js?v=85"></script>
-<script src="js/info.js?v=85"></script>
-<script src="js/scenarios.js?v=85"></script>
-<script src="js/compare.js?v=85"></script>
-<script src="js/variants.js?v=85"></script>
-<script src="js/app.js?v=85"></script>
+<script src="data/route-data.js?v=1.25"></script>
+<script src="js/config.js?v=1.25"></script>
+<script src="js/format.js?v=1.25"></script>
+<script src="js/schedule.js?v=1.25"></script>
+<script src="js/timeline.js?v=1.25"></script>
+<script src="js/route-map.js?v=1.25"></script>
+<script src="js/profile.js?v=1.25"></script>
+<script src="js/pdf-export.js?v=1.25"></script>
+<script src="js/info.js?v=1.25"></script>
+<script src="js/scenarios.js?v=1.25"></script>
+<script src="js/compare.js?v=1.25"></script>
+<script src="js/variants.js?v=1.25"></script>
+<script src="js/app.js?v=1.25"></script>
 </body>
 </html>

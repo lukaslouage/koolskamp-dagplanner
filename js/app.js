@@ -374,7 +374,7 @@
       startPrintLayout();
       await routeMap.snapshotForPrint(true);
       const pdf = await KK.pdfExport.build(document.querySelector('.page'), document.querySelector('.detail'));
-      KK.pdfExport.show(pdf, tab, 'koolskamp-dagplanner.pdf');
+      KK.pdfExport.show(pdf, tab, 'koolskamp-koers-raceday.pdf');
     } catch (e) {
       if (tab) tab.close();
       window.alert('De PDF kon niet gemaakt worden. Controleer je internetverbinding en probeer opnieuw.');
@@ -543,6 +543,11 @@
     addCopy: () => { if (variants.add(changesOf(state.settings))) changed(); },
   });
   $('compare-button').addEventListener('click', () => { variants.view = 'compare'; changed(); window.scrollTo({ top: 0 }); });
+
+  const released = new Date(`${config.released}T12:00:00`).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' });
+  $('credits-version').textContent = `v${config.version}`;
+  $('credits-version').title = `Versie ${config.version}, bijgewerkt op ${released}`;
+  $('credits-version').parentElement.insertAdjacentHTML('afterend', `<span class="credits__sep" aria-hidden="true">·</span><span>bijgewerkt op ${released}</span>`);
 
   syncInputs();
   saveSettings();
