@@ -4,7 +4,8 @@
 window.KK = window.KK || {};
 
 KK.Scenarios = class {
-  static FILE_APP = 'koolskamp-dagplanner';
+  static FILE_APP = 'koolskamp-koers-raceday';
+  static OLD_FILE_APPS = ['koolskamp-dagplanner']; // files exported under the old name still import
   static FILE_VERSION = 1;
 
   /**
@@ -162,7 +163,8 @@ KK.Scenarios = class {
   async importFile(file) {
     let data;
     try { data = JSON.parse(await file.text()); } catch (e) { data = null; }
-    const items = data && data.app === KK.Scenarios.FILE_APP && Array.isArray(data.scenarios) ? data.scenarios : null;
+    const known = data && (data.app === KK.Scenarios.FILE_APP || KK.Scenarios.OLD_FILE_APPS.includes(data.app));
+    const items = known && Array.isArray(data.scenarios) ? data.scenarios : null;
     if (!items) { window.alert('Dit bestand is geen scenariobestand van de Koolskamp Koers Raceday.'); return; }
     let added = 0, same = 0;
     items.forEach(item => {
