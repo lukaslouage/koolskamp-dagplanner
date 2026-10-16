@@ -217,15 +217,36 @@ KK.RouteMap = class {
     if (this.map) { this.map.resize(); this.fit(); }
   }
 
-  /** Resolves when style and tiles are loaded and the map stands still (or after the timeout). */
+  /**
+   * True when the base map is drawn, not only our own route lines: both roads and areas and the place names
+   * (the names need their own font files, which come in later than the map tiles).
+   */
+  hasBaseMap() {
+    try {
+      const own = new Set(['closure', 'local-lap', 'approach', 'ardooie-loop']);
+      const base = this.map.queryRenderedFeatures().filter(feature => !own.has(feature.source));
+      return base.some(feature => feature.layer.type !== 'symbol') && base.some(feature => feature.layer.type === 'symbol');
+    } catch (e) { return true; }
+  }
+
+  /**
+   * Resolves when the map is ready to be copied: style and tiles loaded, nothing moving and the base map drawn
+   * (after a theme switch the map can report "loaded" before the new tiles are even asked for). Gives up after
+   * the timeout, so the export never hangs.
+   */
   whenSettled(timeout) {
     const map = this.map, t0 = Date.now();
     return new Promise(resolve => {
+      let done = false;
       const check = () => {
-        const ready = map.isStyleLoaded() && map.areTilesLoaded() && !map.isMoving();
-        if (ready || Date.now() - t0 > timeout) resolve(); else setTimeout(check, 150);
+        if (done) return;
+        const ready = map.isStyleLoaded() && map.areTilesLoaded() && !map.isMoving() && this.hasBaseMap();
+        if (ready || Date.now() - t0 > timeout) { done = true; resolve(); return; }
+        map.once('idle', check);
+        setTimeout(check, 400);
       };
-      setTimeout(check, 500); // gives the render after the resize and the refit time to ask for its tiles
+      map.triggerRepaint();
+      setTimeout(check, 300);
     });
   }
 
@@ -237,7 +258,7 @@ KK.RouteMap = class {
   async snapshotForPrint(wait) {
     if (!this.map) return;
     this.refreshSize();
-    if (wait) await this.whenSettled(10000);
+    if (wait) await this.whenSettled(15000);
     this.setHaloVisible(false);
     this.map.redraw();
     if (!this.printImage) {

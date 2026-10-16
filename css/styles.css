@@ -894,8 +894,13 @@ html.is-printing .print-head { align-items: center; gap: 12px; }
 html.is-printing .print-head .brand__logo { width: 36px; height: 36px; font-size: 14px; }
 html.is-printing .print-head .brand__title { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
 html.is-printing .print-head .brand__subtitle { font-size: 13px; }
-html.is-printing .print-summary { flex-wrap: wrap; gap: 4px 22px; font-size: 12.5px; color: var(--muted); }
-html.is-printing .print-summary b { color: var(--fg); font-weight: 600; }
+html.is-printing .print-head__meta { margin-left: auto; text-align: right; font-size: 12px; line-height: 1.4; color: var(--muted); }
+/* The settings on page 1 of the PDF: compact blocks next to each other. */
+html.is-printing .psum { display: flex !important; gap: 8px 14px; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+html.is-printing .psum__block { flex: 1 1 0; padding-left: 9px; border-left: 2px solid var(--line-strong); min-width: 0; }
+html.is-printing .psum__block--wide { flex-grow: 1.55; }
+html.is-printing .psum__title { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--fg); margin-bottom: 1px; }
+html.is-printing .psum b { color: var(--fg); font-weight: 600; }
 
 html.is-printing .stats { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 2.8fr); gap: 10px; }
 html.is-printing .stat--margin { grid-column: auto; flex-direction: row; gap: 18px; }
@@ -917,6 +922,7 @@ html.is-printing .route__main { display: contents; }
 html.is-printing .route__map { order: 1; flex: none; width: 600px; height: 420px; } /* same size on screen during export, so the map snapshot fits */
 html.is-printing .route__side { order: 2; flex: none; margin-top: 0; } /* flex-basis 240px would be a height in this column */
 html.is-printing .profile__note { display: none; }
+html.is-printing .profile__flags, html.is-printing .profile__rider { display: none; } /* nothing moves on paper */
 html.is-printing .route__profile { order: 3; border-top: 0; padding-top: 0; gap: 6px; width: 600px; } /* as wide as the map; otherwise the charts decide the width of the card */
 html.is-printing .route-legend { border: 0; padding: 0; flex-direction: row; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; max-width: 600px; }
 html.is-printing .maplibregl-canvas { visibility: hidden; }

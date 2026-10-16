@@ -105,7 +105,9 @@ KK.pdfExport = (function () {
 
     const scale = canvas.width / pageEl.getBoundingClientRect().width;
     const pageTop = pageEl.getBoundingClientRect().top;
-    const splitAt = Math.round((splitEl.getBoundingClientRect().top - pageTop) * scale);
+    // Cut a few pixels above page 2, in the white space between the parts, so no edge of a page 2 card ends up
+    // at the bottom of page 1.
+    const splitAt = Math.round((splitEl.getBoundingClientRect().top - pageTop - 4) * scale);
     const parts = [strip(canvas, 0, splitAt), strip(canvas, splitAt, canvas.height)];
 
     const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });

@@ -182,19 +182,7 @@
     $('men-total').textContent = `${f.km(men.totalKm)} km`;
     $('loop-legend').textContent = `Lus Ardooie, mannen ${men.loops} keer (16 km)`;
 
-    const sporza = schedule.broadcasts.map(b => `${b.race === 'women' ? 'vrouwen' : 'mannen'} ${f.clock(b.start)}`);
-    if (!womenBroadcast) sporza.unshift('vrouwen niet');
-    const vip = schedule.vip;
-    $('print-summary').innerHTML = [
-      variants.list.length > 1 && `<b>Variant</b> ${escapeHtml(variants.fullLabel(variants.active))}`,
-      scenarios && scenarios.label() && `<b>Scenario</b> ${escapeHtml(scenarios.label())}`,
-      `<b>Vrouwen</b> start ${f.clock(women.start)}, ${f.km(women.speed)} km/u (${f.km(range.worst.women.speed)} tot ${f.km(range.best.women.speed)}), ${women.laps} rondes, ${f.km(women.totalKm)} km`,
-      `<b>Mannen</b> start ${f.clock(men.start)}, ${f.km(men.speed)} km/u (${f.km(range.best.men.speed)} tot ${f.km(range.worst.men.speed)}), ${men.loops} lussen Ardooie, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
-      s.showVip !== false && `<b>VIP</b> aankomst ${f.clock(vip.arrival)}, 3-gangenmenu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`,
-      s.showBroadcast !== false && `<b>Uitzending</b> ${sporza.join(', ')}`,
-      `<b>Podium</b> ${Number(s.podiumDuration) || 0} min`,
-      `<b>Wegafsluiting</b> vrouwen ${schedule.closures.women.red} min voor, ${schedule.closures.women.green} min na; mannen ${schedule.closures.men.red} min voor, ${schedule.closures.men.green} min na${men.breakaway > 0 ? `, vroege vlucht ${formatMss(Math.round(men.breakaway * 60))}` : ''}`,
-    ].filter(Boolean).map(t => `<span>${t}</span>`).join('');
+    renderPrintSummary(s, schedule, range);
     $('print-link').textContent = new URL(shareUrl(), location.href).href;
 
     renderPassages($('women-passages'), women.passages);
@@ -233,11 +221,16 @@
   function renderMarginSum(margin, firstRider) {
     const p = margin.parts, minus = text => String(text).replace('-', '\u2212');
     const row = (label, value, kind = '', title = '') => `<div class="sum__row${kind ? ' sum__row--' + kind : ''}"${title ? ` title="${title}"` : ''}><span>${label}</span><b>${value}</b></div>`;
+    // The road is clear after the podium or after the green flag car, whichever is later. Only that one is
+    // listed; the other one is in the tooltip of "Weg vrij vanaf".
+    const greenDecides = p.womenGreenEnd > p.podiumEnd;
     const women = [
       row('Aankomst', f.clock(p.womenFinish), 'muted'),
-      row(`Groene vlag, +${p.womenGreenMinutes} min`, f.clock(p.womenGreenEnd), 'muted', `Aankomst ${f.clock(p.womenFinish)} + ${p.womenGreenMinutes} min`),
-      row(`Podium, +${p.podiumMinutes} min`, f.clock(p.podiumEnd), 'muted', `Aankomst ${f.clock(p.womenFinish)} + podium ${p.podiumMinutes} min`),
-      row('Weg vrij vanaf', f.clock(p.womenClear), 'total', 'Het latere van het einde van het podium en de groene vlag'),
+      greenDecides
+        ? row(`Groene vlag, +${p.womenGreenMinutes} min`, f.clock(p.womenGreenEnd), 'muted', `De groene vlag komt na het einde van het podium (${f.clock(p.podiumEnd)})`)
+        : row(`Podium, +${p.podiumMinutes} min`, f.clock(p.podiumEnd), 'muted'),
+      row('Weg vrij vanaf', f.clock(p.womenClear), 'total',
+        `Het latere van het einde van het podium (${f.clock(p.podiumEnd)}) en de groene vlag, ${p.womenGreenMinutes} min na de aankomst (${f.clock(p.womenGreenEnd)})`),
     ];
     const men = [
       ...(p.menBreakawaySeconds > 0 ? [
@@ -252,6 +245,47 @@
       <div class="sum__group"><div class="sum__title">Vrouwen</div>${women.join('')}</div>
       <div class="sum__group"><div class="sum__title">Mannen</div>${men.join('')}</div>
       <div class="sum__result">${f.clock(p.menRed)} \u2212 ${f.clock(p.womenClear)} = <b>${minus(margin.minutes)} min</b></div>`;
+  }
+
+  /**
+   * Page 1 of the PDF starts with the settings in compact blocks: one per subject, two or three short lines each.
+   * Hidden parts (the eyes in the sidebar) are left out, as on the timeline.
+   */
+  function renderPrintSummary(s, schedule, range) {
+    const { women, men, closures } = schedule;
+    const vip = schedule.vip, mss = seconds => formatMss(Math.round(seconds));
+    const speeds = (race, slow, fast) => `${f.km(race.speed)} km/u (${f.km(slow)} tot ${f.km(fast)})`;
+    const block = (title, lines, wide = false) => `<div class="psum__block${wide ? ' psum__block--wide' : ''}"><div class="psum__title">${title}</div>${lines.filter(Boolean).map(l => `<div>${l}</div>`).join('')}</div>`;
+    const flags = c => `rode vlag ${c.red}, groene ${c.green} min`;
+    const sameFlags = closures.women.red === closures.men.red && closures.women.green === closures.men.green;
+    const broadcast = race => schedule.broadcasts.find(b => b.race === race);
+    const wb = broadcast('women'), mb = broadcast('men');
+    const blocks = [
+      block('Vrouwen', [
+        `Start <b>${f.clock(women.start)}</b>, ${women.laps} rondes, ${f.km(women.totalKm)} km`,
+        speeds(women, range.worst.women.speed, range.best.women.speed),
+        `Ploegvoorstelling ${Number(s.womenIntroDuration) || 0} min`,
+      ], true),
+      block('Mannen', [
+        `Start <b>${f.clock(men.start)}</b>, ${men.loops} lussen, ${men.laps} rondes, ${f.km(men.totalKm)} km`,
+        speeds(men, range.best.men.speed, range.worst.men.speed),
+        `Ploegvoorstelling ${Number(s.menIntroDuration) || 0} min${men.breakaway > 0 ? `, vroege vlucht ${mss(men.breakaway * 60)}` : ''}`,
+      ], true),
+      block('Wegafsluiting', sameFlags ? [`Rode vlag ${closures.women.red} min ervoor`, `Groene vlag ${closures.women.green} min erna`]
+        : [`Vrouwen: ${flags(closures.women)}`, `Mannen: ${flags(closures.men)}`]),
+      block('Podium en marge', [`Podium ${Number(s.podiumDuration) || 0} min`, `Streefmarge ${s.marginOk} min`, `Minimummarge ${s.marginWarn} min`]),
+      s.showBroadcast !== false && block('Uitzending', [
+        wb ? `Vrouwen ${f.clock(wb.start)} tot ${f.clock(wb.end)}` : 'Vrouwen niet',
+        mb && `Mannen ${f.clock(mb.start)} tot ${f.clock(mb.end)}`,
+      ]),
+      s.showVip !== false && block('VIP-tent', [`Aankomst ${f.clock(vip.arrival)}`, `Menu ${f.clock(vip.menuStart)} tot ${f.clock(vip.menuEnd)}`]),
+    ].filter(Boolean);
+    $('print-summary').innerHTML = blocks.join('');
+    const meta = [
+      variants.list.length > 1 && `Variant ${escapeHtml(variants.fullLabel(variants.active))}`,
+      scenarios && scenarios.label() && `Scenario ${escapeHtml(scenarios.label())}`,
+    ].filter(Boolean);
+    $('print-meta').innerHTML = meta.join('<br>');
   }
 
   /** The margin when the women ride slow and the men fast (worst) or the other way round (best), as a bar. */

@@ -130,3 +130,10 @@ Variants are saved in this browser (`kk-dagplanner-variants-v1`) and all go into
 ## Explanations ("i" buttons)
 
 Longer explanations are not printed under the fields but sit behind a small "i" button: `<button class="info" data-info="...">i</button>` (`KK.info.button(text)` builds one in JavaScript). `js/info.js` shows the text in one floating tooltip on hover or keyboard focus, and pins it on a click or tap (a second tap, a tap elsewhere, Escape or scrolling closes it). The tooltip is `position: fixed`, so a scrolling sidebar does not cut it off. The buttons are left out of the PDF. Keep labels short enough to stay on one line with the button; put units and details in the explanation when space is tight.
+
+## PDF details
+
+- Page 1 starts with the settings in compact blocks next to each other (`renderPrintSummary` in `app.js`): Vrouwen and Mannen a little wider, then Wegafsluiting, Podium en marge, Uitzending and VIP-tent (the last two only when shown with the eye). The variant and the saved scenario stand at the top right.
+- The map waits until the base map is really drawn, roads and place names (`RouteMap.whenSettled` with `hasBaseMap`), with a 15 s limit. After a switch from dark to light the map can report itself loaded before the new tiles and fonts are even asked for.
+- On paper nothing moves: the rider dots and the flags are left out of the map and the elevation profile.
+- The margin sum lists only the part that decides when the women are clear: the podium, or the green flag car when that comes later. The other one is in the tooltip of "Weg vrij vanaf".
