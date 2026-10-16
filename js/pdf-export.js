@@ -94,6 +94,18 @@ KK.pdfExport = (function () {
     link.remove();
   }
 
+  /**
+   * Renders any element to a canvas at `pixelRatio` times its size on screen, with the page font embedded.
+   * Used by the map export of the Parcourskaart module.
+   */
+  async function capture(el, { pixelRatio = 2, backgroundColor = '#FFFFFF' } = {}) {
+    const [, fontEmbedCSS] = await Promise.all([loadLibraries(), loadFontCss().catch(() => '')]);
+    await document.fonts.ready;
+    const options = { pixelRatio, backgroundColor, cacheBust: false, fontEmbedCSS };
+    if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) await window.htmlToImage.toCanvas(el, options);
+    return window.htmlToImage.toCanvas(el, options);
+  }
+
   /** Renders `pageEl` to an image, cuts it in two at `splitEl` (the start of page 2) and returns both parts as one PDF blob. */
   async function build(pageEl, splitEl) {
     const [, fontEmbedCSS] = await Promise.all([loadLibraries(), loadFontCss().catch(() => '')]);
@@ -123,5 +135,5 @@ KK.pdfExport = (function () {
     return pdf.output('blob');
   }
 
-  return { build, show, openWaitingTab };
+  return { build, show, openWaitingTab, capture };
 })();

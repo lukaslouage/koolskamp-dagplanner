@@ -16,7 +16,8 @@ Static site: plain HTML, CSS and JavaScript. No build step, no dependencies to i
 ## Structure
 
 ```
-index.html            Page markup (Dutch copy)
+index.html            Raceday: page markup (Dutch copy)
+parcours.html         Parcourskaart: load GPX files and export a styled map image
 css/styles.css        All styling, light/dark theme variables, print rules
 js/config.js          Distances, fixed durations, default settings, limits
 js/format.js          Time and number formatting (10u15, 10:15:24, 117,5)
@@ -27,6 +28,9 @@ js/profile.js         Elevation profiles (women, men) under the map, with the ri
 js/app.js             State, controls, cards, tables, theme, share link, playback, PDF export flow
 js/pdf-export.js      Turns the print layout into a downloadable two-page PDF
 js/info.js            Small "i" buttons with an explanation in a floating tooltip (hover, focus or tap)
+js/gpx.js             Parcourskaart: reads GPX files; length, points along a line, elevation profile (no page code)
+js/parcours-map.js    Parcourskaart: the map (recoloured OpenFreeMap), routes, points, kilometre markers, high-resolution render
+js/parcours.js        Parcourskaart: controller (sidebar, layout of the image, profile, saving, PNG export)
 js/scenarios.js       Saved scenarios in this browser, export and import
 js/variants.js        Variants A, B and C: tabs, storage, share link
 js/compare.js         Comparison view: cards, days on one axis, what changes, Zoek de grens
@@ -141,3 +145,14 @@ Longer explanations are not printed under the fields but sit behind a small "i" 
 ## Versions and credits
 
 The site has a version `v1.<n>` (`version` and `released` in `js/config.js`), shown in the footer next to the maker's name and the sources. The same number is used as `?v=` on the CSS and JS files in `index.html`. `v1.0` is the first complete version (commit `8824e32`, 14 October 2026: timeline, margin, map with elevation profile, PDF, share link, phone layout, VIP tent). Every published change that users can see since then is a version up: the git tags `v1.0` to `v1.24` mark them, and this release is `v1.25` (name Koolskamp Koers Raceday, credits and version). The repository and the site are called `koolskamp-koers-raceday` (https://lukaslouage.github.io/koolskamp-koers-raceday/). The site was renamed from `koolskamp-dagplanner` on 16 October 2026, before the link was shared, so no link broke; GitHub still redirects the old repository address, but the old site address no longer works. Scenario files exported under the old name (`app: 'koolskamp-dagplanner'`) can still be imported. The saved settings in the browser keep their `kk-dagplanner-...` keys on purpose, so nobody loses saved scenarios. In the PDF the footer is a smaller line at the bottom of page 2.
+
+## Parcourskaart (parcours.html)
+
+A second module next to Raceday (the header has a switch between the two). It turns GPX files into a styled map image for the roadbook, the site or social media, in the spirit of ProCyclingMaps.
+
+- **Routes:** load one or more GPX files (button or drag them onto the image), or "Koolskamp Koers laden" for the three Koolskamp routes with their official lengths and the start, Kruiskalsijde and finish. Every track or route in a GPX becomes a line with a name, a colour, solid or dashed, visible or not; the first one in the list lies on top. Light lines get a dark border and dark lines a light one. Waypoints become points; a first route gets a start and a finish automatically. Long lines are thinned to at most 4000 points (`KK.gpx.simplify`).
+- **Points:** start, finish, klim, sprint, voeding or a plain point, with a label on any side. Added by clicking on the map (they snap to a route within 24 px) and moved by dragging.
+- **Map:** OpenFreeMap positron recoloured per theme (Licht, Donker, Minimaal, Klassiek) by the kind of data of each layer (`ParcoursMap.applyTheme`); place names and street names can be switched off; the routes lie under the place names so names stay readable; direction arrows (an SDF triangle along the line) and kilometre markers along one route.
+- **Image:** formats A4 and A3 (landscape or portrait), 16:9, 1:1 and 4:5. The image on screen keeps the shape of the format and all its parts are sized in `--u` (one hundredth of its shortest side), so the export looks exactly like the screen. Title block with the KK logo, legend with the lengths, elevation profile strip (any route, or for the Koolskamp routes the full women's or men's race with the lap counts of the Raceday defaults), and the required OpenStreetMap credit.
+- **Export:** PNG at 300 dpi for paper formats (A4 3508 x 2480 px) or half of that for screens. The map is rendered again at that pixel ratio (`map.setPixelRatio`, `maxCanvasSize` raised to 8192), copied as an image under the markers, and the whole image is captured with html-to-image (`KK.pdfExport.capture`). The size is capped at 16,7 million pixels (Safari's canvas limit), which makes A3 at 300 dpi slightly smaller.
+- Everything is kept in this browser (`kk-parcours-v1`); nothing is uploaded. "Wissen" starts over.

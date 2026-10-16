@@ -4,7 +4,7 @@ window.KK = window.KK || {};
 KK.config = {
   // Version of the site, shown in the footer and the PDF. Raise it with every published change that users can
   // see (see CLAUDE.md); index.html uses the same number as ?v= on its own files, so browsers fetch the new files.
-  version: '1.26',
+  version: '2.0',
   released: '2026-10-16',
 
   timelineAxis: { start: 8 * 60 + 30, end: 18 * 60 + 30 },
