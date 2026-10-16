@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=2.0">
+<link rel="stylesheet" href="css/styles.css?v=2.1">
 </head>
 <body>
 
@@ -54,10 +54,11 @@
 </section>
 
 <section class="settings__group">
-<h3 class="settings__heading">Punten <button type="button" class="info" data-info="Start, finish, klim, sprint, voeding of een gewone plaats. Klik op 'Punt toevoegen' en daarna op de kaart. Dicht bij een parcours springt het punt op de lijn. Sleep een punt op de kaart om het te verplaatsen. Waypoints uit een GPX worden ook punten." aria-label="Uitleg" aria-expanded="false">i</button></h3>
+<h3 class="settings__heading">Punten <button type="button" class="info" data-info="Start en finish (zwart label met de plaatsnaam), een plaats langs het parcours (vet met een vierkantje), een helling, kasseien of sprint (genummerd, met een lijst op de kaart), een bevoorrading of een gewoon punt. Klik op 'Punt toevoegen' en daarna op de kaart, of laat 'Plaatsen langs het parcours' de dorpen op de route zoeken. Dicht bij een parcours springt het punt op de lijn. Sleep een punt op de kaart om het te verplaatsen. Waypoints uit een GPX worden ook punten." aria-label="Uitleg" aria-expanded="false">i</button></h3>
 <div class="pm-points" id="pm-points"></div>
 <div class="pm-actions">
 <button type="button" class="btn btn--secondary btn--small" id="pm-add-point" aria-pressed="false">Punt toevoegen</button>
+<button type="button" class="btn btn--secondary btn--small" id="pm-towns" title="Zoekt de dorpen en steden die op het parcours liggen en zet hun naam vet bij de lijn">Plaatsen langs het parcours</button>
 </div>
 <p class="settings__note" id="pm-add-hint" hidden>Klik op de kaart om het punt te plaatsen. Esc om te stoppen.</p>
 </section>
@@ -101,8 +102,13 @@
         <div class="pm-mapwrap">
           <div class="pm-map" id="pm-map"></div>
           <img class="pm-snapshot" id="pm-snapshot" alt="">
-          <div class="pm-title" id="pm-title"><div class="pm-title__logo">KK</div><div class="pm-title__text"><div class="pm-title__main" id="pm-title-main"></div><div class="pm-title__sub" id="pm-title-sub"></div></div></div>
-          <div class="pm-legend" id="pm-legend"></div>
+          <div class="pm-key" id="pm-key">
+            <div class="pm-key__head"><span class="pm-key__logo">KK</span><span id="pm-key-title"></span></div>
+            <div class="pm-key__sub" id="pm-key-sub"></div>
+            <div class="pm-key__items" id="pm-key-items"></div>
+          </div>
+          <div class="pm-list" id="pm-list"></div>
+          <div class="pm-scale" id="pm-scale"><svg class="pm-scale__north" viewBox="0 0 20 30" aria-hidden="true"><path d="M10 1l7 17-7-4-7 4z" fill="currentColor"/><text x="10" y="29" text-anchor="middle" font-size="9" font-weight="700" fill="currentColor">N</text></svg><div class="pm-scale__bar"><span class="pm-scale__line" id="pm-scale-line"></span><span class="pm-scale__label" id="pm-scale-label"></span></div></div>
           <div class="pm-attrib">© OpenStreetMap-bijdragers · OpenFreeMap</div>
         </div>
         <div class="pm-profile" id="pm-profile"></div>
@@ -120,13 +126,13 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>Afbeelding wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=2.0"></script>
-<script src="js/config.js?v=2.0"></script>
-<script src="js/format.js?v=2.0"></script>
-<script src="js/info.js?v=2.0"></script>
-<script src="js/pdf-export.js?v=2.0"></script>
-<script src="js/gpx.js?v=2.0"></script>
-<script src="js/parcours-map.js?v=2.0"></script>
-<script src="js/parcours.js?v=2.0"></script>
+<script src="data/route-data.js?v=2.1"></script>
+<script src="js/config.js?v=2.1"></script>
+<script src="js/format.js?v=2.1"></script>
+<script src="js/info.js?v=2.1"></script>
+<script src="js/pdf-export.js?v=2.1"></script>
+<script src="js/gpx.js?v=2.1"></script>
+<script src="js/parcours-map.js?v=2.1"></script>
+<script src="js/parcours.js?v=2.1"></script>
 </body>
 </html>

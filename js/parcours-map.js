@@ -1,40 +1,49 @@
-// The map of the Parcourskaart module: OpenFreeMap (positron) recoloured into a few themes, the loaded routes as
-// lines with a border and optional direction arrows, points with an icon and a label, and kilometre markers.
-// It can render at a higher pixel ratio for a sharp export.
+// The map of the Parcourskaart module, in the style of race maps such as ProCyclingMaps: a calm, almost white base
+// map (OpenFreeMap positron recoloured), the routes in a strong colour with a thin border and small arrows beside
+// them, start and finish as black badges with the place name, the towns on the route in bold with a square on the
+// line, and numbered markers for climbs and cobbles. It can render at a higher pixel ratio for a sharp export.
 window.KK = window.KK || {};
 
 KK.ParcoursMap = class {
   static STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
-  // Colours per theme. 'klassiek' keeps the original map.
+  // Colours per theme. 'klassiek' keeps the original map. noCasing: roads without a white border.
   static THEMES = {
+    koers: { label: 'Koers (zoals ProCyclingMaps)', bg: '#F8F8F6', water: '#C6DEEC', green: '#DAE9CF', landuse: '#ECECE9', building: null,
+      road: '#DEDEDA', major: '#D2D2CD', motorway: '#C4C4BF', casing: null, rail: null, boundary: '#2A2A2A', dottedBorder: true,
+      text: '#58585E', halo: '#FFFFFF', street: '#8E8E93', thinBorder: true },
     licht: { label: 'Licht', bg: '#F2F1ED', water: '#C6D4DC', green: '#DFE6D8', landuse: '#EAE9E4', building: '#E2E1DB', road: '#FFFFFF', casing: '#D6D5D0', rail: '#D2D1CC', boundary: '#B5B4AF', text: '#27272A', halo: '#FFFFFF', street: '#75747A' },
-    donker: { label: 'Donker', bg: '#141518', water: '#1F2C36', green: '#1A211C', landuse: '#18191C', building: '#1E1F23', road: '#2D2F34', casing: '#222428', rail: '#292B2F', boundary: '#3A3C41', text: '#D9D9DE', halo: '#141518', street: '#85858C', dark: true },
+    donker: { label: 'Donker', bg: '#141518', water: '#1F2C36', green: '#1A211C', landuse: '#18191C', building: '#1E1F23', road: '#2D2F34', casing: '#222428', rail: '#292B2F', boundary: '#55575C', dottedBorder: true, text: '#C9C9CF', halo: '#141518', street: '#85858C', dark: true, thinBorder: true },
     minimaal: { label: 'Minimaal', bg: '#F7F7F4', water: '#D5DFE5', green: '#ECEFE7', landuse: '#F2F2EF', building: null, road: '#FFFFFF', casing: '#E2E2DE', rail: null, boundary: '#C9C9C4', text: '#3F3F46', halo: '#FFFFFF', street: '#8B8B90', minimal: true },
     klassiek: { label: 'Klassiek (OpenFreeMap)', original: true },
   };
 
-  static WIDTHS = { dun: 3, normaal: 4.5, dik: 6.5 };
+  static WIDTHS = { dun: 3.5, normaal: 5, dik: 7 };
 
+  // White icons on a black circle.
   static ICONS = {
-    start: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M7 4h11l-2.6 3.6L18 11H7z" fill="currentColor"/></svg>',
-    finish: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M7 4h12v8H7z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 4h3v2.7H7zM13 4h3v2.7h-3zM10 6.7h3v2.6h-3zM16 6.7h3v2.6h-3zM7 9.3h3V12H7zM13 9.3h3V12h-3z" fill="currentColor"/></svg>',
-    punt: '',
-    klim: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19l6.5-11 4 6.5 2.5-4L21 19z" fill="currentColor"/></svg>',
-    sprint: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L5 14h6l-1 8 8-12h-6z" fill="currentColor"/></svg>',
-    voeding: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6v3l-1 1v2c2 1 3 2.5 3 4.5V21a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-8.5C7 10.5 8 9 10 8V6L9 5z" fill="currentColor"/></svg>',
+    start: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.5v11l9-5.5z" fill="currentColor"/></svg>',
+    finish: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h4v4H6zM14 6h4v4h-4zM10 10h4v4h-4zM6 14h4v4H6zM14 14h4v4h-4z" fill="currentColor"/><path d="M6 6h12v12H6z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>',
+    klim: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 18.5l6.2-11 3.8 6.3 2.3-3.6 4.7 8.3z" fill="currentColor"/></svg>',
+    kasseien: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.6" fill="currentColor"/><rect x="13" y="4" width="7" height="7" rx="1.6" fill="currentColor"/><rect x="4" y="13" width="7" height="7" rx="1.6" fill="currentColor"/><rect x="13" y="13" width="7" height="7" rx="1.6" fill="currentColor"/></svg>',
+    sprint: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L6 13.5h5L10 21l8-11h-5.2z" fill="currentColor"/></svg>',
+    voeding: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v7.5a2 2 0 0 0 1.5 1.9V21h2v-8.6A2 2 0 0 0 13 10.5V3h-1.3v5.5h-1V3H9.3v5.5h-1V3zM16.5 3c-1.4 0-2.5 2-2.5 5.5 0 2 .8 3 1.8 3.4V21h2V3z" fill="currentColor"/></svg>',
   };
 
-  /** callbacks: onMove(view), onPointMoved(id, lat, lon), onMapClick(lat, lon), onReady(). */
+  // Marked with a number on the map and listed in a table next to it.
+  static NUMBERED = ['klim', 'kasseien', 'sprint'];
+
+  /** callbacks: onMove(view), onView(), onPointMoved(id, lat, lon), onMapClick(lat, lon), onReady(). */
   constructor(el, callbacks) {
     this.el = el;
     this.callbacks = callbacks;
-    this.options = { theme: 'licht', places: true, streets: false, arrows: true, width: 'normaal' };
+    this.options = { theme: 'koers', places: true, streets: false, arrows: true, width: 'normaal' };
     this.tracks = [];
     this.points = [];
     this.km = null;
     this.markers = [];
     this.kmMarkers = [];
+    this.hiddenNames = [];
     this.ready = false;
   }
 
@@ -48,6 +57,9 @@ KK.ParcoursMap = class {
     this.map = map;
     map.addControl(new ml.NavigationControl({ visualizePitch: false }), 'top-right');
     map.on('style.load', () => {
+      // The original filters of the place-name layers, so names of towns on the route can be left out later.
+      this.placeFilters = {};
+      map.getStyle().layers.filter(l => l['source-layer'] === 'place' && l.type === 'symbol').forEach(l => { this.placeFilters[l.id] = l.filter || null; });
       this.addArrowImage();
       this.applyTheme();
       this.drawTracks();
@@ -55,7 +67,8 @@ KK.ParcoursMap = class {
       if (this.callbacks.onReady) this.callbacks.onReady();
     });
     map.on('moveend', () => this.callbacks.onMove({ center: map.getCenter().toArray(), zoom: map.getZoom(), bearing: map.getBearing() }));
-    map.on('click', e => { if (this.callbacks.onMapClick) this.callbacks.onMapClick(e.lngLat.lat, e.lngLat.lng, e.point); });
+    map.on('move', () => { if (this.callbacks.onView) this.callbacks.onView(); });
+    map.on('click', e => { if (this.callbacks.onMapClick) this.callbacks.onMapClick(e.lngLat.lat, e.lngLat.lng); });
     if (window.ResizeObserver) {
       let last = '';
       new ResizeObserver(entries => {
@@ -76,7 +89,7 @@ KK.ParcoursMap = class {
     this.drawTracks();
   }
 
-  get theme() { return KK.ParcoursMap.THEMES[this.options.theme] || KK.ParcoursMap.THEMES.licht; }
+  get theme() { return KK.ParcoursMap.THEMES[this.options.theme] || KK.ParcoursMap.THEMES.koers; }
 
   /** Recolours the base map and switches its labels, layer by layer (by the kind of data each layer shows). */
   applyTheme() {
@@ -88,8 +101,9 @@ KK.ParcoursMap = class {
       if (id.startsWith('pm-')) return;
       if (type === 'symbol') {
         if (data === 'place') {
-          show(id, o.places && !/country|state/.test(id));
-          if (!t.original) { paint(id, 'text-color', t.text); paint(id, 'text-halo-color', t.halo); paint(id, 'text-halo-width', 1.6); }
+          show(id, o.places && !/state/.test(id) && (!/country/.test(id) || !t.minimal));
+          this.filterPlaceNames(id);
+          if (!t.original) { paint(id, 'text-color', /country/.test(id) ? '#2A2A2E' : t.text); paint(id, 'text-halo-color', t.halo); paint(id, 'text-halo-width', 1.6); }
         } else if (data === 'transportation_name') {
           show(id, o.streets);
           if (!t.original) { paint(id, 'text-color', t.street); paint(id, 'text-halo-color', t.halo); }
@@ -107,28 +121,43 @@ KK.ParcoursMap = class {
         if (t.building) { paint(id, 'fill-color', t.building); paint(id, 'fill-outline-color', t.building); }
       } else if (data === 'transportation' && type === 'line') {
         if (/rail/.test(id)) { show(id, !!t.rail); if (t.rail) paint(id, 'line-color', /dash/.test(id) ? t.bg : t.rail); }
-        else if (/casing|subtle/.test(id)) paint(id, 'line-color', t.casing);
-        else paint(id, 'line-color', t.road);
+        else if (/casing/.test(id)) { if (t.casing) paint(id, 'line-color', t.casing); else paint(id, 'line-opacity', 0); }
+        else if (/subtle/.test(id)) paint(id, 'line-color', t.casing || t.road);
+        else paint(id, 'line-color', /motorway/.test(id) ? (t.motorway || t.road) : /major/.test(id) ? (t.major || t.road) : t.road);
       } else if (data === 'transportation' && type === 'fill') paint(id, 'fill-color', t.bg);
-      else if (data === 'boundary') paint(id, 'line-color', t.boundary);
-      else if (data === 'aeroway') show(id, !t.minimal);
+      else if (data === 'boundary') {
+        paint(id, 'line-color', /_2|country/.test(id) ? t.boundary : t.casing || t.road);
+        if (t.dottedBorder && /_2|country/.test(id)) { paint(id, 'line-dasharray', [1, 2.2]); paint(id, 'line-width', 1.4); }
+        if (!/_2|country/.test(id)) show(id, !t.minimal && !!t.casing); // province lines only on the busier themes
+      } else if (data === 'aeroway') show(id, !t.minimal && !!t.casing);
     });
+  }
+
+  /** Leaves the grey map names out for towns that are shown in bold on the route, so no name is there twice. */
+  filterPlaceNames(id) {
+    if (!this.placeFilters || !(id in this.placeFilters)) return;
+    const original = this.placeFilters[id];
+    const names = this.hiddenNames;
+    const filter = names.length
+      ? ['all', ...(original ? [original] : []), ['!', ['in', ['coalesce', ['get', 'name:latin'], ['get', 'name']], ['literal', names]]]]
+      : original;
+    try { this.map.setFilter(id, filter); } catch (e) { /* keep the map as it is */ }
   }
 
   // ---------- Routes ----------
 
-  /** A chevron for the direction arrows, drawn once (an SDF image, so each route can colour it). */
+  /** A small double chevron for the direction arrows (an SDF image, so it can be coloured). */
   addArrowImage() {
     if (this.map.hasImage('pm-arrow')) return;
-    const size = 32, c = document.createElement('canvas');
-    c.width = c.height = size;
+    const w = 40, h = 24, c = document.createElement('canvas');
+    c.width = w; c.height = h;
     const ctx = c.getContext('2d');
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.moveTo(9, 7); ctx.lineTo(25, 16); ctx.lineTo(9, 25); ctx.lineTo(13, 16);
-    ctx.closePath();
-    ctx.fill();
-    this.map.addImage('pm-arrow', ctx.getImageData(0, 0, size, size), { sdf: true, pixelRatio: 2 });
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    [8, 20].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 5); ctx.lineTo(x + 9, 12); ctx.lineTo(x, 19); ctx.stroke(); });
+    this.map.addImage('pm-arrow', ctx.getImageData(0, 0, w, h), { sdf: true, pixelRatio: 2 });
   }
 
   /** Light routes get a dark border, dark routes a light one, so every route stands out from the map. */
@@ -136,7 +165,7 @@ KK.ParcoursMap = class {
     const hex = String(color).replace('#', '');
     const [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
     const light = 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.45;
-    return light ? (theme.dark ? '#000000' : '#111111') : (theme.dark ? '#E4E4E7' : '#FFFFFF');
+    return light ? (theme.dark ? '#000000' : '#1A1A1A') : (theme.dark ? '#E4E4E7' : '#FFFFFF');
   }
 
   setTracks(tracks) {
@@ -146,26 +175,29 @@ KK.ParcoursMap = class {
 
   /** Removes and re-adds the route layers. The first route in the list is drawn on top. */
   drawTracks() {
-    const map = this.map, theme = this.theme, width = KK.ParcoursMap.WIDTHS[this.options.width] || 4.5;
+    const map = this.map, theme = this.theme, width = KK.ParcoursMap.WIDTHS[this.options.width] || 5;
     map.getStyle().layers.filter(l => l.id.startsWith('pm-')).forEach(l => map.removeLayer(l.id));
     Object.keys(map.getStyle().sources).filter(id => id.startsWith('pm-')).forEach(id => map.removeSource(id));
     // The routes go under the place names, so a name on the route stays readable (names have a halo).
     const firstName = map.getStyle().layers.find(l => l.type === 'symbol' && l['source-layer'] === 'place');
     const before = firstName ? firstName.id : undefined;
+    const arrowColor = theme.dark ? '#E4E4E7' : '#111111';
     [...this.tracks].reverse().filter(t => t.visible !== false).forEach(track => {
       const id = `pm-${track.id}`;
       map.addSource(id, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: track.points.map(p => [p[1], p[0]]) } } });
       const border = KK.ParcoursMap.borderFor(track.color, theme);
       const dashed = track.style === 'dashed';
       map.addLayer({ id: `${id}-casing`, type: 'line', source: id, layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': border, 'line-width': width + (dashed ? 2.5 : 3.5), 'line-opacity': dashed ? 0.85 : 1 } }, before);
+        paint: { 'line-color': border, 'line-width': width + (theme.thinBorder ? 2 : 3.5) } }, before);
       map.addLayer({ id: `${id}-line`, type: 'line', source: id, layout: { 'line-join': 'round', 'line-cap': dashed ? 'butt' : 'round' },
         paint: { 'line-color': track.color, 'line-width': width, ...(dashed ? { 'line-dasharray': [2, 1.4] } : {}) } }, before);
       if (this.options.arrows) {
+        // Beside the line, like on race maps; the offset is in icon pixels and turns with the line.
+        const size = 0.85;
         map.addLayer({ id: `${id}-arrows`, type: 'symbol', source: id,
-          layout: { 'symbol-placement': 'line', 'symbol-spacing': 90, 'icon-image': 'pm-arrow', 'icon-size': (width + 3) / 9,
-            'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true },
-          paint: { 'icon-color': border, 'icon-opacity': 0.9 } }, before);
+          layout: { 'symbol-placement': 'line', 'symbol-spacing': 230, 'icon-image': 'pm-arrow', 'icon-size': size,
+            'icon-offset': [0, -(width / 2 + 9) / size], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true },
+          paint: { 'icon-color': arrowColor } }, before);
       }
     });
   }
@@ -178,30 +210,108 @@ KK.ParcoursMap = class {
     return [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
   }
 
-  /** Fits the routes in the map, keeping room for the title (top) and the legend (bottom). */
-  fit(padding) {
+  /**
+   * Fits the routes in the map, keeping them free of the boxes on top of it. Each option is a padding; the one
+   * that lets the map zoom in furthest wins (a box can sit above the route or beside it).
+   */
+  fit(paddings) {
     const b = this.bounds();
-    if (b && this.map) this.map.fitBounds(b, { padding, animate: false, bearing: this.map.getBearing() });
+    if (!b || !this.map) return;
+    const bearing = this.map.getBearing();
+    let best = null;
+    (Array.isArray(paddings) ? paddings : [paddings]).forEach(padding => {
+      let camera = null;
+      try { camera = this.map.cameraForBounds(b, { padding, bearing }); } catch (e) { /* padding too large */ }
+      if (camera && (!best || camera.zoom > best.camera.zoom)) best = { camera, padding };
+    });
+    if (best) this.map.jumpTo({ ...best.camera, bearing });
+  }
+
+  /** Metres per CSS pixel at the centre of the map, for the scale bar. */
+  metresPerPixel() {
+    if (!this.map) return null;
+    const lat = this.map.getCenter().lat;
+    return (40075016.686 * Math.cos((lat * Math.PI) / 180)) / (512 * 2 ** this.map.getZoom());
+  }
+
+  // ---------- Towns on the route ----------
+
+  /**
+   * Towns (cities, towns, villages) of the base map within `km` of a visible route, with the nearest point of the
+   * route: [{ name, lat, lon }]. Uses the map data of the area on screen.
+   */
+  townsOnRoute(km = 0.9) {
+    if (!this.map) return [];
+    let features = [];
+    try { features = this.map.querySourceFeatures('openmaptiles', { sourceLayer: 'place' }); } catch (e) { return []; }
+    const lines = this.tracks.filter(t => t.visible !== false).map(t => t.points);
+    const found = new Map();
+    features.forEach(f => {
+      const cls = f.properties.class;
+      if (!['city', 'town', 'village'].includes(cls) || !f.geometry || f.geometry.type !== 'Point') return;
+      const name = f.properties['name:latin'] || f.properties['name:nl'] || f.properties.name;
+      if (!name || found.has(name)) return;
+      const [lon, lat] = f.geometry.coordinates;
+      let best = null, bestD = km;
+      lines.forEach(points => points.forEach(p => {
+        const d = KK.gpx.haversineKm(p, [lat, lon]);
+        if (d < bestD) { bestD = d; best = p; }
+      }));
+      if (best) found.set(name, { name, lat: best[0], lon: best[1], rank: cls === 'city' ? 0 : cls === 'town' ? 1 : 2 });
+    });
+    return [...found.values()];
+  }
+
+  setHiddenNames(names) {
+    const key = JSON.stringify(names);
+    if (key === JSON.stringify(this.hiddenNames)) return;
+    this.hiddenNames = names;
+    if (this.ready) Object.keys(this.placeFilters || {}).forEach(id => this.filterPlaceNames(id));
   }
 
   // ---------- Points and kilometre markers ----------
+
+  static esc(text) {
+    return String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
+  /** The marker element of a point: a badge for start and finish, a number, a town or a plain point. */
+  static markerHtml(p) {
+    const esc = KK.ParcoursMap.esc, icon = KK.ParcoursMap.ICONS[p.type] || '';
+    if (p.type === 'start' || p.type === 'finish') {
+      const below = p.side === 'bottom';
+      return { anchor: below ? 'top' : 'bottom', className: `pm-badge pm-badge--${p.type}${below ? ' pm-badge--below' : ''}`,
+        html: `${p.name ? `<span class="pm-badge__label">${esc(p.name)}</span>` : ''}<span class="pm-badge__icon">${icon}</span><span class="pm-badge__stem"></span>` };
+    }
+    if (KK.ParcoursMap.NUMBERED.includes(p.type)) {
+      return { anchor: 'center', className: `pm-num pm-num--${p.type}`, html: `<span>${p.number || ''}</span>` };
+    }
+    if (p.type === 'plaats') {
+      return { anchor: 'center', className: `pm-town pm-town--${p.side || 'right'}`, html: `<span class="pm-town__label">${esc(p.name)}</span>` };
+    }
+    if (p.type === 'voeding') {
+      return { anchor: 'center', className: `pm-feed pm-point--${p.side || 'right'}`, html: `<span class="pm-feed__icon">${icon}</span>${p.name ? `<span class="pm-point__label">${esc(p.name)}</span>` : ''}` };
+    }
+    return { anchor: 'center', className: `pm-point pm-point--${p.side || 'right'}`, html: `<span class="pm-point__icon"></span>${p.name ? `<span class="pm-point__label">${esc(p.name)}</span>` : ''}` };
+  }
 
   setPoints(points) {
     this.points = points;
     if (!this.map) return;
     this.markers.forEach(m => m.remove());
     this.markers = points.map(p => {
+      const { anchor, className, html } = KK.ParcoursMap.markerHtml(p);
       const el = document.createElement('div');
-      el.className = `pm-point pm-point--${p.type} pm-point--${p.side || 'right'}`;
-      el.innerHTML = `<span class="pm-point__icon">${KK.ParcoursMap.ICONS[p.type] || ''}</span>${p.name ? `<span class="pm-point__label">${KK.ParcoursMap.esc(p.name)}</span>` : ''}`;
-      el.title = 'Sleep om te verplaatsen';
-      const marker = new window.maplibregl.Marker({ element: el, anchor: 'center', draggable: true }).setLngLat([p.lon, p.lat]).addTo(this.map);
+      el.className = className;
+      el.innerHTML = html;
+      el.title = `${p.name || ''}${p.name ? '. ' : ''}Sleep om te verplaatsen`;
+      const marker = new window.maplibregl.Marker({ element: el, anchor, draggable: true }).setLngLat([p.lon, p.lat]).addTo(this.map);
       marker.on('dragend', () => { const ll = marker.getLngLat(); this.callbacks.onPointMoved(p.id, ll.lat, ll.lng); });
       return marker;
     });
   }
 
-  /** Kilometre markers every `step` km along one route: { points, step, labels }. */
+  /** Kilometre markers every `step` km along one route: { points, step }. */
   setKm(km) {
     this.km = km;
     if (!this.map) return;
@@ -217,13 +327,9 @@ KK.ParcoursMap = class {
       const p = KK.gpx.pointAtKm(km.points, cum, d);
       const el = document.createElement('div');
       el.className = 'pm-km';
-      el.textContent = KK.format.km(Math.round(d * 10) / 10);
+      el.textContent = `km ${KK.format.km(Math.round(d * 10) / 10)}`;
       this.kmMarkers.push(new window.maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([p[1], p[0]]).addTo(this.map));
     }
-  }
-
-  static esc(text) {
-    return String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   }
 
   // ---------- Export ----------

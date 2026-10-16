@@ -16,13 +16,15 @@
     square: { file: 'vierkant', label: 'Vierkant 1:1 (sociale media)', ratio: 1, print: [2160, 2160], web: [1080, 1080] },
     portrait: { file: 'staand-4x5', label: 'Staand 4:5 (Instagram)', ratio: 4 / 5, print: [2160, 2700], web: [1080, 1350] },
   };
-  const TYPES = [['start', 'Start'], ['finish', 'Finish'], ['punt', 'Punt'], ['klim', 'Klim'], ['sprint', 'Sprint'], ['voeding', 'Voeding']];
+  const TYPES = [['start', 'Start'], ['finish', 'Finish'], ['plaats', 'Plaats'], ['klim', 'Helling'], ['kasseien', 'Kasseien'], ['sprint', 'Sprint'], ['voeding', 'Bevoorrading'], ['punt', 'Punt']];
+  // Words for the legend, per kind of point.
+  const KEY = { start: 'Vertrek', finish: 'Aankomst', klim: 'Helling', kasseien: 'Kasseien', sprint: 'Sprint', voeding: 'Bevoorrading' };
   const SIDES = [['right', 'Rechts'], ['left', 'Links'], ['top', 'Boven'], ['bottom', 'Onder']];
   const COLORS = ['#FFD201', '#18181B', '#7A7A7A', '#E4572E', '#2E86DE', '#2F9E5B'];
   const MAX_AREA = 16.7e6; // Safari cannot make a larger canvas
 
   const DEFAULTS = {
-    title: 'Koolskamp Koers', subtitle: '', format: 'a4-l', quality: 'print', theme: 'licht', width: 'normaal',
+    style: 2, title: 'Koolskamp Koers', subtitle: '', format: 'a4-l', quality: 'print', theme: 'koers', width: 'normaal',
     places: true, streets: false, arrows: true, kmTrack: '', kmStep: 5, showTitle: true, showLegend: true, showProfile: true,
     profileSource: '', tracks: [], points: [], view: null,
   };
@@ -36,6 +38,8 @@
     try {
       const raw = JSON.parse(localStorage.getItem(STORAGE) || 'null');
       if (raw && typeof raw === 'object') {
+        // Maps saved before the race-map style (style 2) switch to it once; the points get their new kinds.
+        if (raw.style !== 2) { raw.theme = 'koers'; raw.style = 2; }
         return { ...DEFAULTS, ...raw,
           tracks: Array.isArray(raw.tracks) ? raw.tracks.filter(t => t && t.id && Array.isArray(t.points) && t.points.length > 1) : [],
           points: Array.isArray(raw.points) ? raw.points.filter(p => p && p.id && Number.isFinite(p.lat) && Number.isFinite(p.lon)) : [] };
@@ -64,6 +68,7 @@
 
   const pmap = new KK.ParcoursMap($('pm-map'), {
     onMove: view => { state.view = view; save(); },
+    onView: () => renderScale(),
     onPointMoved: (id, lat, lon) => {
       const p = state.points.find(x => x.id === id);
       if (p) { Object.assign(p, snap(lat, lon)); save(); pmap.setPoints(state.points); }
@@ -94,9 +99,24 @@
     return best ? { lat: best[0], lon: best[1] } : { lat, lon };
   }
 
+  /** Climbs, cobbles and sprints are numbered in list order; every point gets its km along the kilometre route. */
+  function decoratePoints() {
+    const track = state.tracks.find(t => t.id === state.kmTrack);
+    const cum = track ? KK.gpx.cumulative(track.points) : null;
+    const scale = track && track.km ? track.km / cum[cum.length - 1] : 1;
+    let n = 0;
+    return state.points.map(p => ({ ...p,
+      number: KK.ParcoursMap.NUMBERED.includes(p.type) ? ++n : null,
+      km: track ? KK.gpx.nearest(track.points, cum, p.lat, p.lon).km * scale : null }));
+  }
+
   function syncMap(what = 'all') {
     if (what === 'all' || what === 'tracks') pmap.setTracks(state.tracks);
-    if (what === 'all' || what === 'points') pmap.setPoints(state.points);
+    if (what === 'all' || what === 'points' || what === 'km') {
+      pmap.setPoints(decoratePoints());
+      // Towns shown in bold on the route, and start and finish, are left out of the grey map names.
+      pmap.setHiddenNames(state.points.filter(p => ['plaats', 'start', 'finish'].includes(p.type) && p.name).flatMap(p => [p.name, p.name.charAt(0) + p.name.slice(1).toLowerCase()]));
+    }
     if (what === 'all' || what === 'tracks' || what === 'km') {
       const track = state.tracks.find(t => t.id === state.kmTrack && t.visible !== false);
       pmap.setKm(track ? { points: track.points, step: Number(state.kmStep) } : null);
@@ -107,12 +127,19 @@
   function fit() {
     const wrap = document.querySelector('.pm-mapwrap').getBoundingClientRect();
     const u = parseFloat(getComputedStyle($('pm-artboard')).getPropertyValue('--u')) || 8;
-    const title = $('pm-title'), legend = $('pm-legend');
-    const top = !title.hidden ? title.getBoundingClientRect().bottom - wrap.top + 2 * u : 3 * u;
-    const bottom = !legend.hidden ? wrap.bottom - legend.getBoundingClientRect().top + 2 * u : 3 * u;
-    const padding = { top, bottom, left: 4 * u, right: 7 * u };
-    if (wrap.height - top - bottom < 80) { padding.top = 3 * u; padding.bottom = 3 * u; }
-    pmap.fit(padding);
+    const box = el => (el.hidden ? null : el.getBoundingClientRect());
+    const key = box($('pm-key')), list = box($('pm-list')), scale = box($('pm-scale'));
+    const edge = 7 * u, gap = 2 * u; // room for the start and finish badges, which stand out from their point
+    // The key (top left) sits above the route or to its left; the list (bottom right) below it or to its right.
+    const keyOptions = key ? [{ top: key.bottom - wrap.top + gap }, { left: key.right - wrap.left + gap }] : [{}];
+    const listOptions = list ? [{ bottom: wrap.bottom - list.top + gap }, { right: wrap.right - list.left + gap }] : [{}];
+    const scaleBottom = scale ? wrap.bottom - scale.top + gap : edge;
+    const paddings = [];
+    keyOptions.forEach(k => listOptions.forEach(l => paddings.push({
+      top: Math.max(edge + 3 * u, k.top || 0), left: Math.max(edge, k.left || 0),
+      bottom: Math.max(scaleBottom, l.bottom || 0), right: Math.max(edge + 3 * u, l.right || 0),
+    })));
+    pmap.fit(paddings);
   }
 
   // ---------- Routes ----------
@@ -126,16 +153,22 @@
     // A first route gets a start and a finish (one point when it ends where it started).
     if (firstLoad && !state.points.length && tracks.length) {
       const pts = tracks[0].points, a = pts[0], z = pts[pts.length - 1];
-      if (KK.gpx.haversineKm(a, z) < 0.3) state.points.push({ id: newId('p'), type: 'finish', name: 'Start en finish', side: 'right', lat: a[0], lon: a[1] });
+      if (KK.gpx.haversineKm(a, z) < 0.3) state.points.push({ id: newId('p'), type: 'finish', name: 'START EN FINISH', side: 'top', lat: a[0], lon: a[1] });
       else {
-        state.points.push({ id: newId('p'), type: 'start', name: 'Start', side: 'right', lat: a[0], lon: a[1] });
-        state.points.push({ id: newId('p'), type: 'finish', name: 'Finish', side: 'right', lat: z[0], lon: z[1] });
+        state.points.push({ id: newId('p'), type: 'start', name: 'START', side: 'top', lat: a[0], lon: a[1] });
+        state.points.push({ id: newId('p'), type: 'finish', name: 'FINISH', side: 'top', lat: z[0], lon: z[1] });
       }
     }
-    if (!state.kmTrack && state.tracks.length) state.kmTrack = state.tracks[0].id;
+    if (!state.kmTrack && state.tracks.length) {
+      state.kmTrack = state.tracks[0].id;
+      // About eight kilometre markers on the first route.
+      const total = KK.gpx.lengthKm(state.tracks[0].points);
+      state.kmStep = [1, 2, 5, 10, 20].find(step => total / step <= 8) || 20;
+    }
     if (!state.profileSource && state.tracks.length) state.profileSource = state.tracks[0].id;
     changed('all');
     requestAnimationFrame(fit);
+    if (pmap.map) pmap.map.once('idle', () => addTowns(true));
   }
 
   async function loadFiles(files) {
@@ -165,9 +198,9 @@
       { id: 'kk-loop', name: 'Lus Ardooie', color: '#18181B', style: 'dashed', visible: true, km: config.distances.ardooieLoop, points: strip(r.ardooieLoop) },
     );
     state.points.push(
-      { id: 'kk-start', type: 'start', name: 'Start Ardooie', side: 'left', lat: r.ardooieLoop[0][0], lon: r.ardooieLoop[0][1] },
+      { id: 'kk-start', type: 'start', name: 'ARDOOIE', side: 'top', lat: r.ardooieLoop[0][0], lon: r.ardooieLoop[0][1] },
       { id: 'kk-kruis', type: 'punt', name: 'Kruiskalsijde', side: 'right', lat: r.kruiskalsijde[0], lon: r.kruiskalsijde[1] },
-      { id: 'kk-finish', type: 'finish', name: 'Finish Koolskamp', side: 'top', lat: r.localLap[0][0], lon: r.localLap[0][1] },
+      { id: 'kk-finish', type: 'finish', name: 'KOOLSKAMP', side: 'top', lat: r.localLap[0][0], lon: r.localLap[0][1] },
     );
     if (!state.title || state.title === DEFAULTS.title) state.title = 'Koolskamp Koers';
     if (!state.subtitle) state.subtitle = 'Kampioenschap van Vlaanderen';
@@ -177,9 +210,20 @@
     changed('all');
     requestAnimationFrame(fit);
     message('De parcours van Koolskamp Koers zijn geladen.', 'ok');
+    // Once the map of the area is loaded: the towns along the route.
+    if (pmap.map) pmap.map.once('idle', () => addTowns(true));
   }
 
   const trackKm = t => t.km || KK.gpx.lengthKm(t.points);
+
+  /** Adds the towns of the map that lie on a route, as bold names with a square on the line. */
+  function addTowns(quiet = false) {
+    const have = new Set(state.points.map(p => p.name.toLowerCase()));
+    const towns = pmap.townsOnRoute().filter(t => !have.has(t.name.toLowerCase()));
+    towns.forEach(t => state.points.push({ id: newId('p'), type: 'plaats', name: t.name, side: 'right', lat: t.lat, lon: t.lon }));
+    changed('points');
+    if (!quiet || towns.length) message(towns.length ? `${towns.length === 1 ? '1 plaats' : `${towns.length} plaatsen`} langs het parcours toegevoegd. Verwijder wat je niet wil tonen.` : 'Geen nieuwe plaatsen gevonden langs het parcours. Zoom eventueel in en probeer opnieuw.', 'ok');
+  }
 
   // ---------- Elevation profile ----------
 
@@ -264,20 +308,40 @@
   function renderArtboard() {
     const art = $('pm-artboard'), theme = KK.ParcoursMap.THEMES[state.theme] || KK.ParcoursMap.THEMES.licht;
     art.dataset.dark = theme.dark ? 'true' : 'false';
-    $('pm-title').hidden = !state.showTitle || !(state.title || state.subtitle);
-    $('pm-title-main').textContent = state.title;
-    $('pm-title-sub').textContent = state.subtitle;
-    $('pm-title-sub').hidden = !state.subtitle;
+    // The box top left: yellow head with the title, then the legend (kinds of points used, and the routes).
     const visible = state.tracks.filter(t => t.visible !== false);
-    $('pm-legend').hidden = !state.showLegend || !visible.length;
-    $('pm-legend').innerHTML = visible.map(t => {
-      const border = KK.ParcoursMap.borderFor(t.color, theme.original ? KK.ParcoursMap.THEMES.licht : theme);
-      return `<div class="pm-legend__item"><svg class="pm-legend__line" viewBox="0 0 40 10" aria-hidden="true"><line x1="3" y1="5" x2="37" y2="5" stroke="${border}" stroke-width="7.5" stroke-linecap="round"/><line x1="3" y1="5" x2="37" y2="5" stroke="${t.color}" stroke-width="4.5" stroke-linecap="${t.style === 'dashed' ? 'butt' : 'round'}"${t.style === 'dashed' ? ' stroke-dasharray="7 4"' : ''}/></svg><span>${esc(t.name)}</span><span class="pm-legend__km">${f.km(Math.round(trackKm(t) * 10) / 10)} km</span></div>`;
-    }).join('');
+    const used = Object.keys(KEY).filter(type => state.points.some(p => p.type === type));
+    const showKey = (state.showTitle && state.title) || (state.showLegend && (visible.length || used.length));
+    $('pm-key').hidden = !showKey;
+    $('pm-key-title').textContent = state.showTitle && state.title ? state.title : 'Legende';
+    $('pm-key-sub').textContent = state.showTitle ? state.subtitle : '';
+    $('pm-key-sub').hidden = !state.showTitle || !state.subtitle;
+    const lineBorder = t => KK.ParcoursMap.borderFor(t.color, theme.original ? KK.ParcoursMap.THEMES.licht : theme);
+    $('pm-key-items').hidden = !state.showLegend;
+    $('pm-key-items').innerHTML = !state.showLegend ? '' : [
+      ...used.map(type => `<div class="pm-key__item"><span class="pm-key__icon pm-key__icon--${type}">${KK.ParcoursMap.ICONS[type]}</span><span>${KEY[type]}</span></div>`),
+      ...visible.map(t => `<div class="pm-key__item"><svg class="pm-key__line" viewBox="0 0 40 10" aria-hidden="true"><line x1="3" y1="5" x2="37" y2="5" stroke="${lineBorder(t)}" stroke-width="7" stroke-linecap="round"/><line x1="3" y1="5" x2="37" y2="5" stroke="${t.color}" stroke-width="5" stroke-linecap="${t.style === 'dashed' ? 'butt' : 'round'}"${t.style === 'dashed' ? ' stroke-dasharray="7 4"' : ''}/></svg><span>${esc(t.name)}</span><span class="pm-key__km">${f.km(Math.round(trackKm(t) * 10) / 10)} km</span></div>`),
+    ].join('');
+    // The box bottom right: the numbered climbs, cobbles and sprints with their km.
+    const numbered = decoratePoints().filter(p => p.number);
+    $('pm-list').hidden = !state.showLegend || !numbered.length;
+    $('pm-list').innerHTML = numbered.map(p => `<div class="pm-list__row"><span class="pm-num pm-num--small"><span>${p.number}</span></span><span class="pm-key__icon pm-key__icon--${p.type}">${KK.ParcoursMap.ICONS[p.type]}</span><span class="pm-list__name">${esc(p.name)}</span>${p.km != null ? `<span class="pm-list__km">km ${f.km(Math.round(p.km * 10) / 10)}</span>` : ''}</div>`).join('');
+    renderScale();
     renderProfile();
     const [w, h] = targetSize();
     const format = FORMATS[state.format];
     $('pm-size').textContent = `${w} × ${h} px${format.paper ? (state.quality === 'print' ? ', 300 dpi op papier' : ', 150 dpi op papier') : ''}`;
+  }
+
+  /** North arrow and a scale bar with a round length (1, 2, 5, 10 or 20 km) of about a tenth of the image. */
+  function renderScale() {
+    const mpp = pmap.metresPerPixel(), width = $('pm-artboard').clientWidth;
+    if (!mpp) { $('pm-scale').hidden = true; return; }
+    const target = (width * 0.12) * mpp / 1000;
+    const km = [0.5, 1, 2, 5, 10, 20, 50].find(k => k >= target * 0.7) || 50;
+    $('pm-scale').hidden = false;
+    $('pm-scale-line').style.width = `${(km * 1000) / mpp}px`;
+    $('pm-scale-label').textContent = `${f.km(km)} km`;
   }
 
   /** Size of the exported image in pixels, at most MAX_AREA pixels. */
@@ -448,6 +512,10 @@
     changed('points');
   });
   $('pm-add-point').addEventListener('click', () => setAddMode(!addMode));
+  $('pm-towns').addEventListener('click', () => {
+    if (!state.tracks.length) { message('Laad eerst een parcours.', 'warn'); return; }
+    addTowns();
+  });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && addMode) setAddMode(false); });
 
   const mapOption = (id, key, prop = 'checked') => $(id).addEventListener('change', e => {
