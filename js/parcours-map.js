@@ -1,7 +1,7 @@
 // The map of the Parcourskaart module, in the style of race maps such as ProCyclingMaps: a calm, almost white base
-// map (OpenFreeMap positron recoloured), the routes in a strong colour with a thin border and small arrows beside
-// them, start and finish as black badges with the place name, the towns on the route in bold with a square on the
-// line, and numbered markers for climbs and cobbles. It can render at a higher pixel ratio for a sharp export.
+// map (OpenFreeMap positron recoloured) with road numbers, the routes in a strong colour with a border, a soft shadow
+// and small arrows on the line, start, finish and km 0 as black badges, the towns on the route in bold with a square
+// on the line, numbered markers for climbs and cobbles, feed and litter zones, and labels for loops and laps. It can render at a higher pixel ratio for a sharp export.
 window.KK = window.KK || {};
 
 KK.ParcoursMap = class {
@@ -27,22 +27,38 @@ KK.ParcoursMap = class {
     klim: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 18.5l6.2-11 3.8 6.3 2.3-3.6 4.7 8.3z" fill="currentColor"/></svg>',
     kasseien: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.6" fill="currentColor"/><rect x="13" y="4" width="7" height="7" rx="1.6" fill="currentColor"/><rect x="4" y="13" width="7" height="7" rx="1.6" fill="currentColor"/><rect x="13" y="13" width="7" height="7" rx="1.6" fill="currentColor"/></svg>',
     sprint: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L6 13.5h5L10 21l8-11h-5.2z" fill="currentColor"/></svg>',
+    afval: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14l-1.4 1.6-1 11.4a1.6 1.6 0 0 1-1.6 1.5H9a1.6 1.6 0 0 1-1.6-1.5l-1-11.4zM9 3.5h6l.6 1.6H8.4z" fill="currentColor"/><path d="M10 10v7.5M14 10v7.5" stroke="#000" stroke-opacity=".25" stroke-width="1.4"/></svg>',
     voeding: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v7.5a2 2 0 0 0 1.5 1.9V21h2v-8.6A2 2 0 0 0 13 10.5V3h-1.3v5.5h-1V3H9.3v5.5h-1V3zM16.5 3c-1.4 0-2.5 2-2.5 5.5 0 2 .8 3 1.8 3.4V21h2V3z" fill="currentColor"/></svg>',
   };
 
   // Marked with a number on the map and listed in a table next to it.
   static NUMBERED = ['klim', 'kasseien', 'sprint'];
+  // Zones for the team cars and riders: a light blue icon beside the route with a line to it.
+  static ZONES = ['voeding', 'afval'];
 
-  /** callbacks: onMove(view), onView(), onPointMoved(id, lat, lon), onMapClick(lat, lon), onReady(). */
+  // Line styles: solid, dashed, 'double' (a white or black stripe in the middle, like a race route) and
+  // 'neutral' (stripes in the middle, for a neutralised part before km 0).
+  static LINE_STYLES = [['solid', 'Doorlopend'], ['double', 'Met middenstreep'], ['neutral', 'Geneutraliseerd'], ['dashed', 'Gestreept']];
+
+  /** Black or white, whichever reads best on the colour. */
+  static contrast(color) {
+    const hex = String(color).replace('#', '');
+    const [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.45 ? '#111111' : '#FFFFFF';
+  }
+
+  /** callbacks: onMove(view), onView(), onPointMoved(id, lat, lon), onLabelMoved(id, lat, lon), onMapClick(lat, lon), onReady(). */
   constructor(el, callbacks) {
     this.el = el;
     this.callbacks = callbacks;
-    this.options = { theme: 'koers', places: true, streets: false, arrows: true, width: 'normaal' };
+    this.options = { theme: 'koers', places: true, streets: false, shields: true, arrows: true, width: 'normaal' };
     this.tracks = [];
     this.points = [];
     this.km = null;
     this.markers = [];
     this.kmMarkers = [];
+    this.labels = [];
+    this.labelMarkers = [];
     this.hiddenNames = [];
     this.ready = false;
   }
@@ -61,6 +77,7 @@ KK.ParcoursMap = class {
       this.placeFilters = {};
       map.getStyle().layers.filter(l => l['source-layer'] === 'place' && l.type === 'symbol').forEach(l => { this.placeFilters[l.id] = l.filter || null; });
       this.addArrowImage();
+      this.addShieldImage();
       this.applyTheme();
       this.drawTracks();
       this.ready = true;
@@ -105,7 +122,7 @@ KK.ParcoursMap = class {
           this.filterPlaceNames(id);
           if (!t.original) { paint(id, 'text-color', /country/.test(id) ? '#2A2A2E' : t.text); paint(id, 'text-halo-color', t.halo); paint(id, 'text-halo-width', 1.6); }
         } else if (data === 'transportation_name') {
-          show(id, o.streets);
+          show(id, o.streets && !/shield/.test(id));
           if (!t.original) { paint(id, 'text-color', t.street); paint(id, 'text-halo-color', t.halo); }
         } else show(id, o.places && !t.minimal && !/oneway/.test(id)); // water names, airports
         return;
@@ -146,18 +163,31 @@ KK.ParcoursMap = class {
 
   // ---------- Routes ----------
 
-  /** A small double chevron for the direction arrows (an SDF image, so it can be coloured). */
+  /** A small chevron for the direction arrows on the line (an SDF image, so it can be coloured). */
   addArrowImage() {
     if (this.map.hasImage('pm-arrow')) return;
-    const w = 40, h = 24, c = document.createElement('canvas');
+    const w = 24, h = 24, c = document.createElement('canvas');
     c.width = w; c.height = h;
     const ctx = c.getContext('2d');
     ctx.strokeStyle = '#000';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 4.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    [8, 20].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 5); ctx.lineTo(x + 9, 12); ctx.lineTo(x, 19); ctx.stroke(); });
+    ctx.beginPath(); ctx.moveTo(8, 5); ctx.lineTo(16, 12); ctx.lineTo(8, 19); ctx.stroke();
     this.map.addImage('pm-arrow', ctx.getImageData(0, 0, w, h), { sdf: true, pixelRatio: 2 });
+  }
+
+  /** A white box with a dark border that stretches around a road number (N33, E40). */
+  addShieldImage() {
+    if (this.map.hasImage('pm-shield')) return;
+    const n = 24, c = document.createElement('canvas');
+    c.width = n; c.height = n;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#2A2A2E';
+    ctx.fillRect(0, 0, n, n);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(3, 3, n - 6, n - 6);
+    this.map.addImage('pm-shield', ctx.getImageData(0, 0, n, n), { pixelRatio: 2, stretchX: [[6, 18]], stretchY: [[6, 18]], content: [6, 5, 18, 19] });
   }
 
   /** Light routes get a dark border, dark routes a light one, so every route stands out from the map. */
@@ -173,7 +203,10 @@ KK.ParcoursMap = class {
     if (this.ready) this.drawTracks();
   }
 
-  /** Removes and re-adds the route layers. The first route in the list is drawn on top. */
+  /**
+   * Removes and re-adds the route layers. The first route in the list is drawn on top. Every route has a soft
+   * shadow and a border; 'double' and 'neutral' get a stripe in the middle; the arrows sit on the line.
+   */
   drawTracks() {
     const map = this.map, theme = this.theme, width = KK.ParcoursMap.WIDTHS[this.options.width] || 5;
     map.getStyle().layers.filter(l => l.id.startsWith('pm-')).forEach(l => map.removeLayer(l.id));
@@ -181,25 +214,44 @@ KK.ParcoursMap = class {
     // The routes go under the place names, so a name on the route stays readable (names have a halo).
     const firstName = map.getStyle().layers.find(l => l.type === 'symbol' && l['source-layer'] === 'place');
     const before = firstName ? firstName.id : undefined;
-    const arrowColor = theme.dark ? '#E4E4E7' : '#111111';
+    if (this.options.shields && !theme.original) this.addShields(before);
     [...this.tracks].reverse().filter(t => t.visible !== false).forEach(track => {
-      const id = `pm-${track.id}`;
+      const id = `pm-${track.id}`, style = track.style || 'solid';
       map.addSource(id, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: track.points.map(p => [p[1], p[0]]) } } });
-      const border = KK.ParcoursMap.borderFor(track.color, theme);
-      const dashed = track.style === 'dashed';
-      map.addLayer({ id: `${id}-casing`, type: 'line', source: id, layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': border, 'line-width': width + (theme.thinBorder ? 2 : 3.5) } }, before);
-      map.addLayer({ id: `${id}-line`, type: 'line', source: id, layout: { 'line-join': 'round', 'line-cap': dashed ? 'butt' : 'round' },
-        paint: { 'line-color': track.color, 'line-width': width, ...(dashed ? { 'line-dasharray': [2, 1.4] } : {}) } }, before);
-      if (this.options.arrows) {
-        // Beside the line, like on race maps; the offset is in icon pixels and turns with the line.
-        const size = 0.85;
+      const border = KK.ParcoursMap.borderFor(track.color, theme), inner = KK.ParcoursMap.contrast(track.color);
+      const striped = style === 'double' || style === 'neutral';
+      const w = striped ? width * 1.3 : width;
+      const layout = cap => ({ 'line-join': 'round', 'line-cap': cap });
+      map.addLayer({ id: `${id}-shadow`, type: 'line', source: id, layout: layout('round'),
+        paint: { 'line-color': theme.dark ? '#000000' : '#202024', 'line-opacity': theme.dark ? 0.5 : 0.22, 'line-width': w + 6, 'line-blur': 4, 'line-translate': [0, 1.5] } }, before);
+      map.addLayer({ id: `${id}-casing`, type: 'line', source: id, layout: layout('round'),
+        paint: { 'line-color': border, 'line-width': w + (theme.thinBorder ? 2.4 : 3.5) } }, before);
+      map.addLayer({ id: `${id}-line`, type: 'line', source: id, layout: layout(style === 'dashed' ? 'butt' : 'round'),
+        paint: { 'line-color': track.color, 'line-width': w, ...(style === 'dashed' ? { 'line-dasharray': [2, 1.4] } : {}) } }, before);
+      if (striped) {
+        map.addLayer({ id: `${id}-stripe`, type: 'line', source: id, layout: layout(style === 'neutral' ? 'butt' : 'round'),
+          paint: { 'line-color': inner, 'line-width': Math.max(1.4, w * 0.36), ...(style === 'neutral' ? { 'line-dasharray': [1.6, 1.6] } : {}) } }, before);
+      }
+      if (this.options.arrows && style !== 'neutral') {
+        // Small chevrons on the line: in the route colour on the middle stripe, else in the contrasting colour.
+        const size = (w * (striped ? 1 : 0.95)) / 12;
         map.addLayer({ id: `${id}-arrows`, type: 'symbol', source: id,
-          layout: { 'symbol-placement': 'line', 'symbol-spacing': 230, 'icon-image': 'pm-arrow', 'icon-size': size,
-            'icon-offset': [0, -(width / 2 + 9) / size], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true },
-          paint: { 'icon-color': arrowColor } }, before);
+          layout: { 'symbol-placement': 'line', 'symbol-spacing': 160, 'icon-image': 'pm-arrow', 'icon-size': size,
+            'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true },
+          paint: { 'icon-color': striped ? track.color : inner } }, before);
       }
     });
+  }
+
+  /** Road numbers (N33, E40) in small boxes on the main roads, like on race maps. */
+  addShields(before) {
+    if (!this.map.getSource('openmaptiles')) return;
+    this.map.addLayer({ id: 'pm-shields', type: 'symbol', source: 'openmaptiles', 'source-layer': 'transportation_name', minzoom: 8.5,
+      filter: ['all', ['has', 'ref'], ['<=', ['get', 'ref_length'], 6], ['match', ['get', 'class'], ['motorway', 'trunk', 'primary', 'secondary'], true, false]],
+      layout: { 'symbol-placement': 'line', 'symbol-spacing': 420, 'text-field': ['get', 'ref'], 'text-font': ['Noto Sans Bold'], 'text-size': 10.5,
+        'text-rotation-alignment': 'viewport', 'icon-rotation-alignment': 'viewport', 'icon-image': 'pm-shield', 'icon-text-fit': 'both',
+        'icon-text-fit-padding': [1, 3, 1, 3], 'text-padding': 12 },
+      paint: { 'text-color': '#1A1A1E' } }, before);
   }
 
   /** Bounds of the visible routes and points, or null. */
@@ -275,13 +327,20 @@ KK.ParcoursMap = class {
     return String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   }
 
-  /** The marker element of a point: a badge for start and finish, a number, a town or a plain point. */
+  /** Kilometres as on race maps: one decimal when needed (188,5). */
+  static kmText(km) { return KK.format.km(Math.round(km * 10) / 10); }
+
+  /**
+   * The marker element of a point: a badge for start, finish and km 0, a number, a town, a zone or a plain point.
+   * offset: pixels to move the marker, so the small square at the foot sits exactly on the route.
+   */
   static markerHtml(p) {
     const esc = KK.ParcoursMap.esc, icon = KK.ParcoursMap.ICONS[p.type] || '';
-    if (p.type === 'start' || p.type === 'finish') {
-      const below = p.side === 'bottom';
-      return { anchor: below ? 'top' : 'bottom', className: `pm-badge pm-badge--${p.type}${below ? ' pm-badge--below' : ''}`,
-        html: `${p.name ? `<span class="pm-badge__label">${esc(p.name)}</span>` : ''}<span class="pm-badge__icon">${icon}</span><span class="pm-badge__stem"></span>` };
+    if (p.type === 'start' || p.type === 'finish' || p.type === 'km0') {
+      const below = p.side === 'bottom', label = p.type !== 'km0' && p.name;
+      const glyph = p.type === 'km0' ? '<span class="pm-zero"><small>km</small>0</span>' : icon;
+      return { anchor: below ? 'top' : 'bottom', offset: [0, below ? -4 : 4], className: `pm-badge pm-badge--${p.type}${below ? ' pm-badge--below' : ''}`,
+        html: `${label ? `<span class="pm-badge__label">${esc(p.name)}</span>` : ''}<span class="pm-badge__icon">${glyph}</span><span class="pm-badge__stem"></span><span class="pm-badge__foot"></span>` };
     }
     if (KK.ParcoursMap.NUMBERED.includes(p.type)) {
       return { anchor: 'center', className: `pm-num pm-num--${p.type}`, html: `<span>${p.number || ''}</span>` };
@@ -289,8 +348,9 @@ KK.ParcoursMap = class {
     if (p.type === 'plaats') {
       return { anchor: 'center', className: `pm-town pm-town--${p.side || 'right'}`, html: `<span class="pm-town__label">${esc(p.name)}</span>` };
     }
-    if (p.type === 'voeding') {
-      return { anchor: 'center', className: `pm-feed pm-point--${p.side || 'right'}`, html: `<span class="pm-feed__icon">${icon}</span>${p.name ? `<span class="pm-point__label">${esc(p.name)}</span>` : ''}` };
+    if (KK.ParcoursMap.ZONES.includes(p.type)) {
+      return { anchor: 'center', className: `pm-zone pm-zone--${p.side || 'right'}`,
+        html: `<span class="pm-zone__lead"></span><span class="pm-zone__body"><span class="pm-zone__icon">${icon}</span>${p.km != null ? `<span class="pm-zone__km">${KK.ParcoursMap.kmText(p.km)}</span>` : ''}</span>` };
     }
     return { anchor: 'center', className: `pm-point pm-point--${p.side || 'right'}`, html: `<span class="pm-point__icon"></span>${p.name ? `<span class="pm-point__label">${esc(p.name)}</span>` : ''}` };
   }
@@ -300,13 +360,38 @@ KK.ParcoursMap = class {
     if (!this.map) return;
     this.markers.forEach(m => m.remove());
     this.markers = points.map(p => {
-      const { anchor, className, html } = KK.ParcoursMap.markerHtml(p);
+      const { anchor, offset, className, html } = KK.ParcoursMap.markerHtml(p);
       const el = document.createElement('div');
       el.className = className;
       el.innerHTML = html;
       el.title = `${p.name || ''}${p.name ? '. ' : ''}Sleep om te verplaatsen`;
-      const marker = new window.maplibregl.Marker({ element: el, anchor, draggable: true }).setLngLat([p.lon, p.lat]).addTo(this.map);
+      const marker = new window.maplibregl.Marker({ element: el, anchor, offset: offset || [0, 0], draggable: true }).setLngLat([p.lon, p.lat]).addTo(this.map);
       marker.on('dragend', () => { const ll = marker.getLngLat(); this.callbacks.onPointMoved(p.id, ll.lat, ll.lng); });
+      return marker;
+    });
+  }
+
+  /**
+   * Labels of loops and laps: the name in the route colour with the length, and lines such as "Mannen 9 rondes"
+   * with the numbers in colour. labels: [{ id, lat, lon, name, km, rows: [text], color }]. Can be dragged.
+   */
+  setLabels(labels) {
+    this.labels = labels;
+    if (!this.map) return;
+    this.labelMarkers.forEach(m => m.remove());
+    const esc = KK.ParcoursMap.esc;
+    this.labelMarkers = labels.map(l => {
+      const text = KK.ParcoursMap.contrast(l.color);
+      // On a light route colour (yellow) the numbers would not read on white: they stay black there.
+      const accent = text === '#111111' ? '#111111' : l.color;
+      const el = document.createElement('div');
+      el.className = 'pm-lap';
+      el.dataset.track = l.id;
+      el.title = 'Sleep om te verplaatsen';
+      el.innerHTML = `<div class="pm-lap__head"><span class="pm-lap__name" style="background:${l.color};color:${text}">${esc(l.name)}</span>${l.km ? `<span class="pm-lap__km" style="color:${accent}">${KK.ParcoursMap.kmText(l.km)} km</span>` : ''}</div>`
+        + l.rows.map(r => `<div class="pm-lap__row">${esc(r).replace(/(\d+)/g, `<b style="color:${accent}">$1</b>`)}</div>`).join('');
+      const marker = new window.maplibregl.Marker({ element: el, anchor: 'center', draggable: true }).setLngLat([l.lon, l.lat]).addTo(this.map);
+      marker.on('dragend', () => { const ll = marker.getLngLat(); if (this.callbacks.onLabelMoved) this.callbacks.onLabelMoved(l.id, ll.lat, ll.lng); });
       return marker;
     });
   }

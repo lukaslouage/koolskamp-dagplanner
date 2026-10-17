@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="css/styles.css?v=2.1">
+<link rel="stylesheet" href="css/styles.css?v=2.2">
 </head>
 <body>
 
@@ -44,7 +44,7 @@
     <div class="settings">
 
 <section class="settings__group">
-<h3 class="settings__heading">Parcours <button type="button" class="info" data-info="Laad een of meer GPX-bestanden, bijvoorbeeld uit Strava, Komoot, RideWithGPS of Garmin. Elk spoor wordt een lijn op de kaart: geef het een naam, een kleur en een stijl. Het bovenste spoor ligt bovenop. Je kunt GPX-bestanden ook gewoon op de kaart slepen. Alles blijft enkel in deze browser bewaard." aria-label="Uitleg" aria-expanded="false">i</button></h3>
+<h3 class="settings__heading">Parcours <button type="button" class="info" data-info="Laad een of meer GPX-bestanden, bijvoorbeeld uit Strava, Komoot, RideWithGPS of Garmin. Elk spoor wordt een lijn op de kaart: geef het een naam, een kleur en een stijl. 'Met middenstreep' geeft een lijn met een streep in het midden, 'Geneutraliseerd' een gestreepte middenlijn voor het stuk voor km 0. Met het labeltje zet je de naam en de lengte op de kaart, met eronder bijvoorbeeld het aantal rondes. Het bovenste spoor ligt bovenop. Je kunt GPX-bestanden ook gewoon op de kaart slepen. Alles blijft enkel in deze browser bewaard." aria-label="Uitleg" aria-expanded="false">i</button></h3>
 <div class="pm-tracks" id="pm-tracks"></div>
 <div class="pm-actions">
 <label class="btn btn--secondary btn--small"><input type="file" id="pm-file" accept=".gpx,application/gpx+xml" multiple hidden>GPX laden</label>
@@ -54,7 +54,7 @@
 </section>
 
 <section class="settings__group">
-<h3 class="settings__heading">Punten <button type="button" class="info" data-info="Start en finish (zwart label met de plaatsnaam), een plaats langs het parcours (vet met een vierkantje), een helling, kasseien of sprint (genummerd, met een lijst op de kaart), een bevoorrading of een gewoon punt. Klik op 'Punt toevoegen' en daarna op de kaart, of laat 'Plaatsen langs het parcours' de dorpen op de route zoeken. Dicht bij een parcours springt het punt op de lijn. Sleep een punt op de kaart om het te verplaatsen. Waypoints uit een GPX worden ook punten." aria-label="Uitleg" aria-expanded="false">i</button></h3>
+<h3 class="settings__heading">Punten <button type="button" class="info" data-info="Start en finish (zwart label met de plaatsnaam), km 0 (de officiële start), een plaats langs het parcours (vet met een vierkantje), een helling, kasseien of sprint (genummerd, met een lijst op de kaart), een bevoorrading of afvalzone (lichtblauw, met de kilometer) of een gewoon punt. Start, km 0, finish, hellingen en zones komen ook op het hoogteprofiel. Klik op 'Punt toevoegen' en daarna op de kaart, of laat 'Plaatsen langs het parcours' de dorpen op de route zoeken. Dicht bij een parcours springt het punt op de lijn. Sleep een punt op de kaart om het te verplaatsen. Waypoints uit een GPX worden ook punten." aria-label="Uitleg" aria-expanded="false">i</button></h3>
 <div class="pm-points" id="pm-points"></div>
 <div class="pm-actions">
 <button type="button" class="btn btn--secondary btn--small" id="pm-add-point" aria-pressed="false">Punt toevoegen</button>
@@ -68,7 +68,8 @@
 <label class="field"><span class="field__label">Stijl</span><select class="field__select" id="pm-theme"></select></label>
 <label class="field"><span class="field__label">Lijndikte</span><select class="field__select" id="pm-width"><option value="dun">Dun</option><option value="normaal">Normaal</option><option value="dik">Dik</option></select></label>
 <label class="field"><span class="field__label">Plaatsnamen</span><input type="checkbox" class="switch" id="pm-places"></label>
-<label class="field"><span class="field__label">Straatnamen en wegnummers</span><input type="checkbox" class="switch" id="pm-streets"></label>
+<label class="field"><span class="field__label">Wegnummers <button type="button" class="info" data-info="De nummers van de grote wegen (N33, E40) in kleine kaders, zoals op koerskaarten." aria-label="Uitleg" aria-expanded="false">i</button></span><input type="checkbox" class="switch" id="pm-shields"></label>
+<label class="field"><span class="field__label">Straatnamen</span><input type="checkbox" class="switch" id="pm-streets"></label>
 <label class="field"><span class="field__label">Rijrichting <button type="button" class="info" data-info="Kleine pijlen langs elk parcours, in de richting van het GPX-bestand." aria-label="Uitleg" aria-expanded="false">i</button></span><input type="checkbox" class="switch" id="pm-arrows"></label>
 <label class="field"><span class="field__label">Kilometers <button type="button" class="info" data-info="Kilometermarkeringen langs een van de parcours, op de gekozen afstand van elkaar." aria-label="Uitleg" aria-expanded="false">i</button></span><select class="field__select" id="pm-km-track"></select></label>
 <label class="field"><span class="field__label">Om de</span><select class="field__select" id="pm-km-step"><option value="1">1 km</option><option value="2">2 km</option><option value="5">5 km</option><option value="10">10 km</option><option value="20">20 km</option></select></label>
@@ -126,13 +127,13 @@
 <div class="export-overlay" id="export-overlay" hidden><span class="spinner" aria-hidden="true"></span>Afbeelding wordt gemaakt</div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="data/route-data.js?v=2.1"></script>
-<script src="js/config.js?v=2.1"></script>
-<script src="js/format.js?v=2.1"></script>
-<script src="js/info.js?v=2.1"></script>
-<script src="js/pdf-export.js?v=2.1"></script>
-<script src="js/gpx.js?v=2.1"></script>
-<script src="js/parcours-map.js?v=2.1"></script>
-<script src="js/parcours.js?v=2.1"></script>
+<script src="data/route-data.js?v=2.2"></script>
+<script src="js/config.js?v=2.2"></script>
+<script src="js/format.js?v=2.2"></script>
+<script src="js/info.js?v=2.2"></script>
+<script src="js/pdf-export.js?v=2.2"></script>
+<script src="js/gpx.js?v=2.2"></script>
+<script src="js/parcours-map.js?v=2.2"></script>
+<script src="js/parcours.js?v=2.2"></script>
 </body>
 </html>

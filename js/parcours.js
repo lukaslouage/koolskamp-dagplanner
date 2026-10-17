@@ -16,16 +16,18 @@
     square: { file: 'vierkant', label: 'Vierkant 1:1 (sociale media)', ratio: 1, print: [2160, 2160], web: [1080, 1080] },
     portrait: { file: 'staand-4x5', label: 'Staand 4:5 (Instagram)', ratio: 4 / 5, print: [2160, 2700], web: [1080, 1350] },
   };
-  const TYPES = [['start', 'Start'], ['finish', 'Finish'], ['plaats', 'Plaats'], ['klim', 'Helling'], ['kasseien', 'Kasseien'], ['sprint', 'Sprint'], ['voeding', 'Bevoorrading'], ['punt', 'Punt']];
+  const TYPES = [['start', 'Start'], ['km0', 'Km 0'], ['finish', 'Finish'], ['plaats', 'Plaats'], ['klim', 'Helling'], ['kasseien', 'Kasseien'], ['sprint', 'Sprint'], ['voeding', 'Bevoorrading'], ['afval', 'Afvalzone'], ['punt', 'Punt']];
   // Words for the legend, per kind of point.
-  const KEY = { start: 'Vertrek', finish: 'Aankomst', klim: 'Helling', kasseien: 'Kasseien', sprint: 'Sprint', voeding: 'Bevoorrading' };
+  const KEY = { start: 'Vertrek', km0: 'Km 0, officiële start', finish: 'Aankomst', klim: 'Helling', kasseien: 'Kasseien', sprint: 'Sprint', voeding: 'Bevoorrading', afval: 'Afvalzone' };
+  // Kinds of points shown on the elevation profile.
+  const ON_PROFILE = ['start', 'km0', 'finish', ...KK.ParcoursMap.NUMBERED, ...KK.ParcoursMap.ZONES];
   const SIDES = [['right', 'Rechts'], ['left', 'Links'], ['top', 'Boven'], ['bottom', 'Onder']];
   const COLORS = ['#FFD201', '#18181B', '#7A7A7A', '#E4572E', '#2E86DE', '#2F9E5B'];
   const MAX_AREA = 16.7e6; // Safari cannot make a larger canvas
 
   const DEFAULTS = {
     style: 2, title: 'Koolskamp Koers', subtitle: '', format: 'a4-l', quality: 'print', theme: 'koers', width: 'normaal',
-    places: true, streets: false, arrows: true, kmTrack: '', kmStep: 5, showTitle: true, showLegend: true, showProfile: true,
+    places: true, streets: false, shields: true, arrows: true, kmTrack: '', kmStep: 5, showTitle: true, showLegend: true, showProfile: true,
     profileSource: '', tracks: [], points: [], view: null,
   };
 
@@ -69,6 +71,10 @@
   const pmap = new KK.ParcoursMap($('pm-map'), {
     onMove: view => { state.view = view; save(); },
     onView: () => renderScale(),
+    onLabelMoved: (id, lat, lon) => {
+      const track = state.tracks.find(t => t.id === id);
+      if (track) { track.labelPos = { lat, lon }; track.labelAuto = false; save(); }
+    },
     onPointMoved: (id, lat, lon) => {
       const p = state.points.find(x => x.id === id);
       if (p) { Object.assign(p, snap(lat, lon)); save(); pmap.setPoints(state.points); }
@@ -85,6 +91,7 @@
     onReady: () => {
       syncMap();
       if (!state.view) fit();
+      setTimeout(placeLabels, 300);
     },
   });
 
@@ -111,7 +118,7 @@
   }
 
   function syncMap(what = 'all') {
-    if (what === 'all' || what === 'tracks') pmap.setTracks(state.tracks);
+    if (what === 'all' || what === 'tracks') { pmap.setTracks(state.tracks); pmap.setLabels(lapLabels()); }
     if (what === 'all' || what === 'points' || what === 'km') {
       pmap.setPoints(decoratePoints());
       // Towns shown in bold on the route, and start and finish, are left out of the grey map names.
@@ -121,6 +128,65 @@
       const track = state.tracks.find(t => t.id === state.kmTrack && t.visible !== false);
       pmap.setKm(track ? { points: track.points, step: Number(state.kmStep) } : null);
     }
+  }
+
+  /** Labels of the routes that have one: name, length and the lines of text (split at "/"). */
+  function lapLabels() {
+    return state.tracks.filter(t => t.label && t.visible !== false).map(t => {
+      let pos = t.labelPos;
+      if (!pos) {
+        // First place: the middle of the route's area (inside a loop); it can be dragged from there.
+        const lats = t.points.map(p => p[0]), lons = t.points.map(p => p[1]);
+        pos = { lat: (Math.min(...lats) + Math.max(...lats)) / 2, lon: (Math.min(...lons) + Math.max(...lons)) / 2 };
+      }
+      return { id: t.id, lat: pos.lat, lon: pos.lon, name: t.name, km: trackKm(t), color: t.color,
+        rows: String(t.laps || '').split('/').map(r => r.trim()).filter(Boolean) };
+    });
+  }
+
+  /**
+   * Gives labels without a place one: the free spot nearest to their route, not on a route, a point or a box.
+   * Tries a grid of spots on the map; the label can be dragged from there.
+   */
+  function placeLabels() {
+    const map = pmap.map;
+    const todo = state.tracks.filter(t => t.label && !t.labelPos && t.visible !== false);
+    if (!map || !pmap.ready || !todo.length) return;
+    const wrap = document.querySelector('.pm-mapwrap').getBoundingClientRect();
+    const rect = el => { const r = el.getBoundingClientRect(); return { x0: r.left - wrap.left, y0: r.top - wrap.top, x1: r.right - wrap.left, y1: r.bottom - wrap.top }; };
+    const boxes = [...['pm-key', 'pm-list', 'pm-scale'].map($).filter(el => !el.hidden),
+      ...document.querySelectorAll('#pm-map .maplibregl-marker:not(.pm-lap)')].map(rect);
+    const dots = state.tracks.filter(t => t.visible !== false).flatMap(t => t.points.filter((_, i) => i % 2 === 0).map(p => {
+      const s = map.project([p[1], p[0]]);
+      return { id: t.id, x: s.x, y: s.y };
+    }));
+    todo.forEach(t => {
+      const el = document.querySelector(`.pm-lap[data-track="${t.id}"]`);
+      const w = el ? el.offsetWidth : 220, h = el ? el.offsetHeight : 60, m = 12, step = 14;
+      const own = dots.filter(d => d.id === t.id);
+      let best = null;
+      for (let y = m; y + h < wrap.height - m; y += step) {
+        for (let x = m; x + w < wrap.width - m; x += step) {
+          const x1 = x + w, y1 = y + h;
+          let score = 0;
+          boxes.forEach(b => { if (b.x0 < x1 + m && b.x1 > x - m && b.y0 < y1 + m && b.y1 > y - m) score += 1e5; });
+          if (best && score >= best.score) continue;
+          dots.forEach(d => { if (d.x > x - m && d.x < x1 + m && d.y > y - m && d.y < y1 + m) score += 400; });
+          if (best && score >= best.score) continue;
+          let near = Infinity;
+          own.forEach(d => { const dx = Math.max(x - d.x, 0, d.x - x1), dy = Math.max(y - d.y, 0, d.y - y1); near = Math.min(near, dx * dx + dy * dy); });
+          score += Math.sqrt(near);
+          if (!best || score < best.score) best = { score, x, y };
+        }
+      }
+      if (!best) return;
+      const ll = map.unproject([best.x + w / 2, best.y + h / 2]);
+      t.labelPos = { lat: ll.lat, lon: ll.lng };
+      t.labelAuto = true;
+      boxes.push({ x0: best.x, y0: best.y, x1: best.x + w, y1: best.y + h });
+    });
+    save();
+    pmap.setLabels(lapLabels());
   }
 
   /** Fits the routes in the map, leaving room for the title and the legend. */
@@ -140,6 +206,12 @@
       bottom: Math.max(scaleBottom, l.bottom || 0), right: Math.max(edge + 3 * u, l.right || 0),
     })));
     pmap.fit(paddings);
+    // Labels that were placed automatically look for a new spot; dragged labels stay where they are.
+    if (state.tracks.some(t => t.labelAuto)) {
+      state.tracks.forEach(t => { if (t.labelAuto) delete t.labelPos; });
+      pmap.setLabels(lapLabels());
+      setTimeout(placeLabels, 300);
+    }
   }
 
   // ---------- Routes ----------
@@ -168,7 +240,7 @@
     if (!state.profileSource && state.tracks.length) state.profileSource = state.tracks[0].id;
     changed('all');
     requestAnimationFrame(fit);
-    if (pmap.map) pmap.map.once('idle', () => addTowns(true));
+    if (pmap.map) pmap.map.once('idle', () => { addTowns(true); setTimeout(placeLabels, 150); });
   }
 
   async function loadFiles(files) {
@@ -195,8 +267,11 @@
     state.tracks.unshift(
       { id: 'kk-lap', name: 'Lokale ronde', color: '#FFD201', style: 'solid', visible: true, km: config.distances.localLap, points: strip(r.localLap) },
       { id: 'kk-approach', name: 'Aanloop naar de finish', color: '#7A7A7A', style: 'solid', visible: true, km: config.distances.approachToFinish, points: strip(r.approach) },
-      { id: 'kk-loop', name: 'Lus Ardooie', color: '#18181B', style: 'dashed', visible: true, km: config.distances.ardooieLoop, points: strip(r.ardooieLoop) },
+      { id: 'kk-loop', name: 'Lus Ardooie', color: '#18181B', style: 'double', visible: true, km: config.distances.ardooieLoop, points: strip(r.ardooieLoop) },
     );
+    const d = config.defaults, laps = n => `${n} ${n === 1 ? 'ronde' : 'rondes'}`;
+    Object.assign(state.tracks[0], { label: true, laps: `Mannen ${laps(d.menLaps)} / Vrouwen ${laps(d.womenLaps)}` });
+    Object.assign(state.tracks[2], { label: true, laps: `Mannen ${laps(d.menLoops)}` });
     state.points.push(
       { id: 'kk-start', type: 'start', name: 'ARDOOIE', side: 'top', lat: r.ardooieLoop[0][0], lon: r.ardooieLoop[0][1] },
       { id: 'kk-kruis', type: 'punt', name: 'Kruiskalsijde', side: 'right', lat: r.kruiskalsijde[0], lon: r.kruiskalsijde[1] },
@@ -211,7 +286,7 @@
     requestAnimationFrame(fit);
     message('De parcours van Koolskamp Koers zijn geladen.', 'ok');
     // Once the map of the area is loaded: the towns along the route.
-    if (pmap.map) pmap.map.once('idle', () => addTowns(true));
+    if (pmap.map) pmap.map.once('idle', () => { addTowns(true); setTimeout(placeLabels, 150); });
   }
 
   const trackKm = t => t.km || KK.gpx.lengthKm(t.points);
@@ -256,6 +331,46 @@
     return track ? { parts: [{ points: track.points, km: track.km }], color: track.color, name: track.name } : null;
   }
 
+  /**
+   * Where the points lie on the profile: [{ id, type, number, km }]. A point counts on every part it lies on
+   * (within 150 m), so a climb on a lap shows every lap; the finish line is crossed at the start or end of a part.
+   * Start and km 0 count once.
+   */
+  function profileMarks(parts) {
+    const pts = decoratePoints().filter(p => ON_PROFILE.includes(p.type));
+    const marks = [];
+    const add = (p, km) => {
+      if (marks.some(m => m.id === p.id && Math.abs(m.km - km) < 0.5)) return;
+      if ((p.type === 'start' || p.type === 'km0') && marks.some(m => m.id === p.id)) return;
+      marks.push({ id: p.id, type: p.type, number: p.number, km });
+    };
+    let offset = 0;
+    parts.forEach(part => {
+      const cum = KK.gpx.cumulative(part.points), gpxKm = cum[cum.length - 1] || 1, length = part.km || gpxKm;
+      const ends = [[part.points[0], 0], [part.points[part.points.length - 1], length]];
+      pts.forEach(p => {
+        const near = q => KK.gpx.haversineKm(q, [p.lat, p.lon]) < 0.15;
+        if (p.type === 'finish' && ends.some(([q]) => near(q))) { ends.forEach(([q, at]) => { if (near(q)) add(p, offset + at); }); return; }
+        const n = KK.gpx.nearest(part.points, cum, p.lat, p.lon);
+        if (n.distanceKm < 0.15) add(p, offset + (n.km * length) / gpxKm);
+      });
+      offset += length;
+    });
+    return marks.sort((a, b) => a.km - b.km);
+  }
+
+  /** One icon of the profile as SVG: a circle with the glyph of the kind of point, or a number. */
+  function profileIcon(m, cx, cy, r) {
+    const icons = KK.ParcoursMap.ICONS;
+    if (m.type === 'finish') return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#pm-checker)" stroke="#111111" stroke-width="${(r * 0.16).toFixed(2)}"/>`;
+    const zone = KK.ParcoursMap.ZONES.includes(m.type);
+    const circle = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${zone ? '#6FC0DC' : '#111111'}" stroke="#FFFFFF" stroke-width="${(r * 0.14).toFixed(2)}"/>`;
+    if (m.number) return `${circle}<text x="${cx}" y="${cy}" dy="0.36em" text-anchor="middle" class="pm-profile__num" style="font-size:${(r * 1.05).toFixed(1)}px">${m.number}</text>`;
+    if (m.type === 'km0') return `${circle}<text x="${cx}" y="${cy}" text-anchor="middle" class="pm-profile__num"><tspan x="${cx}" dy="${(-0.12 * r).toFixed(1)}" style="font-size:${(r * 0.55).toFixed(1)}px">km</tspan><tspan x="${cx}" dy="${(0.85 * r).toFixed(1)}" style="font-size:${(r * 0.95).toFixed(1)}px">0</tspan></text>`;
+    const s = r * 1.3;
+    return `${circle}<svg x="${cx - s / 2}" y="${cy - s / 2}" width="${s}" height="${s}" viewBox="0 0 24 24" style="color:#FFFFFF">${(icons[m.type] || '').replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
+  }
+
   function renderProfile() {
     const el = $('pm-profile');
     el.hidden = !state.showProfile || !state.tracks.length;
@@ -266,26 +381,62 @@
     const p = KK.gpx.profile(source.parts);
     if (!p.hasElevation) { el.innerHTML = '<div class="pm-profile__empty">Dit GPX-bestand heeft geen hoogtegegevens.</div>'; return; }
     const u = parseFloat(getComputedStyle($('pm-artboard')).getPropertyValue('--u')) || 8;
-    const L = 6.2 * u, R = 2.4 * u, T = 4.6 * u, B = 3.2 * u;
-    const top = Math.max(...p.ele), yMax = Math.max(100, Math.ceil((top + 10) / 50) * 50);
-    const x = km => L + (km / p.totalKm) * (W - L - R), y = e => T + (1 - Math.max(0, e) / yMax) * (H - T - B);
-    const line = p.km.map((k, i) => `${i ? 'L' : 'M'}${x(k).toFixed(1)},${y(p.ele[i]).toFixed(1)}`).join('');
-    const area = `${line}L${x(p.totalKm).toFixed(1)},${y(0).toFixed(1)}L${x(0).toFixed(1)},${y(0).toFixed(1)}Z`;
+    const L = 5.8 * u, R = 2.6 * u, band = 2.6 * u, xOf = km => L + (km / p.totalKm) * (W - L - R);
+    // Icons in a row above the profile; an icon that would touch the one before it goes one row lower.
+    const all = profileMarks(source.parts);
+    // A zone shows as a light blue strip at every passage, with its icon only the first time.
+    const strips = all.filter(m => KK.ParcoursMap.ZONES.includes(m.type));
+    const marks = all.filter(m => !KK.ParcoursMap.ZONES.includes(m.type) || strips.find(z => z.id === m.id) === m).map(m => {
+      const final = m.type === 'finish' && p.totalKm - m.km < 0.3;
+      const big = m.type === 'start' || final;
+      return { ...m, final, x: xOf(m.km), r: (big ? 1.35 : m.type === 'finish' ? 0.85 : 1.05) * u };
+    });
+    // Start and finish passages keep the top row; the other icons take it where there is room, else the row below.
+    const row0 = 5.3 * u, rowGap = 2.6 * u, top = [];
+    const fits = m => top.every(o => Math.abs(o.x - m.x) >= o.r + m.r + 0.5 * u);
+    const order = m => (m.type === 'start' || m.type === 'finish' ? 0 : 1);
+    [...marks].sort((a, b) => order(a) - order(b) || a.km - b.km).forEach(m => {
+      const lane = order(m) === 0 || fits(m) ? 0 : 1;
+      if (lane === 0) top.push(m);
+      m.cy = row0 + lane * rowGap;
+    });
+    const T = Math.max(...marks.map(m => m.cy + m.r), row0 + 1.4 * u) + 1.4 * u, B = H - band;
+    const peak = Math.max(...p.ele), yMax = Math.max(100, Math.ceil((peak + 10) / 50) * 50);
+    const yOf = e => T + (1 - Math.max(0, e) / yMax) * (B - T);
+    const eleAt = km => { let i = 0; while (i < p.km.length - 1 && p.km[i] < km) i++; return p.ele[i]; };
+    const line = p.km.map((k, i) => `${i ? 'L' : 'M'}${xOf(k).toFixed(1)},${yOf(p.ele[i]).toFixed(1)}`).join('');
+    const area = `${line}L${xOf(p.totalKm).toFixed(1)},${B}L${xOf(0).toFixed(1)},${B}Z`;
     const yStep = yMax > 300 ? 100 : 50, grid = [];
-    for (let e = 0; e <= yMax; e += yStep) {
-      grid.push(`<line class="pm-profile__grid" x1="${L}" x2="${W - R}" y1="${y(e)}" y2="${y(e)}"/><text class="pm-profile__axis" x="${L - 0.8 * u}" y="${y(e) + 0.45 * u}" text-anchor="end">${e} m</text>`);
+    for (let e = yStep; e <= yMax; e += yStep) {
+      grid.push(`<line class="pm-profile__grid" x1="${L}" x2="${W - R}" y1="${yOf(e)}" y2="${yOf(e)}"/><text class="pm-profile__axis" x="${L - 0.8 * u}" y="${yOf(e) + 0.45 * u}" text-anchor="end">${e} m</text>`);
     }
-    const steps = [1, 2, 5, 10, 20, 25, 50, 100], xStep = steps.find(s => p.totalKm / s <= 12) || 100, ticks = [];
-    for (let k = 0; k <= p.totalKm + 1e-6; k += xStep) ticks.push(`<text class="pm-profile__axis" x="${x(k)}" y="${H - 0.9 * u}" text-anchor="middle">${f.km(k)}</text>`);
-    const border = KK.ParcoursMap.borderFor(source.color, pmap.theme);
-    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="--fs:${(1.55 * u).toFixed(1)}px">
-      <text class="pm-profile__title" x="${L}" y="${2.6 * u}"><tspan class="pm-profile__name">Hoogteprofiel ${esc(source.name)}</tspan><tspan dx="${1.2 * u}">${f.km(Math.round(p.totalKm * 10) / 10)} km, klim ongeveer ${Math.round(p.climb / 10) * 10} m</tspan></text>
-      ${grid.join('')}
-      <path d="${area}" fill="${source.color}" fill-opacity="0.85"/>
+    // The black band with the kilometres: the places of the points in bold, round numbers in between where there is room.
+    const labelY = B + band / 2, gap = 3.4 * u, taken = [];
+    const free = x => x < W - R - 10 * u && taken.every(t => Math.abs(t - x) >= gap);
+    const kmLabels = [];
+    const kmLabel = (km, x, cls, anchor = 'middle') => { kmLabels.push(`<text class="${cls}" x="${x}" y="${labelY}" dy="0.36em" text-anchor="${anchor}">${f.km(Math.round(km * 10) / 10)}</text>`); taken.push(x); };
+    kmLabel(p.totalKm, W - R - 0.6 * u, 'pm-profile__bandkm pm-profile__bandkm--mark', 'end');
+    kmLabels[0] = kmLabels[0].replace(/<\/text>$/, ' km</text>');
+    marks.filter(m => !m.final && (m.type === 'finish' || m.type === 'km0')).forEach(m => {
+      const x = Math.max(m.x, L + 1.6 * u);
+      if (free(x)) kmLabel(m.km, x, 'pm-profile__bandkm pm-profile__bandkm--mark');
+    });
+    const steps = [5, 10, 20, 25, 50, 100], xStep = steps.find(s => p.totalKm / s <= 10) || 100;
+    for (let k = 0; k < p.totalKm; k += xStep) { const x = k === 0 ? L + 0.6 * u : xOf(k); if (free(x)) kmLabel(k, x, 'pm-profile__bandkm', k === 0 ? 'start' : 'middle'); }
+    const leaders = marks.map(m => `<line class="pm-profile__lead" x1="${m.x}" x2="${m.x}" y1="${m.cy + m.r}" y2="${yOf(eleAt(m.km))}"/>`);
+    const icons = marks.map(m => profileIcon(m, m.x, m.cy, m.r));
+    const border = KK.ParcoursMap.borderFor(source.color, pmap.theme), ck = (0.55 * u).toFixed(2);
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="--fs:${(1.45 * u).toFixed(1)}px">
+      <defs><pattern id="pm-checker" width="${ck * 2}" height="${ck * 2}" patternUnits="userSpaceOnUse"><rect width="${ck * 2}" height="${ck * 2}" fill="#FFFFFF"/><rect width="${ck}" height="${ck}" fill="#111111"/><rect x="${ck}" y="${ck}" width="${ck}" height="${ck}" fill="#111111"/></pattern></defs>
+      <text class="pm-profile__title" x="${L}" y="${2.3 * u}"><tspan class="pm-profile__name">${esc(source.name)}</tspan><tspan dx="${1 * u}">${f.km(Math.round(p.totalKm * 10) / 10)} km, klim ongeveer ${Math.round(p.climb / 10) * 10} m</tspan></text>
+ ${grid.join('')}
+      ${strips.map(z => `<rect class="pm-profile__zone" x="${(xOf(z.km) - 0.3 * u).toFixed(1)}" y="${T}" width="${(0.6 * u).toFixed(1)}" height="${B - T}"/>`).join('')}
+      <path d="${area}" fill="${source.color}" fill-opacity="0.9"/>
       <path d="${line}" fill="none" stroke="${border}" stroke-width="${Math.max(1, 0.18 * u).toFixed(2)}" stroke-linejoin="round"/>
-      <line class="pm-profile__base" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>
-      ${ticks.join('')}
-      <text class="pm-profile__axis" x="${W - R}" y="${H - 0.9 * u}" text-anchor="end" dy="0">km</text>
+      ${leaders.join('')}
+      <rect class="pm-profile__band" x="${L}" y="${B}" width="${W - L - R}" height="${band}"/>
+      ${kmLabels.join('')}
+      ${icons.join('')}
     </svg>`;
   }
 
@@ -317,10 +468,16 @@
     $('pm-key-sub').textContent = state.showTitle ? state.subtitle : '';
     $('pm-key-sub').hidden = !state.showTitle || !state.subtitle;
     const lineBorder = t => KK.ParcoursMap.borderFor(t.color, theme.original ? KK.ParcoursMap.THEMES.licht : theme);
+    const lineSample = t => {
+      const style = t.style || 'solid', striped = style === 'double' || style === 'neutral';
+      const stripe = striped ? `<line x1="3" y1="5" x2="37" y2="5" stroke="${KK.ParcoursMap.contrast(t.color)}" stroke-width="2"${style === 'neutral' ? ' stroke-dasharray="3 3"' : ''}/>` : '';
+      return `<svg class="pm-key__line" viewBox="0 0 40 10" aria-hidden="true"><line x1="3" y1="5" x2="37" y2="5" stroke="${lineBorder(t)}" stroke-width="${striped ? 9 : 7}" stroke-linecap="round"/><line x1="3" y1="5" x2="37" y2="5" stroke="${t.color}" stroke-width="${striped ? 7 : 5}" stroke-linecap="${style === 'dashed' ? 'butt' : 'round'}"${style === 'dashed' ? ' stroke-dasharray="7 4"' : ''}/>${stripe}</svg>`;
+    };
+    const keyIcon = type => `<span class="pm-key__icon pm-key__icon--${type}">${type === 'km0' ? '<span class="pm-zero"><small>km</small>0</span>' : KK.ParcoursMap.ICONS[type]}</span>`;
     $('pm-key-items').hidden = !state.showLegend;
     $('pm-key-items').innerHTML = !state.showLegend ? '' : [
-      ...used.map(type => `<div class="pm-key__item"><span class="pm-key__icon pm-key__icon--${type}">${KK.ParcoursMap.ICONS[type]}</span><span>${KEY[type]}</span></div>`),
-      ...visible.map(t => `<div class="pm-key__item"><svg class="pm-key__line" viewBox="0 0 40 10" aria-hidden="true"><line x1="3" y1="5" x2="37" y2="5" stroke="${lineBorder(t)}" stroke-width="7" stroke-linecap="round"/><line x1="3" y1="5" x2="37" y2="5" stroke="${t.color}" stroke-width="5" stroke-linecap="${t.style === 'dashed' ? 'butt' : 'round'}"${t.style === 'dashed' ? ' stroke-dasharray="7 4"' : ''}/></svg><span>${esc(t.name)}</span><span class="pm-key__km">${f.km(Math.round(trackKm(t) * 10) / 10)} km</span></div>`),
+      ...used.map(type => `<div class="pm-key__item">${keyIcon(type)}<span>${KEY[type]}</span></div>`),
+      ...visible.map(t => `<div class="pm-key__item">${lineSample(t)}<span>${esc(t.name)}</span><span class="pm-key__km">${f.km(Math.round(trackKm(t) * 10) / 10)} km</span></div>`),
     ].join('');
     // The box bottom right: the numbered climbs, cobbles and sprints with their km.
     const numbered = decoratePoints().filter(p => p.number);
@@ -364,13 +521,15 @@
       <div class="pm-track${t.visible === false ? ' is-hidden' : ''}" data-track="${esc(t.id)}">
         <div class="pm-track__top">
         <input type="color" class="pm-color" data-field="color" value="${esc(t.color)}" aria-label="Kleur van ${esc(t.name)}">
-        <input type="text" class="pm-text pm-track__name" data-field="name" value="${esc(t.name)}" maxlength="60" aria-label="Naam van het parcours">
+        <input type="text" class="pm-text pm-track__name" data-field="name" value="${esc(t.name)}" maxlength="60" aria-label="Naam van het parcours"><span class="pm-track__km">${f.km(Math.round(trackKm(t) * 10) / 10)} km</span>
         </div>
-        <div class="pm-track__meta"><select class="pm-mini" data-field="style" aria-label="Stijl van de lijn">${options([['solid', 'Doorlopend'], ['dashed', 'Gestreept']], t.style)}</select><span class="pm-track__km">${f.km(Math.round(trackKm(t) * 10) / 10)} km</span>
+        <div class="pm-track__meta"><select class="pm-mini" data-field="style" aria-label="Stijl van de lijn">${options(KK.ParcoursMap.LINE_STYLES, t.style || 'solid')}</select>
+        <button type="button" class="pm-icon" data-action="label" aria-pressed="${!!t.label}" title="Label met naam en lengte op de kaart, bijvoorbeeld voor een lokale ronde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h12l6 7-6 7H3z"/><path d="M7 12h5"/></svg></button>
         <button type="button" class="pm-icon" data-action="toggle" aria-pressed="${t.visible !== false}" title="Tonen of verbergen">${eyeIcon(t.visible !== false)}</button>
         <button type="button" class="pm-icon" data-action="up" title="Naar boven (bovenop)"${i === 0 ? ' disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
         <button type="button" class="pm-icon" data-action="delete" title="Verwijderen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         </div>
+        ${t.label ? `<input type="text" class="pm-text pm-track__laps" data-field="laps" value="${esc(t.laps || '')}" maxlength="80" placeholder="Onder het label, bv. Mannen 9 rondes / Vrouwen 7 rondes" aria-label="Tekst onder het label (een schuine streep begint een nieuwe regel)">` : ''}
       </div>`).join('') : '<p class="settings__note">Nog geen parcours. Laad een GPX of de parcours van Koolskamp Koers.</p>';
 
     $('pm-points').innerHTML = state.points.map(p => `
@@ -391,6 +550,7 @@
     $('pm-width').value = state.width;
     $('pm-places').checked = state.places;
     $('pm-streets').checked = state.streets;
+    $('pm-shields').checked = state.shields;
     $('pm-arrows').checked = state.arrows;
     $('pm-format').value = state.format;
     $('pm-quality').value = state.quality;
@@ -468,7 +628,7 @@
     if (!window.confirm('Alle parcours, punten en instellingen van de kaart wissen?')) return;
     Object.assign(state, { ...DEFAULTS, tracks: [], points: [] });
     syncControls();
-    pmap.setOptions({ theme: state.theme, places: state.places, streets: state.streets, arrows: state.arrows, width: state.width });
+    pmap.setOptions({ theme: state.theme, places: state.places, streets: state.streets, shields: state.shields, arrows: state.arrows, width: state.width });
     layout();
     changed('all');
   });
@@ -478,7 +638,9 @@
     const track = row && state.tracks.find(t => t.id === row.dataset.track);
     if (!track || !field) return;
     track[field] = e.target.value;
+    if (field === 'name') pmap.setLabels(lapLabels());
     // Typing a name only changes the legend; the list is not redrawn, so the field keeps its focus.
+    if (field === 'laps') { save(); pmap.setLabels(lapLabels()); return; }
     changed(field === 'name' ? 'none' : 'tracks', { lists: field !== 'name' && field !== 'color' });
   });
   $('pm-tracks').addEventListener('click', e => {
@@ -488,6 +650,7 @@
     if (i < 0) return;
     const action = button.dataset.action;
     if (action === 'toggle') state.tracks[i].visible = state.tracks[i].visible === false;
+    else if (action === 'label') { state.tracks[i].label = !state.tracks[i].label; setTimeout(placeLabels, 50); }
     else if (action === 'up' && i > 0) state.tracks.splice(i - 1, 0, state.tracks.splice(i, 1)[0]);
     else if (action === 'delete') {
       if (!window.confirm(`"${state.tracks[i].name}" verwijderen?`)) return;
@@ -527,6 +690,7 @@
   mapOption('pm-width', 'width', 'value');
   mapOption('pm-places', 'places');
   mapOption('pm-streets', 'streets');
+  mapOption('pm-shields', 'shields');
   mapOption('pm-arrows', 'arrows');
   $('pm-km-track').addEventListener('change', e => { state.kmTrack = e.target.value; changed('km', { lists: false }); });
   $('pm-km-step').addEventListener('change', e => { state.kmStep = Number(e.target.value); changed('km', { lists: false }); });
@@ -575,7 +739,7 @@
   renderLists();
   layout();
   renderArtboard();
-  pmap.setOptions({ theme: state.theme, places: state.places, streets: state.streets, arrows: state.arrows, width: state.width });
+  pmap.setOptions({ theme: state.theme, places: state.places, streets: state.streets, shields: state.shields, arrows: state.arrows, width: state.width });
   if (window.maplibregl) {
     try { pmap.init(state.view); } catch (e) { $('pm-map').classList.add('route__map--unavailable'); }
   }
